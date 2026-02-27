@@ -1,0 +1,18 @@
+# Scraping
+selenium >= 4.0.0
+webdriver-manager >= 4.0.0
+beautifulsoup >= 4.12.0
+
+# Data
+pandas >= 2.0.0
+numpy >= 1.24.0
+
+# Training
+scikit-learn >= 1.3.0
+xgboost >= 2.0.0
+jobllib >= 1.3.0
+
+# API
+fastapi >= 0.110.0
+unicorn >= 0.29.0
+
