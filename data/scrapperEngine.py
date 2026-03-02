@@ -149,9 +149,9 @@ class scrapeEngine:
                     print(f"No table found for {monthLabel}")
                     continue
 
-                # FIXME: Understand.....
+                # Gets all rows in the page to loop and pull info for
                 rows = table.find("tbody").find_all(
-                        "tr", class_=lambda x: x != "thread"
+                        "tr", class_= lambda x: x != "thread"
                 )
 
                 # Go over all rows in that months table
