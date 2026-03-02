@@ -3,19 +3,18 @@ import re
 import json
 import unicodedata
 import sqlite3
+from datetime import date
 from datetime import datetime
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 
 # Add docstings fat bum
 
-class scrapeEngine:
+class ScrapeEngine:
     # db path defaults to NBA.db
     # headless to make google not pop up during scrapping
     def __init__(self, db='NBA.db', headless=True):
@@ -43,13 +42,21 @@ class scrapeEngine:
     # Sets up the driver to be used in scrapping functions, gives basic options along with a true/false headless option
     def _setupDriver(self, headless):
         options = Options()
-        if (headless):
-           options = options.add_argument('--headless')
 
-        options = options.add_argument('--disable-blink-features=AutomationControlled')
-        service = Service(ChromeDriverManager().install())
+        if headless:
+            options.add_argument("--headless=new")  # modern headless mode
 
-        return webdriver.Chrome(service=service, options=options)
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--remote-debugging-port=9222")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option("useAutomationExtension", False)
+        driver = webdriver.Chrome(options=options)
+
+        driver.set_page_load_timeout(30)
+        return driver
 
     # Trys to open and read json file, if fails return empty list    
     def _loadJson(self, path): 
@@ -326,7 +333,7 @@ class scrapeEngine:
                         "turnovers": getStat("tov"),
                         "fg_pct": getStat("fg_pct", default=0.0, asFloat=True),
                         "is_starter": onStarters,
-                        "is_home": isHome
+                        "is_home": isHome,
                         "rest_days": daysRest,
                     })
 
@@ -548,15 +555,14 @@ class scrapeEngine:
 
 
     def scrapeStatus(self):
-    """
+        """
         Overveiw:
             Scrapes epsn for a list of all current injured players and lists their estimated return date, along with details of the injury. Also adds the scrape date as the data needs to be time series. 
         Params
             None
         Returns:
             A list containing injured players along with other information.
-        """
-
+    """
         url = "https://www.espn.com/nba/injuries"
         statusData = []
         nextLogID = 1
@@ -597,7 +603,7 @@ class scrapeEngine:
 
                 # FIXME: Understand...
                 for row in tbody.find_all("tr", class_="Table__TR"):
-                    nameTD = row.find("td", class_"col-name")
+                    nameTD = row.find("td", class_="col-name")
                     if not nameTD:
                         continue
 
@@ -625,13 +631,13 @@ class scrapeEngine:
 
                 print(f"Total status records scraped: {len(statusData)}")
 
-            except Exception as e:
-                print(f"Error in scrapeStatus: {e}")
+        except Exception as e:
+            print(f"Error in scrapeStatus: {e}")
 
         return statusData
 
     def scrapeResults(self):
-    """
+        """
         Overveiw:
             Scrapes basketball reference and scrapes which team won eacg game in a season, along with the total scores for each team
         Params

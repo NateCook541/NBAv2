@@ -1,18 +1,22 @@
-# Scraping
-selenium >= 4.0.0
-webdriver-manager >= 4.0.0
-beautifulsoup >= 4.12.0
-
-# Data
-pandas >= 2.0.0
-numpy >= 1.24.0
-
-# Training
-scikit-learn >= 1.3.0
-xgboost >= 2.0.0
-jobllib >= 1.3.0
-
-# API
-fastapi >= 0.110.0
-unicorn >= 0.29.0
-
+attrs==25.4.0
+beautifulsoup4==4.14.3
+certifi==2026.2.25
+charset-normalizer==3.4.4
+driver-manager==0.1.1
+h11==0.16.0
+idna==3.11
+outcome==1.3.0.post0
+packaging==26.0
+PySocks==1.7.1
+python-dotenv==1.2.2
+requests==2.32.5
+selenium==4.41.0
+sniffio==1.3.1
+sortedcontainers==2.4.0
+soupsieve==2.8.3
+trio==0.33.0
+trio-websocket==0.12.2
+typing_extensions==4.15.0
+urllib3==2.6.3
+websocket-client==1.9.0
+wsproto==1.3.2
