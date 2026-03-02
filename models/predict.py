@@ -24,7 +24,7 @@ def _loadModel():
                 "Non trained model found"
         )
 
-        return joblib.load(modelPath)
+    return joblib.load(modelPath)
 
 
 # PUBLIC API
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     if result is None:
         print("Player or game not found in db")
     else:
-        status = (f"[{result['injury_status']}]" if result["injury_status"] else ""
+        status = (f"[{result['injury_status']}]" if result["injury_status"] else "")
         print(f"{result['player']}{status}: {result['predicted_points']} pts on {result['date']}")
 
 

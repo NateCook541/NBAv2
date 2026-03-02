@@ -5,7 +5,7 @@ import unicodedata
 import sqlite3
 from datetime import datetime
 from bs4 import BeautifulSoup
-from seleniun import webdriver
+from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -44,7 +44,7 @@ class scrapeEngine:
     def _setupDriver(self, headless):
         options = Options()
         if (headless):
-            options = options.add_argument('--headless')
+           options = options.add_argument('--headless')
 
         options = options.add_argument('--disable-blink-features=AutomationControlled')
         service = Service(ChromeDriverManager().install())
@@ -65,16 +65,16 @@ class scrapeEngine:
                         if unicodedata.category(c) != 'Mn').lower().strip() 
     
     # Finds and players name in the db and returns it normalized
-    def _init_playerLookup(self, name):
+    def _init_playerLookup(self):
         # Load the players just file as a list
-        players = self._loadJson(self, "output/players.json")
+        players = self._loadJson("output/players.json")
 
         # Loop through list and build a dictonary where the key is the normalized name the value is the player id
         lookup = {}
 
         for p in players:
             normalized = self._normalizeName(p["name"])
-            lookup[normlized] = p["player_id"]
+            lookup[normalized] = p["player_id"]
 
         return lookup
 
@@ -89,7 +89,7 @@ class scrapeEngine:
         
     # Strips comments in html page using re
     def _stripComments(self, html):
-        return re.sub(r"<!--(.*?)-->", r"\1", html, flags=RE.DOTALL)
+        return re.sub(r"<!--(.*?)-->", r"\1", html, flags=re.DOTALL)
 
     # SCRAPPERS
 
@@ -132,7 +132,7 @@ class scrapeEngine:
                 monthURLs = [url]
 
             # Go over each month found in the main url HTML source
-            for url in monthLinks:
+            for url in monthURLs:
                 monthLabel = url.split('-')[-1].replace('.html', "").capitalize()
                 print(f"---------Scraping {monthLabel}----------")
 
@@ -170,7 +170,7 @@ class scrapeEngine:
                     
                     # Converts the name to the abbrvation used in the main team map to get the correct ID. Just continues if empty
                     homeAbbr = self.fullNameConversion.get(homeTD.text.strip())
-                    awayAbbr = self.fullNameConversion.get(awayTD.text.strip())
+                    awayAbbr = self.fullNameConversion.get(visitorTD.text.strip())
 
                     homeID = self.teamMap.get(homeAbbr)
                     awayID = self.teamMap.get(awayAbbr)
@@ -251,12 +251,12 @@ class scrapeEngine:
                         (currentDate - lastGameDate[teamid]).days
                         if teamid in lastGameDate else 20
                 )
-                lateGameDate[teamid] = currentDate
+                lastGameDate[teamid] = currentDate
 
         # Loops through each game in gameslist to get each log
         for game in gamesList:
             gameID = game["game_id"]
-            homeTeamID = game["home_teamIid"]
+            homeTeamID = game["home_team_id"]
             url = f"{url}/{gameID}.html"
             print(f"Scrapping log {url}")
 
@@ -285,7 +285,15 @@ class scrapeEngine:
                     daysRest = restLookup.get((gameID, currentTeamID), 0)
                     onStarters = True
 
-                    for row in table.find("td", {"data-stat": "reason"})
+                    for row in table.find("tbody").find_all("tr"):
+                        if "thead" in row.get("class", []):
+                            onStarters = False
+                            continue
+
+                        if row.find("td", {"data-stat": "reason"}):
+                            continue
+
+                        nameTH = row.find("th", {"data-stat": "player"})
                     if not nameTH:
                         continue
                     
@@ -494,7 +502,7 @@ class scrapeEngine:
                 if row.get("class") and "thread" in row["class"]:
                     continue
 
-                teamID = row.find("td", {"data-stat": "team"})
+                teamTD = row.find("td", {"data-stat": "team"})
                 if not teamID:
                     continue
 
@@ -574,18 +582,18 @@ class scrapeEngine:
             
             # FIXME: Understand...
             for section in soup.find_all("div", class_="ResponsiveTable"):
-            titleDiv = section.find("div", class_="Table__Title")
-            espnName = titleDiv.get_text().strip() if titleDiv else None
-            abbr = self.fullNameConversion.get(espnName)
-            rawID = self.teamMpa.get(abbr) if abbr else None
-            if not rawID:
-                continue
-            teamID = int(raw)
-            targetGameID = nextGameLookup.get(teamID)
+                titleDiv = section.find("div", class_="Table__Title")
+                espnName = titleDiv.get_text().strip() if titleDiv else None
+                abbr = self.fullNameConversion.get(espnName)
+                rawID = self.teamMpa.get(abbr) if abbr else None
+                if not rawID:
+                    continue
+                teamID = int(raw)
+                targetGameID = nextGameLookup.get(teamID)
 
-            tbody = section.find("tbody", class_="Table__TBODY")
-            if not tbody:
-                continue
+                tbody = section.find("tbody", class_="Table__TBODY")
+                if not tbody:
+                    continue
 
                 # FIXME: Understand...
                 for row in tbody.find_all("tr", class_="Table__TR"):

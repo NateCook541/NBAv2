@@ -51,11 +51,11 @@ def getTeamPrediction(
     try:
         results = predictTeamRoster(teamID, gameDate)
     except FileNotFoundError as e:
-        raise HTTPException(status=503, detail=str(e))
+        raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
-        raise HTTPException(status=500, detail=f"Prediction error - {e}")
+        raise HTTPException(status_code=500, detail=f"Prediction error - {e}")
 
-    if result is None:
+    if results is None:
         raise HTTPException(
                 status_code=404,
                 detail=f"No game found for {teamID} on {gameDate}"

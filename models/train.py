@@ -33,6 +33,10 @@ def generateTrainingData():
         """
         logs = pd.read_sql_query(logsQuery, conn)
         print(f"Building features for {len(logs)} log rows")
+        
+        featureRows = []
+        targets = []
+        skipped = 0
 
         for _, row in logs.iterrows():
             features = buildFeatures(
@@ -64,13 +68,14 @@ def trainModel(save):
     X, y = X[mask], y[mask]
 
     # Uses basic hyperparameters (tried expermenting so far the best are actually these)
-    XTrain, XTest, yTrain, yTest = train_test_split(
+    XTrain, XTest, yTrain, yTest = train_test_split(X, y, test_size=0.2, random_state=42)
+    model = XGBRegressor(
         n_estimators  = 100,
         max_depth     = 5,
         learning_rate = 0.1,
         objective     = "reg:squarederror",
         random_state  = 42,
-    )
+    ) 
 
     model.fit(XTrain, yTrain)
 

@@ -17,7 +17,7 @@ featureOrder = [
 # PRIVATE HELPERS
 
 # Get a players stats for the last 20 games
-def _rollingStats(playerID, conn):
+def _rollingStats(playerID, date, conn):
     # Query the db for players rolling stats and create a pandas df to return of results
     query = """
         SELECT pgl.points, pgl.minutes, pgl.fg_pct, pgl.is_home, pgl.rest_days
@@ -63,7 +63,7 @@ def _injuryContext(teamID, date, conn):
         SELECT SUM(avg_pts) AS total_missing
         FROM (
             SELECT player_id, AVG(points) AS avg_pts
-            FROM Player_game_logs
+     Player_game_logs
             GROUP BY player_id
         ) p_avg
         WHERE player_id IN (
@@ -73,13 +73,13 @@ def _injuryContext(teamID, date, conn):
               AND status IN ('Out', 'Doubtful')
         )
     """
-    missingDF = pd.read_sql_query(missingPPGQuery, conn, paramspteamID, date]
+    missingDF = pd.read_sql_query(missingPPGQuery, conn, params=[teamID, date])
 
     startersOut = int(startersDF["starters_out"].iloc[0]) if not startersDF.empty else 0
     missingPPG = float(missingDF["total_missing"].iloc[0] or 0.0) if not missingDF.empty else 0
     dataExists = 1 if startersOut > 0 or missingPPG > 0 else 0
 
-    return {"missing_ppg": missingPPG, "starters_out": startesOut, "data_exists": dataExists}
+    return {"missing_ppg": missingPPG, "starters_out": startersOut, "data_exists": dataExists}
 
 
 def _oppContext(oppTeamID, date, conn):
@@ -91,7 +91,7 @@ def _oppContext(oppTeamID, date, conn):
         LIMIT 1
     """
 
-    df.pd.read_sql_query(query, conn, params[oppTeamID, date])
+    df = pd.read_sql_query(query, conn, params=[oppTeamID, date])
     if df.empty:
         return {"def_rtg": 0.0, "pace": 0.0}
     return {"def_rtg": float(df["def_rtg"].iloc[0] or 0.0),

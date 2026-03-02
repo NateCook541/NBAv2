@@ -16,11 +16,11 @@ TeamMap = {
 
 # LOL
 def _doubleCheckTeamMap(outputDir="output"):
-    path = Path(outputDIr) / "teams_map.json"
+    path = Path(outputDir) / "teams_map.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists():
         with open(path, "w") as f:
-            json.dump(teamMap, f, indent=2)
+            json.dump(TeamMap, f, indent=2)
         print(f"Created {path}")
 
 def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None):
@@ -31,7 +31,7 @@ def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None):
     engine = ScrapeEngine(db=dbPath, headless=True)
 
     try:
-        print("\--------Scraping--------")
+        print("\n--------Scraping--------")
         teams = engine.scrapeTeams()
         players = engine.scrapePlayers()
         games = engine.scrapeGames()
@@ -52,7 +52,7 @@ def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None):
     print("\n--------DB Updated Complete--------")
 
 
-def retrainModel()
+def retrainModel():
     from models.train import trainModel
     print("\n--------Training Model--------")
     trainModel(save=True)

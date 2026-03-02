@@ -142,7 +142,7 @@ class DBManager:
 
         # Opens a connect with the db and executes the query for each item in data
         with self._connect() as conn:
-            conn.sursor().executemany(sql, data)
+            conn.cursor().executemany(sql, data)
 
         print(f"Upserted {len(data)} team records")
 
