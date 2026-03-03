@@ -728,7 +728,7 @@ class ScrapeEngine:
     def getLastScrapeDate(self):
         conn = sqlite3.connect(self.db)
         # FIXME: Might have tp change later
-        res = conn.execute("SELECT MAX(game_date) FROM Games WHERE home_score IS NOT NULL").fetchone()
+        res = conn.execute("SELECT MAX(game_date) FROM Games WHERE game_date IS NOT NULL").fetchone()
         conn.close()
 
         if res[0]:
