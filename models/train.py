@@ -13,7 +13,7 @@ def generateTrainingData():
     conn = sqlite3.connect('NBA.db')
 
     logsQuery = """
-    SELECT
+        SELECT
             pgl.player_id,
             pgl.game_id,
             pgl.points          AS actual_points,
@@ -31,34 +31,35 @@ def generateTrainingData():
         WHERE pgl.minutes > 0
         ORDER BY g.game_date
         """
-        logs = pd.read_sql_query(logsQuery, conn)
-        print(f"Building features for {len(logs)} log rows")
+    logs = pd.read_sql_query(logsQuery, conn)
+    logs = logs.dropna(subset=["team_id", "opp_team_id"])
+    print(f"Building features for {len(logs)} log rows")
         
-        featureRows = []
-        targets = []
-        skipped = 0
+    featureRows = []
+    targets = []
+    skipped = 0
 
-        for _, row in logs.iterrows():
-            features = buildFeatures(
-                    playerID = int(row["player_id"]),
-                    date = row["game_date"],
-                    teamID = int(row["team_id"]),
-                    oppTeamID = int(row["opp_team_id"]),
-                    conn = conn,
-            )
-            if features is None or features.isnull().any(axis=1).iloc[0]:
-                skipped += 1
-                continue
+    for _, row in logs.iterrows():
+        features = buildFeatures(
+                playerID = int(row["player_id"]),
+                date = row["game_date"],
+                teamID = int(row["team_id"]),
+                oppTeamID = int(row["opp_team_id"]),
+                conn = conn,
+        )
+        if features is None or features.isnull().any(axis=1).iloc[0]:
+            skipped += 1
+            continue
 
-            featureRows.append(features)
-            targets.append(float(row["actual_points"]))
+        featureRows.append(features)
+        targets.append(float(row["actual_points"]))
 
-        conn.close()
+    conn.close()
         
-        print(f"Built {len(featureRows)} rows  |  skipped {skipped} (insufficient history)")
-        X = pd.concat(featureRows, ignore_index=True)
-        y = pd.Series(targets, name="points")
-        return X, y
+    print(f"Built {len(featureRows)} rows  |  skipped {skipped} (insufficient history)")
+    X = pd.concat(featureRows, ignore_index=True)
+    y = pd.Series(targets, name="points")
+    return X, y
 
 
 def trainModel(save):

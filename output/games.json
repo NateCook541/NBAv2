@@ -1,0 +1,8045 @@
+[
+  {
+    "game_id": "202510210OKC",
+    "game_date": "2025-10-21",
+    "home_team_id": 2,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202510210LAL",
+    "game_date": "2025-10-21",
+    "home_team_id": 9,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202510220CHO",
+    "game_date": "2025-10-22",
+    "home_team_id": 18,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202510220NYK",
+    "game_date": "2025-10-22",
+    "home_team_id": 4,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202510220ORL",
+    "game_date": "2025-10-22",
+    "home_team_id": 14,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202510220BOS",
+    "game_date": "2025-10-22",
+    "home_team_id": 17,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202510220ATL",
+    "game_date": "2025-10-22",
+    "home_team_id": 15,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202510220CHI",
+    "game_date": "2025-10-22",
+    "home_team_id": 13,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202510220MEM",
+    "game_date": "2025-10-22",
+    "home_team_id": 21,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202510220MIL",
+    "game_date": "2025-10-22",
+    "home_team_id": 24,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202510220DAL",
+    "game_date": "2025-10-22",
+    "home_team_id": 25,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202510220POR",
+    "game_date": "2025-10-22",
+    "home_team_id": 11,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202510220PHO",
+    "game_date": "2025-10-22",
+    "home_team_id": 22,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202510230IND",
+    "game_date": "2025-10-23",
+    "home_team_id": 29,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202510230GSW",
+    "game_date": "2025-10-23",
+    "home_team_id": 23,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202510240TOR",
+    "game_date": "2025-10-24",
+    "home_team_id": 19,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202510240ORL",
+    "game_date": "2025-10-24",
+    "home_team_id": 14,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202510240BRK",
+    "game_date": "2025-10-24",
+    "home_team_id": 30,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202510240NYK",
+    "game_date": "2025-10-24",
+    "home_team_id": 4,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202510240HOU",
+    "game_date": "2025-10-24",
+    "home_team_id": 3,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202510240NOP",
+    "game_date": "2025-10-24",
+    "home_team_id": 20,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202510240MEM",
+    "game_date": "2025-10-24",
+    "home_team_id": 21,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202510240DAL",
+    "game_date": "2025-10-24",
+    "home_team_id": 25,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202510240LAL",
+    "game_date": "2025-10-24",
+    "home_team_id": 9,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202510240POR",
+    "game_date": "2025-10-24",
+    "home_team_id": 11,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202510240SAC",
+    "game_date": "2025-10-24",
+    "home_team_id": 27,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202510250ORL",
+    "game_date": "2025-10-25",
+    "home_team_id": 14,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202510250ATL",
+    "game_date": "2025-10-25",
+    "home_team_id": 15,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202510250PHI",
+    "game_date": "2025-10-25",
+    "home_team_id": 16,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202510250MEM",
+    "game_date": "2025-10-25",
+    "home_team_id": 21,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202510250DEN",
+    "game_date": "2025-10-25",
+    "home_team_id": 1,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202510260SAS",
+    "game_date": "2025-10-26",
+    "home_team_id": 6,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202510260DET",
+    "game_date": "2025-10-26",
+    "home_team_id": 10,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202510260WAS",
+    "game_date": "2025-10-26",
+    "home_team_id": 26,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202510260MIA",
+    "game_date": "2025-10-26",
+    "home_team_id": 5,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202510260CLE",
+    "game_date": "2025-10-26",
+    "home_team_id": 12,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202510260MIN",
+    "game_date": "2025-10-26",
+    "home_team_id": 8,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202510260DAL",
+    "game_date": "2025-10-26",
+    "home_team_id": 25,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202510260SAC",
+    "game_date": "2025-10-26",
+    "home_team_id": 27,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202510270DET",
+    "game_date": "2025-10-27",
+    "home_team_id": 10,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202510270PHI",
+    "game_date": "2025-10-27",
+    "home_team_id": 16,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202510270CHI",
+    "game_date": "2025-10-27",
+    "home_team_id": 13,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202510270HOU",
+    "game_date": "2025-10-27",
+    "home_team_id": 3,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202510270NOP",
+    "game_date": "2025-10-27",
+    "home_team_id": 20,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202510270SAS",
+    "game_date": "2025-10-27",
+    "home_team_id": 6,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202510270DAL",
+    "game_date": "2025-10-27",
+    "home_team_id": 25,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202510270UTA",
+    "game_date": "2025-10-27",
+    "home_team_id": 7,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202510270MIN",
+    "game_date": "2025-10-27",
+    "home_team_id": 8,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202510270GSW",
+    "game_date": "2025-10-27",
+    "home_team_id": 23,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202510270LAL",
+    "game_date": "2025-10-27",
+    "home_team_id": 9,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202510280WAS",
+    "game_date": "2025-10-28",
+    "home_team_id": 26,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202510280MIA",
+    "game_date": "2025-10-28",
+    "home_team_id": 5,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202510280MIL",
+    "game_date": "2025-10-28",
+    "home_team_id": 24,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202510280OKC",
+    "game_date": "2025-10-28",
+    "home_team_id": 2,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202510290TOR",
+    "game_date": "2025-10-29",
+    "home_team_id": 19,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202510290BOS",
+    "game_date": "2025-10-29",
+    "home_team_id": 17,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202510290DET",
+    "game_date": "2025-10-29",
+    "home_team_id": 10,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202510290BRK",
+    "game_date": "2025-10-29",
+    "home_team_id": 30,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202510290CHI",
+    "game_date": "2025-10-29",
+    "home_team_id": 13,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202510290DAL",
+    "game_date": "2025-10-29",
+    "home_team_id": 25,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202510290UTA",
+    "game_date": "2025-10-29",
+    "home_team_id": 7,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202510290DEN",
+    "game_date": "2025-10-29",
+    "home_team_id": 1,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202510290MIN",
+    "game_date": "2025-10-29",
+    "home_team_id": 8,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202510290PHO",
+    "game_date": "2025-10-29",
+    "home_team_id": 22,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202510300CHO",
+    "game_date": "2025-10-30",
+    "home_team_id": 18,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202510300MIL",
+    "game_date": "2025-10-30",
+    "home_team_id": 24,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202510300OKC",
+    "game_date": "2025-10-30",
+    "home_team_id": 2,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202510300SAS",
+    "game_date": "2025-10-30",
+    "home_team_id": 6,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202510310IND",
+    "game_date": "2025-10-31",
+    "home_team_id": 29,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202510310PHI",
+    "game_date": "2025-10-31",
+    "home_team_id": 16,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202510310CLE",
+    "game_date": "2025-10-31",
+    "home_team_id": 12,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202510310CHI",
+    "game_date": "2025-10-31",
+    "home_team_id": 13,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202510310MEM",
+    "game_date": "2025-10-31",
+    "home_team_id": 21,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202510310PHO",
+    "game_date": "2025-10-31",
+    "home_team_id": 22,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202510310POR",
+    "game_date": "2025-10-31",
+    "home_team_id": 11,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202511010MIL",
+    "game_date": "2025-11-01",
+    "home_team_id": 24,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202511010CHO",
+    "game_date": "2025-11-01",
+    "home_team_id": 18,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202511010IND",
+    "game_date": "2025-11-01",
+    "home_team_id": 29,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202511010WAS",
+    "game_date": "2025-11-01",
+    "home_team_id": 26,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202511010BOS",
+    "game_date": "2025-11-01",
+    "home_team_id": 17,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202511010DET",
+    "game_date": "2025-11-01",
+    "home_team_id": 10,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202511020OKC",
+    "game_date": "2025-11-02",
+    "home_team_id": 2,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202511020BRK",
+    "game_date": "2025-11-02",
+    "home_team_id": 30,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202511020CHO",
+    "game_date": "2025-11-02",
+    "home_team_id": 18,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202511020CLE",
+    "game_date": "2025-11-02",
+    "home_team_id": 12,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202511020TOR",
+    "game_date": "2025-11-02",
+    "home_team_id": 19,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202511020NYK",
+    "game_date": "2025-11-02",
+    "home_team_id": 4,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202511020PHO",
+    "game_date": "2025-11-02",
+    "home_team_id": 22,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202511020LAL",
+    "game_date": "2025-11-02",
+    "home_team_id": 9,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202511030BRK",
+    "game_date": "2025-11-03",
+    "home_team_id": 30,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202511030IND",
+    "game_date": "2025-11-03",
+    "home_team_id": 29,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202511030BOS",
+    "game_date": "2025-11-03",
+    "home_team_id": 17,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202511030NYK",
+    "game_date": "2025-11-03",
+    "home_team_id": 4,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202511030HOU",
+    "game_date": "2025-11-03",
+    "home_team_id": 3,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202511030MEM",
+    "game_date": "2025-11-03",
+    "home_team_id": 21,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202511030DEN",
+    "game_date": "2025-11-03",
+    "home_team_id": 1,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202511030POR",
+    "game_date": "2025-11-03",
+    "home_team_id": 11,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202511040TOR",
+    "game_date": "2025-11-04",
+    "home_team_id": 19,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202511040ATL",
+    "game_date": "2025-11-04",
+    "home_team_id": 15,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202511040CHI",
+    "game_date": "2025-11-04",
+    "home_team_id": 13,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202511040NOP",
+    "game_date": "2025-11-04",
+    "home_team_id": 20,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202511040GSW",
+    "game_date": "2025-11-04",
+    "home_team_id": 23,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202511050CLE",
+    "game_date": "2025-11-05",
+    "home_team_id": 12,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202511050DET",
+    "game_date": "2025-11-05",
+    "home_team_id": 10,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202511050IND",
+    "game_date": "2025-11-05",
+    "home_team_id": 29,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202511050BOS",
+    "game_date": "2025-11-05",
+    "home_team_id": 17,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202511050NYK",
+    "game_date": "2025-11-05",
+    "home_team_id": 4,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202511050MEM",
+    "game_date": "2025-11-05",
+    "home_team_id": 21,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202511050DAL",
+    "game_date": "2025-11-05",
+    "home_team_id": 25,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202511050DEN",
+    "game_date": "2025-11-05",
+    "home_team_id": 1,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202511050LAL",
+    "game_date": "2025-11-05",
+    "home_team_id": 9,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202511050POR",
+    "game_date": "2025-11-05",
+    "home_team_id": 11,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202511050SAC",
+    "game_date": "2025-11-05",
+    "home_team_id": 27,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202511070ORL",
+    "game_date": "2025-11-07",
+    "home_team_id": 14,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202511070WAS",
+    "game_date": "2025-11-07",
+    "home_team_id": 26,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202511070ATL",
+    "game_date": "2025-11-07",
+    "home_team_id": 15,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202511070BRK",
+    "game_date": "2025-11-07",
+    "home_team_id": 30,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202511070SAS",
+    "game_date": "2025-11-07",
+    "home_team_id": 6,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202511070MEM",
+    "game_date": "2025-11-07",
+    "home_team_id": 21,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202511070MIA",
+    "game_date": "2025-11-07",
+    "home_team_id": 5,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202511070MIL",
+    "game_date": "2025-11-07",
+    "home_team_id": 24,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202511070MIN",
+    "game_date": "2025-11-07",
+    "home_team_id": 8,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202511070DEN",
+    "game_date": "2025-11-07",
+    "home_team_id": 1,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202511070SAC",
+    "game_date": "2025-11-07",
+    "home_team_id": 27,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202511080WAS",
+    "game_date": "2025-11-08",
+    "home_team_id": 26,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202511080PHI",
+    "game_date": "2025-11-08",
+    "home_team_id": 16,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202511080ATL",
+    "game_date": "2025-11-08",
+    "home_team_id": 15,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202511080CLE",
+    "game_date": "2025-11-08",
+    "home_team_id": 12,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202511080MIA",
+    "game_date": "2025-11-08",
+    "home_team_id": 5,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202511080SAS",
+    "game_date": "2025-11-08",
+    "home_team_id": 6,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202511080DEN",
+    "game_date": "2025-11-08",
+    "home_team_id": 1,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202511090MIL",
+    "game_date": "2025-11-09",
+    "home_team_id": 24,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202511090MEM",
+    "game_date": "2025-11-09",
+    "home_team_id": 21,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202511090NYK",
+    "game_date": "2025-11-09",
+    "home_team_id": 4,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202511090ORL",
+    "game_date": "2025-11-09",
+    "home_team_id": 14,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202511090PHI",
+    "game_date": "2025-11-09",
+    "home_team_id": 16,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202511090GSW",
+    "game_date": "2025-11-09",
+    "home_team_id": 23,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202511090SAC",
+    "game_date": "2025-11-09",
+    "home_team_id": 27,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202511100CHO",
+    "game_date": "2025-11-10",
+    "home_team_id": 18,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202511100DET",
+    "game_date": "2025-11-10",
+    "home_team_id": 10,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202511100ORL",
+    "game_date": "2025-11-10",
+    "home_team_id": 14,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202511100MIA",
+    "game_date": "2025-11-10",
+    "home_team_id": 5,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202511100CHI",
+    "game_date": "2025-11-10",
+    "home_team_id": 13,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202511100DAL",
+    "game_date": "2025-11-10",
+    "home_team_id": 25,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202511100PHO",
+    "game_date": "2025-11-10",
+    "home_team_id": 22,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202511100UTA",
+    "game_date": "2025-11-10",
+    "home_team_id": 7,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202511110BRK",
+    "game_date": "2025-11-11",
+    "home_team_id": 30,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202511110NYK",
+    "game_date": "2025-11-11",
+    "home_team_id": 4,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202511110OKC",
+    "game_date": "2025-11-11",
+    "home_team_id": 2,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202511110PHI",
+    "game_date": "2025-11-11",
+    "home_team_id": 16,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202511110UTA",
+    "game_date": "2025-11-11",
+    "home_team_id": 7,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202511110SAC",
+    "game_date": "2025-11-11",
+    "home_team_id": 27,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202511120CHO",
+    "game_date": "2025-11-12",
+    "home_team_id": 18,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202511120DET",
+    "game_date": "2025-11-12",
+    "home_team_id": 10,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202511120NYK",
+    "game_date": "2025-11-12",
+    "home_team_id": 4,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202511120BOS",
+    "game_date": "2025-11-12",
+    "home_team_id": 17,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202511120MIA",
+    "game_date": "2025-11-12",
+    "home_team_id": 5,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202511120HOU",
+    "game_date": "2025-11-12",
+    "home_team_id": 3,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202511120NOP",
+    "game_date": "2025-11-12",
+    "home_team_id": 20,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202511120SAS",
+    "game_date": "2025-11-12",
+    "home_team_id": 6,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202511120DAL",
+    "game_date": "2025-11-12",
+    "home_team_id": 25,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202511120OKC",
+    "game_date": "2025-11-12",
+    "home_team_id": 2,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202511120SAC",
+    "game_date": "2025-11-12",
+    "home_team_id": 27,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202511130CLE",
+    "game_date": "2025-11-13",
+    "home_team_id": 12,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202511130PHO",
+    "game_date": "2025-11-13",
+    "home_team_id": 22,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202511130UTA",
+    "game_date": "2025-11-13",
+    "home_team_id": 7,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202511140NYK",
+    "game_date": "2025-11-14",
+    "home_team_id": 4,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202511140ORL",
+    "game_date": "2025-11-14",
+    "home_team_id": 14,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202511140DET",
+    "game_date": "2025-11-14",
+    "home_team_id": 10,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202511140HOU",
+    "game_date": "2025-11-14",
+    "home_team_id": 3,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202511140MIL",
+    "game_date": "2025-11-14",
+    "home_team_id": 24,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202511140MIN",
+    "game_date": "2025-11-14",
+    "home_team_id": 8,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202511140NOP",
+    "game_date": "2025-11-14",
+    "home_team_id": 20,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202511140SAS",
+    "game_date": "2025-11-14",
+    "home_team_id": 6,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202511150CLE",
+    "game_date": "2025-11-15",
+    "home_team_id": 12,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202511150CHO",
+    "game_date": "2025-11-15",
+    "home_team_id": 18,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202511150IND",
+    "game_date": "2025-11-15",
+    "home_team_id": 29,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202511150MIL",
+    "game_date": "2025-11-15",
+    "home_team_id": 24,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202511150MIN",
+    "game_date": "2025-11-15",
+    "home_team_id": 8,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202511160SAS",
+    "game_date": "2025-11-16",
+    "home_team_id": 6,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202511160WAS",
+    "game_date": "2025-11-16",
+    "home_team_id": 26,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202511160HOU",
+    "game_date": "2025-11-16",
+    "home_team_id": 3,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202511160NOP",
+    "game_date": "2025-11-16",
+    "home_team_id": 20,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202511160DAL",
+    "game_date": "2025-11-16",
+    "home_team_id": 25,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202511160PHO",
+    "game_date": "2025-11-16",
+    "home_team_id": 22,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202511160UTA",
+    "game_date": "2025-11-16",
+    "home_team_id": 7,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202511170CLE",
+    "game_date": "2025-11-17",
+    "home_team_id": 12,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202511170DET",
+    "game_date": "2025-11-17",
+    "home_team_id": 10,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202511170MIA",
+    "game_date": "2025-11-17",
+    "home_team_id": 5,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202511170TOR",
+    "game_date": "2025-11-17",
+    "home_team_id": 19,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202511170MIN",
+    "game_date": "2025-11-17",
+    "home_team_id": 8,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202511170NOP",
+    "game_date": "2025-11-17",
+    "home_team_id": 20,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202511170DEN",
+    "game_date": "2025-11-17",
+    "home_team_id": 1,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202511180ORL",
+    "game_date": "2025-11-18",
+    "home_team_id": 14,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202511180ATL",
+    "game_date": "2025-11-18",
+    "home_team_id": 15,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202511180BRK",
+    "game_date": "2025-11-18",
+    "home_team_id": 30,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202511180SAS",
+    "game_date": "2025-11-18",
+    "home_team_id": 6,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202511180LAL",
+    "game_date": "2025-11-18",
+    "home_team_id": 9,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202511180POR",
+    "game_date": "2025-11-18",
+    "home_team_id": 11,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202511190CLE",
+    "game_date": "2025-11-19",
+    "home_team_id": 12,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202511190IND",
+    "game_date": "2025-11-19",
+    "home_team_id": 29,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202511190PHI",
+    "game_date": "2025-11-19",
+    "home_team_id": 16,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202511190MIA",
+    "game_date": "2025-11-19",
+    "home_team_id": 5,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202511190MIN",
+    "game_date": "2025-11-19",
+    "home_team_id": 8,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202511190NOP",
+    "game_date": "2025-11-19",
+    "home_team_id": 20,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202511190OKC",
+    "game_date": "2025-11-19",
+    "home_team_id": 2,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202511190DAL",
+    "game_date": "2025-11-19",
+    "home_team_id": 25,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202511190POR",
+    "game_date": "2025-11-19",
+    "home_team_id": 11,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202511200MEM",
+    "game_date": "2025-11-20",
+    "home_team_id": 21,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202511200MIL",
+    "game_date": "2025-11-20",
+    "home_team_id": 24,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202511200SAS",
+    "game_date": "2025-11-20",
+    "home_team_id": 6,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202511210CLE",
+    "game_date": "2025-11-21",
+    "home_team_id": 12,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202511210BOS",
+    "game_date": "2025-11-21",
+    "home_team_id": 17,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202511210TOR",
+    "game_date": "2025-11-21",
+    "home_team_id": 19,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202511210CHI",
+    "game_date": "2025-11-21",
+    "home_team_id": 13,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202511210DAL",
+    "game_date": "2025-11-21",
+    "home_team_id": 25,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202511210PHO",
+    "game_date": "2025-11-21",
+    "home_team_id": 22,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202511210HOU",
+    "game_date": "2025-11-21",
+    "home_team_id": 3,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202511210GSW",
+    "game_date": "2025-11-21",
+    "home_team_id": 23,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202511210UTA",
+    "game_date": "2025-11-21",
+    "home_team_id": 7,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202511220ORL",
+    "game_date": "2025-11-22",
+    "home_team_id": 14,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202511220NOP",
+    "game_date": "2025-11-22",
+    "home_team_id": 20,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202511220CHI",
+    "game_date": "2025-11-22",
+    "home_team_id": 13,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202511220MIL",
+    "game_date": "2025-11-22",
+    "home_team_id": 24,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202511220DAL",
+    "game_date": "2025-11-22",
+    "home_team_id": 25,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202511220DEN",
+    "game_date": "2025-11-22",
+    "home_team_id": 1,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202511230PHI",
+    "game_date": "2025-11-23",
+    "home_team_id": 16,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202511230ATL",
+    "game_date": "2025-11-23",
+    "home_team_id": 15,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202511230BOS",
+    "game_date": "2025-11-23",
+    "home_team_id": 17,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202511230TOR",
+    "game_date": "2025-11-23",
+    "home_team_id": 19,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202511230OKC",
+    "game_date": "2025-11-23",
+    "home_team_id": 2,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202511230PHO",
+    "game_date": "2025-11-23",
+    "home_team_id": 22,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202511230UTA",
+    "game_date": "2025-11-23",
+    "home_team_id": 7,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202511240IND",
+    "game_date": "2025-11-24",
+    "home_team_id": 29,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202511240TOR",
+    "game_date": "2025-11-24",
+    "home_team_id": 19,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202511240BRK",
+    "game_date": "2025-11-24",
+    "home_team_id": 30,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202511240MIA",
+    "game_date": "2025-11-24",
+    "home_team_id": 5,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202511240MEM",
+    "game_date": "2025-11-24",
+    "home_team_id": 21,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202511240MIL",
+    "game_date": "2025-11-24",
+    "home_team_id": 24,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202511240NOP",
+    "game_date": "2025-11-24",
+    "home_team_id": 20,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202511240PHO",
+    "game_date": "2025-11-24",
+    "home_team_id": 22,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202511240GSW",
+    "game_date": "2025-11-24",
+    "home_team_id": 23,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202511240SAC",
+    "game_date": "2025-11-24",
+    "home_team_id": 27,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202511250WAS",
+    "game_date": "2025-11-25",
+    "home_team_id": 26,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202511250PHI",
+    "game_date": "2025-11-25",
+    "home_team_id": 16,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202511260BOS",
+    "game_date": "2025-11-26",
+    "home_team_id": 17,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202511260CHO",
+    "game_date": "2025-11-26",
+    "home_team_id": 18,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202511260MIA",
+    "game_date": "2025-11-26",
+    "home_team_id": 5,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202511260OKC",
+    "game_date": "2025-11-26",
+    "home_team_id": 2,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202511260TOR",
+    "game_date": "2025-11-26",
+    "home_team_id": 19,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202511260NOP",
+    "game_date": "2025-11-26",
+    "home_team_id": 20,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202511260GSW",
+    "game_date": "2025-11-26",
+    "home_team_id": 23,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202511260POR",
+    "game_date": "2025-11-26",
+    "home_team_id": 11,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202511260SAC",
+    "game_date": "2025-11-26",
+    "home_team_id": 27,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202511280ATL",
+    "game_date": "2025-11-28",
+    "home_team_id": 15,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202511280BRK",
+    "game_date": "2025-11-28",
+    "home_team_id": 30,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202511280CHO",
+    "game_date": "2025-11-28",
+    "home_team_id": 18,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202511280DET",
+    "game_date": "2025-11-28",
+    "home_team_id": 10,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202511280IND",
+    "game_date": "2025-11-28",
+    "home_team_id": 29,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202511280NYK",
+    "game_date": "2025-11-28",
+    "home_team_id": 4,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202511280DEN",
+    "game_date": "2025-11-28",
+    "home_team_id": 1,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202511280OKC",
+    "game_date": "2025-11-28",
+    "home_team_id": 2,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202511280UTA",
+    "game_date": "2025-11-28",
+    "home_team_id": 7,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202511280LAL",
+    "game_date": "2025-11-28",
+    "home_team_id": 9,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202511290MIN",
+    "game_date": "2025-11-29",
+    "home_team_id": 8,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202511290CHO",
+    "game_date": "2025-11-29",
+    "home_team_id": 18,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202511290IND",
+    "game_date": "2025-11-29",
+    "home_team_id": 29,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202511290MIA",
+    "game_date": "2025-11-29",
+    "home_team_id": 5,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202511290MIL",
+    "game_date": "2025-11-29",
+    "home_team_id": 24,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202511290GSW",
+    "game_date": "2025-11-29",
+    "home_team_id": 23,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202511290PHO",
+    "game_date": "2025-11-29",
+    "home_team_id": 22,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202511300UTA",
+    "game_date": "2025-11-30",
+    "home_team_id": 7,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202511300CLE",
+    "game_date": "2025-11-30",
+    "home_team_id": 12,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202511300NYK",
+    "game_date": "2025-11-30",
+    "home_team_id": 4,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202511300PHI",
+    "game_date": "2025-11-30",
+    "home_team_id": 16,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202511300POR",
+    "game_date": "2025-11-30",
+    "home_team_id": 11,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202511300MIN",
+    "game_date": "2025-11-30",
+    "home_team_id": 8,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202511300SAC",
+    "game_date": "2025-11-30",
+    "home_team_id": 27,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202511300LAL",
+    "game_date": "2025-11-30",
+    "home_team_id": 9,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202512010DET",
+    "game_date": "2025-12-01",
+    "home_team_id": 10,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202512010IND",
+    "game_date": "2025-12-01",
+    "home_team_id": 29,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202512010WAS",
+    "game_date": "2025-12-01",
+    "home_team_id": 26,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202512010BRK",
+    "game_date": "2025-12-01",
+    "home_team_id": 30,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202512010ORL",
+    "game_date": "2025-12-01",
+    "home_team_id": 14,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202512010DEN",
+    "game_date": "2025-12-01",
+    "home_team_id": 1,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202512010UTA",
+    "game_date": "2025-12-01",
+    "home_team_id": 7,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202512010LAL",
+    "game_date": "2025-12-01",
+    "home_team_id": 9,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202512020PHI",
+    "game_date": "2025-12-02",
+    "home_team_id": 16,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202512020TOR",
+    "game_date": "2025-12-02",
+    "home_team_id": 19,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202512020BOS",
+    "game_date": "2025-12-02",
+    "home_team_id": 17,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202512020NOP",
+    "game_date": "2025-12-02",
+    "home_team_id": 20,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202512020SAS",
+    "game_date": "2025-12-02",
+    "home_team_id": 6,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202512020GSW",
+    "game_date": "2025-12-02",
+    "home_team_id": 23,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202512030CLE",
+    "game_date": "2025-12-03",
+    "home_team_id": 12,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202512030IND",
+    "game_date": "2025-12-03",
+    "home_team_id": 29,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202512030ORL",
+    "game_date": "2025-12-03",
+    "home_team_id": 14,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202512030NYK",
+    "game_date": "2025-12-03",
+    "home_team_id": 4,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202512030CHI",
+    "game_date": "2025-12-03",
+    "home_team_id": 13,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202512030HOU",
+    "game_date": "2025-12-03",
+    "home_team_id": 3,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202512030MIL",
+    "game_date": "2025-12-03",
+    "home_team_id": 24,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202512030DAL",
+    "game_date": "2025-12-03",
+    "home_team_id": 25,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202512040PHI",
+    "game_date": "2025-12-04",
+    "home_team_id": 16,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202512040WAS",
+    "game_date": "2025-12-04",
+    "home_team_id": 26,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202512040BRK",
+    "game_date": "2025-12-04",
+    "home_team_id": 30,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202512040TOR",
+    "game_date": "2025-12-04",
+    "home_team_id": 19,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202512040NOP",
+    "game_date": "2025-12-04",
+    "home_team_id": 20,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202512050BOS",
+    "game_date": "2025-12-05",
+    "home_team_id": 17,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202512050ORL",
+    "game_date": "2025-12-05",
+    "home_team_id": 14,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202512050ATL",
+    "game_date": "2025-12-05",
+    "home_team_id": 15,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202512050CLE",
+    "game_date": "2025-12-05",
+    "home_team_id": 12,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202512050DET",
+    "game_date": "2025-12-05",
+    "home_team_id": 10,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202512050NYK",
+    "game_date": "2025-12-05",
+    "home_team_id": 4,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202512050TOR",
+    "game_date": "2025-12-05",
+    "home_team_id": 19,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202512050CHI",
+    "game_date": "2025-12-05",
+    "home_team_id": 13,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202512050HOU",
+    "game_date": "2025-12-05",
+    "home_team_id": 3,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202512050MIL",
+    "game_date": "2025-12-05",
+    "home_team_id": 24,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202512050OKC",
+    "game_date": "2025-12-05",
+    "home_team_id": 2,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202512060BRK",
+    "game_date": "2025-12-06",
+    "home_team_id": 30,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202512060WAS",
+    "game_date": "2025-12-06",
+    "home_team_id": 26,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202512060CLE",
+    "game_date": "2025-12-06",
+    "home_team_id": 12,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202512060DET",
+    "game_date": "2025-12-06",
+    "home_team_id": 10,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202512060MIA",
+    "game_date": "2025-12-06",
+    "home_team_id": 5,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202512060DAL",
+    "game_date": "2025-12-06",
+    "home_team_id": 25,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202512070NYK",
+    "game_date": "2025-12-07",
+    "home_team_id": 4,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202512070TOR",
+    "game_date": "2025-12-07",
+    "home_team_id": 19,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202512070CHO",
+    "game_date": "2025-12-07",
+    "home_team_id": 18,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202512070MEM",
+    "game_date": "2025-12-07",
+    "home_team_id": 21,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202512070CHI",
+    "game_date": "2025-12-07",
+    "home_team_id": 13,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202512070PHI",
+    "game_date": "2025-12-07",
+    "home_team_id": 16,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202512070UTA",
+    "game_date": "2025-12-07",
+    "home_team_id": 7,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202512080IND",
+    "game_date": "2025-12-08",
+    "home_team_id": 29,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202512080MIN",
+    "game_date": "2025-12-08",
+    "home_team_id": 8,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202512080NOP",
+    "game_date": "2025-12-08",
+    "home_team_id": 20,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202512090ORL",
+    "game_date": "2025-12-09",
+    "home_team_id": 14,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202512090TOR",
+    "game_date": "2025-12-09",
+    "home_team_id": 19,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202512100OKC",
+    "game_date": "2025-12-10",
+    "home_team_id": 2,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202512100LAL",
+    "game_date": "2025-12-10",
+    "home_team_id": 9,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202512110MIL",
+    "game_date": "2025-12-11",
+    "home_team_id": 24,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202512110NOP",
+    "game_date": "2025-12-11",
+    "home_team_id": 20,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202512110SAC",
+    "game_date": "2025-12-11",
+    "home_team_id": 27,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202512120CHO",
+    "game_date": "2025-12-12",
+    "home_team_id": 18,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202512120DET",
+    "game_date": "2025-12-12",
+    "home_team_id": 10,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202512120PHI",
+    "game_date": "2025-12-12",
+    "home_team_id": 16,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202512120WAS",
+    "game_date": "2025-12-12",
+    "home_team_id": 26,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202512120MEM",
+    "game_date": "2025-12-12",
+    "home_team_id": 21,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202512120DAL",
+    "game_date": "2025-12-12",
+    "home_team_id": 25,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202512120GSW",
+    "game_date": "2025-12-12",
+    "home_team_id": 23,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202512130ORL",
+    "game_date": "2025-12-13",
+    "home_team_id": 14,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202512130OKC",
+    "game_date": "2025-12-13",
+    "home_team_id": 2,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202512140IND",
+    "game_date": "2025-12-14",
+    "home_team_id": 29,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202512140CLE",
+    "game_date": "2025-12-14",
+    "home_team_id": 12,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202512140ATL",
+    "game_date": "2025-12-14",
+    "home_team_id": 15,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202512140BRK",
+    "game_date": "2025-12-14",
+    "home_team_id": 30,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202512140CHI",
+    "game_date": "2025-12-14",
+    "home_team_id": 13,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202512140MIN",
+    "game_date": "2025-12-14",
+    "home_team_id": 8,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202512140PHO",
+    "game_date": "2025-12-14",
+    "home_team_id": 22,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202512140POR",
+    "game_date": "2025-12-14",
+    "home_team_id": 11,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202512150BOS",
+    "game_date": "2025-12-15",
+    "home_team_id": 17,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202512150MIA",
+    "game_date": "2025-12-15",
+    "home_team_id": 5,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202512150UTA",
+    "game_date": "2025-12-15",
+    "home_team_id": 7,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202512150DEN",
+    "game_date": "2025-12-15",
+    "home_team_id": 1,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202512160NYK",
+    "game_date": "2025-12-16",
+    "home_team_id": 4,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202512170CHI",
+    "game_date": "2025-12-17",
+    "home_team_id": 13,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202512170MIN",
+    "game_date": "2025-12-17",
+    "home_team_id": 8,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202512180CHO",
+    "game_date": "2025-12-18",
+    "home_team_id": 18,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202512180IND",
+    "game_date": "2025-12-18",
+    "home_team_id": 29,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202512180BRK",
+    "game_date": "2025-12-18",
+    "home_team_id": 30,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202512180MIL",
+    "game_date": "2025-12-18",
+    "home_team_id": 24,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202512180NOP",
+    "game_date": "2025-12-18",
+    "home_team_id": 20,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202512180SAS",
+    "game_date": "2025-12-18",
+    "home_team_id": 6,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202512180DAL",
+    "game_date": "2025-12-18",
+    "home_team_id": 25,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202512180DEN",
+    "game_date": "2025-12-18",
+    "home_team_id": 1,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202512180PHO",
+    "game_date": "2025-12-18",
+    "home_team_id": 22,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202512180UTA",
+    "game_date": "2025-12-18",
+    "home_team_id": 7,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202512180POR",
+    "game_date": "2025-12-18",
+    "home_team_id": 11,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202512190BOS",
+    "game_date": "2025-12-19",
+    "home_team_id": 17,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202512190NYK",
+    "game_date": "2025-12-19",
+    "home_team_id": 4,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202512190ATL",
+    "game_date": "2025-12-19",
+    "home_team_id": 15,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202512190CLE",
+    "game_date": "2025-12-19",
+    "home_team_id": 12,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202512190MIN",
+    "game_date": "2025-12-19",
+    "home_team_id": 8,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202512200DEN",
+    "game_date": "2025-12-20",
+    "home_team_id": 1,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202512200NOP",
+    "game_date": "2025-12-20",
+    "home_team_id": 20,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202512200PHI",
+    "game_date": "2025-12-20",
+    "home_team_id": 16,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202512200TOR",
+    "game_date": "2025-12-20",
+    "home_team_id": 19,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202512200DET",
+    "game_date": "2025-12-20",
+    "home_team_id": 10,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202512200MEM",
+    "game_date": "2025-12-20",
+    "home_team_id": 21,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202512200GSW",
+    "game_date": "2025-12-20",
+    "home_team_id": 23,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202512200UTA",
+    "game_date": "2025-12-20",
+    "home_team_id": 7,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202512200SAC",
+    "game_date": "2025-12-20",
+    "home_team_id": 27,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202512210ATL",
+    "game_date": "2025-12-21",
+    "home_team_id": 15,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202512210BRK",
+    "game_date": "2025-12-21",
+    "home_team_id": 30,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202512210NYK",
+    "game_date": "2025-12-21",
+    "home_team_id": 4,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202512210MIN",
+    "game_date": "2025-12-21",
+    "home_team_id": 8,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202512210WAS",
+    "game_date": "2025-12-21",
+    "home_team_id": 26,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202512210SAC",
+    "game_date": "2025-12-21",
+    "home_team_id": 27,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202512220CLE",
+    "game_date": "2025-12-22",
+    "home_team_id": 12,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202512220BOS",
+    "game_date": "2025-12-22",
+    "home_team_id": 17,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202512220NOP",
+    "game_date": "2025-12-22",
+    "home_team_id": 20,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202512220DEN",
+    "game_date": "2025-12-22",
+    "home_team_id": 1,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202512220OKC",
+    "game_date": "2025-12-22",
+    "home_team_id": 2,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202512220GSW",
+    "game_date": "2025-12-22",
+    "home_team_id": 23,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202512220POR",
+    "game_date": "2025-12-22",
+    "home_team_id": 11,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202512230CHO",
+    "game_date": "2025-12-23",
+    "home_team_id": 18,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202512230PHI",
+    "game_date": "2025-12-23",
+    "home_team_id": 16,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202512230ATL",
+    "game_date": "2025-12-23",
+    "home_team_id": 15,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202512230CLE",
+    "game_date": "2025-12-23",
+    "home_team_id": 12,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202512230IND",
+    "game_date": "2025-12-23",
+    "home_team_id": 29,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202512230MIA",
+    "game_date": "2025-12-23",
+    "home_team_id": 5,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202512230DAL",
+    "game_date": "2025-12-23",
+    "home_team_id": 25,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202512230MIN",
+    "game_date": "2025-12-23",
+    "home_team_id": 8,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202512230SAS",
+    "game_date": "2025-12-23",
+    "home_team_id": 6,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202512230PHO",
+    "game_date": "2025-12-23",
+    "home_team_id": 22,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202512230UTA",
+    "game_date": "2025-12-23",
+    "home_team_id": 7,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202512230POR",
+    "game_date": "2025-12-23",
+    "home_team_id": 11,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202512230SAC",
+    "game_date": "2025-12-23",
+    "home_team_id": 27,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202512250NYK",
+    "game_date": "2025-12-25",
+    "home_team_id": 4,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202512250OKC",
+    "game_date": "2025-12-25",
+    "home_team_id": 2,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202512250GSW",
+    "game_date": "2025-12-25",
+    "home_team_id": 23,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202512250LAL",
+    "game_date": "2025-12-25",
+    "home_team_id": 9,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202512250DEN",
+    "game_date": "2025-12-25",
+    "home_team_id": 1,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202512260ATL",
+    "game_date": "2025-12-26",
+    "home_team_id": 15,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202512260IND",
+    "game_date": "2025-12-26",
+    "home_team_id": 29,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202512260ORL",
+    "game_date": "2025-12-26",
+    "home_team_id": 14,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202512260WAS",
+    "game_date": "2025-12-26",
+    "home_team_id": 26,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202512260CHI",
+    "game_date": "2025-12-26",
+    "home_team_id": 13,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202512260MEM",
+    "game_date": "2025-12-26",
+    "home_team_id": 21,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202512260NOP",
+    "game_date": "2025-12-26",
+    "home_team_id": 20,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202512260UTA",
+    "game_date": "2025-12-26",
+    "home_team_id": 7,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202512270SAC",
+    "game_date": "2025-12-27",
+    "home_team_id": 27,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202512270NOP",
+    "game_date": "2025-12-27",
+    "home_team_id": 20,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202512270ORL",
+    "game_date": "2025-12-27",
+    "home_team_id": 14,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202512270ATL",
+    "game_date": "2025-12-27",
+    "home_team_id": 15,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202512270CHI",
+    "game_date": "2025-12-27",
+    "home_team_id": 13,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202512270HOU",
+    "game_date": "2025-12-27",
+    "home_team_id": 3,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202512270MIA",
+    "game_date": "2025-12-27",
+    "home_team_id": 5,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202512270MIN",
+    "game_date": "2025-12-27",
+    "home_team_id": 8,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202512270SAS",
+    "game_date": "2025-12-27",
+    "home_team_id": 6,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202512280OKC",
+    "game_date": "2025-12-28",
+    "home_team_id": 2,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202512280TOR",
+    "game_date": "2025-12-28",
+    "home_team_id": 19,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202512280POR",
+    "game_date": "2025-12-28",
+    "home_team_id": 11,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202512280WAS",
+    "game_date": "2025-12-28",
+    "home_team_id": 26,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202512280LAL",
+    "game_date": "2025-12-28",
+    "home_team_id": 9,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202512290CHO",
+    "game_date": "2025-12-29",
+    "home_team_id": 18,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202512290WAS",
+    "game_date": "2025-12-29",
+    "home_team_id": 26,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202512290BRK",
+    "game_date": "2025-12-29",
+    "home_team_id": 30,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202512290MIA",
+    "game_date": "2025-12-29",
+    "home_team_id": 5,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202512290TOR",
+    "game_date": "2025-12-29",
+    "home_team_id": 19,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202512290CHI",
+    "game_date": "2025-12-29",
+    "home_team_id": 13,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202512290HOU",
+    "game_date": "2025-12-29",
+    "home_team_id": 3,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202512290NOP",
+    "game_date": "2025-12-29",
+    "home_team_id": 20,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202512290OKC",
+    "game_date": "2025-12-29",
+    "home_team_id": 2,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202512290SAS",
+    "game_date": "2025-12-29",
+    "home_team_id": 6,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202512290POR",
+    "game_date": "2025-12-29",
+    "home_team_id": 11,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202512300MEM",
+    "game_date": "2025-12-30",
+    "home_team_id": 21,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202512300UTA",
+    "game_date": "2025-12-30",
+    "home_team_id": 7,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202512300LAL",
+    "game_date": "2025-12-30",
+    "home_team_id": 9,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202512310CHO",
+    "game_date": "2025-12-31",
+    "home_team_id": 18,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202512310ATL",
+    "game_date": "2025-12-31",
+    "home_team_id": 15,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202512310IND",
+    "game_date": "2025-12-31",
+    "home_team_id": 29,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202512310CLE",
+    "game_date": "2025-12-31",
+    "home_team_id": 12,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202512310CHI",
+    "game_date": "2025-12-31",
+    "home_team_id": 13,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202512310SAS",
+    "game_date": "2025-12-31",
+    "home_team_id": 6,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202512310TOR",
+    "game_date": "2025-12-31",
+    "home_team_id": 19,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202512310MIL",
+    "game_date": "2025-12-31",
+    "home_team_id": 24,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202512310OKC",
+    "game_date": "2025-12-31",
+    "home_team_id": 2,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202601010BRK",
+    "game_date": "2026-01-01",
+    "home_team_id": 30,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202601010DET",
+    "game_date": "2026-01-01",
+    "home_team_id": 10,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202601010DAL",
+    "game_date": "2026-01-01",
+    "home_team_id": 25,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202601010SAC",
+    "game_date": "2026-01-01",
+    "home_team_id": 27,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202601020IND",
+    "game_date": "2026-01-02",
+    "home_team_id": 29,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202601020WAS",
+    "game_date": "2026-01-02",
+    "home_team_id": 26,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202601020CLE",
+    "game_date": "2026-01-02",
+    "home_team_id": 12,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202601020NYK",
+    "game_date": "2026-01-02",
+    "home_team_id": 4,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202601020CHI",
+    "game_date": "2026-01-02",
+    "home_team_id": 13,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202601020MIL",
+    "game_date": "2026-01-02",
+    "home_team_id": 24,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202601020NOP",
+    "game_date": "2026-01-02",
+    "home_team_id": 20,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202601020PHO",
+    "game_date": "2026-01-02",
+    "home_team_id": 22,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202601020GSW",
+    "game_date": "2026-01-02",
+    "home_team_id": 23,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202601020LAL",
+    "game_date": "2026-01-02",
+    "home_team_id": 9,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202601030MIA",
+    "game_date": "2026-01-03",
+    "home_team_id": 5,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202601030NYK",
+    "game_date": "2026-01-03",
+    "home_team_id": 4,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202601030TOR",
+    "game_date": "2026-01-03",
+    "home_team_id": 19,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202601030CHI",
+    "game_date": "2026-01-03",
+    "home_team_id": 13,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202601030SAS",
+    "game_date": "2026-01-03",
+    "home_team_id": 6,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202601030DAL",
+    "game_date": "2026-01-03",
+    "home_team_id": 25,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202601030GSW",
+    "game_date": "2026-01-03",
+    "home_team_id": 23,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202601040CLE",
+    "game_date": "2026-01-04",
+    "home_team_id": 12,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202601040ORL",
+    "game_date": "2026-01-04",
+    "home_team_id": 14,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202601040BRK",
+    "game_date": "2026-01-04",
+    "home_team_id": 30,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202601040MIA",
+    "game_date": "2026-01-04",
+    "home_team_id": 5,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202601040WAS",
+    "game_date": "2026-01-04",
+    "home_team_id": 26,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202601040PHO",
+    "game_date": "2026-01-04",
+    "home_team_id": 22,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202601040SAC",
+    "game_date": "2026-01-04",
+    "home_team_id": 27,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202601040LAL",
+    "game_date": "2026-01-04",
+    "home_team_id": 9,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202601050DET",
+    "game_date": "2026-01-05",
+    "home_team_id": 10,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202601050BOS",
+    "game_date": "2026-01-05",
+    "home_team_id": 17,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202601050TOR",
+    "game_date": "2026-01-05",
+    "home_team_id": 19,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202601050HOU",
+    "game_date": "2026-01-05",
+    "home_team_id": 3,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202601050OKC",
+    "game_date": "2026-01-05",
+    "home_team_id": 2,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202601050PHI",
+    "game_date": "2026-01-05",
+    "home_team_id": 16,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202601050POR",
+    "game_date": "2026-01-05",
+    "home_team_id": 11,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202601060IND",
+    "game_date": "2026-01-06",
+    "home_team_id": 29,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202601060WAS",
+    "game_date": "2026-01-06",
+    "home_team_id": 26,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202601060MEM",
+    "game_date": "2026-01-06",
+    "home_team_id": 21,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202601060MIN",
+    "game_date": "2026-01-06",
+    "home_team_id": 8,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202601060NOP",
+    "game_date": "2026-01-06",
+    "home_team_id": 20,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202601060SAC",
+    "game_date": "2026-01-06",
+    "home_team_id": 27,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202601070BOS",
+    "game_date": "2026-01-07",
+    "home_team_id": 17,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202601070CHO",
+    "game_date": "2026-01-07",
+    "home_team_id": 18,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202601070DET",
+    "game_date": "2026-01-07",
+    "home_team_id": 10,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202601070PHI",
+    "game_date": "2026-01-07",
+    "home_team_id": 16,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202601070ATL",
+    "game_date": "2026-01-07",
+    "home_team_id": 15,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202601070BRK",
+    "game_date": "2026-01-07",
+    "home_team_id": 30,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202601070MEM",
+    "game_date": "2026-01-07",
+    "home_team_id": 21,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202601070OKC",
+    "game_date": "2026-01-07",
+    "home_team_id": 2,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202601070SAS",
+    "game_date": "2026-01-07",
+    "home_team_id": 6,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202601070GSW",
+    "game_date": "2026-01-07",
+    "home_team_id": 23,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202601070POR",
+    "game_date": "2026-01-07",
+    "home_team_id": 11,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202601080CHO",
+    "game_date": "2026-01-08",
+    "home_team_id": 18,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202601080MIN",
+    "game_date": "2026-01-08",
+    "home_team_id": 8,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202601080UTA",
+    "game_date": "2026-01-08",
+    "home_team_id": 7,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202601090BOS",
+    "game_date": "2026-01-09",
+    "home_team_id": 17,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202601090ORL",
+    "game_date": "2026-01-09",
+    "home_team_id": 14,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202601090WAS",
+    "game_date": "2026-01-09",
+    "home_team_id": 26,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202601090MEM",
+    "game_date": "2026-01-09",
+    "home_team_id": 21,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202601090DEN",
+    "game_date": "2026-01-09",
+    "home_team_id": 1,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202601090PHO",
+    "game_date": "2026-01-09",
+    "home_team_id": 22,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202601090GSW",
+    "game_date": "2026-01-09",
+    "home_team_id": 23,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202601090POR",
+    "game_date": "2026-01-09",
+    "home_team_id": 11,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202601090LAL",
+    "game_date": "2026-01-09",
+    "home_team_id": 9,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202601100CLE",
+    "game_date": "2026-01-10",
+    "home_team_id": 12,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202601100IND",
+    "game_date": "2026-01-10",
+    "home_team_id": 29,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202601100BOS",
+    "game_date": "2026-01-10",
+    "home_team_id": 17,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202601100CHI",
+    "game_date": "2026-01-10",
+    "home_team_id": 13,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202601100UTA",
+    "game_date": "2026-01-10",
+    "home_team_id": 7,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202601110ORL",
+    "game_date": "2026-01-11",
+    "home_team_id": 14,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202601110MEM",
+    "game_date": "2026-01-11",
+    "home_team_id": 21,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202601110POR",
+    "game_date": "2026-01-11",
+    "home_team_id": 11,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202601110TOR",
+    "game_date": "2026-01-11",
+    "home_team_id": 19,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202601110MIN",
+    "game_date": "2026-01-11",
+    "home_team_id": 8,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202601110OKC",
+    "game_date": "2026-01-11",
+    "home_team_id": 2,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202601110DEN",
+    "game_date": "2026-01-11",
+    "home_team_id": 1,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202601110PHO",
+    "game_date": "2026-01-11",
+    "home_team_id": 22,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202601110GSW",
+    "game_date": "2026-01-11",
+    "home_team_id": 23,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202601110SAC",
+    "game_date": "2026-01-11",
+    "home_team_id": 27,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202601120CLE",
+    "game_date": "2026-01-12",
+    "home_team_id": 12,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202601120IND",
+    "game_date": "2026-01-12",
+    "home_team_id": 29,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202601120TOR",
+    "game_date": "2026-01-12",
+    "home_team_id": 19,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202601120DAL",
+    "game_date": "2026-01-12",
+    "home_team_id": 25,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202601120SAC",
+    "game_date": "2026-01-12",
+    "home_team_id": 27,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202601130MIA",
+    "game_date": "2026-01-13",
+    "home_team_id": 5,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202601130HOU",
+    "game_date": "2026-01-13",
+    "home_team_id": 3,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202601130MIL",
+    "game_date": "2026-01-13",
+    "home_team_id": 24,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202601130NOP",
+    "game_date": "2026-01-13",
+    "home_team_id": 20,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202601130OKC",
+    "game_date": "2026-01-13",
+    "home_team_id": 2,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202601130LAL",
+    "game_date": "2026-01-13",
+    "home_team_id": 9,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202601130GSW",
+    "game_date": "2026-01-13",
+    "home_team_id": 23,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202601140IND",
+    "game_date": "2026-01-14",
+    "home_team_id": 29,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202601140PHI",
+    "game_date": "2026-01-14",
+    "home_team_id": 16,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202601140CHI",
+    "game_date": "2026-01-14",
+    "home_team_id": 13,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202601140NOP",
+    "game_date": "2026-01-14",
+    "home_team_id": 20,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202601140DAL",
+    "game_date": "2026-01-14",
+    "home_team_id": 25,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202601140SAC",
+    "game_date": "2026-01-14",
+    "home_team_id": 27,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202601150ORL",
+    "game_date": "2026-01-15",
+    "home_team_id": 14,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202601150DET",
+    "game_date": "2026-01-15",
+    "home_team_id": 10,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202601150HOU",
+    "game_date": "2026-01-15",
+    "home_team_id": 3,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202601150MIA",
+    "game_date": "2026-01-15",
+    "home_team_id": 5,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202601150SAS",
+    "game_date": "2026-01-15",
+    "home_team_id": 6,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202601150DAL",
+    "game_date": "2026-01-15",
+    "home_team_id": 25,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202601150GSW",
+    "game_date": "2026-01-15",
+    "home_team_id": 23,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202601150POR",
+    "game_date": "2026-01-15",
+    "home_team_id": 11,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202601150LAL",
+    "game_date": "2026-01-15",
+    "home_team_id": 9,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202601160IND",
+    "game_date": "2026-01-16",
+    "home_team_id": 29,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202601160PHI",
+    "game_date": "2026-01-16",
+    "home_team_id": 16,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202601160BRK",
+    "game_date": "2026-01-16",
+    "home_team_id": 30,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202601160HOU",
+    "game_date": "2026-01-16",
+    "home_team_id": 3,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202601160SAC",
+    "game_date": "2026-01-16",
+    "home_team_id": 27,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202601170DAL",
+    "game_date": "2026-01-17",
+    "home_team_id": 25,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202601170ATL",
+    "game_date": "2026-01-17",
+    "home_team_id": 15,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202601170DET",
+    "game_date": "2026-01-17",
+    "home_team_id": 10,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202601170NYK",
+    "game_date": "2026-01-17",
+    "home_team_id": 4,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202601170MIA",
+    "game_date": "2026-01-17",
+    "home_team_id": 5,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202601170SAS",
+    "game_date": "2026-01-17",
+    "home_team_id": 6,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202601170GSW",
+    "game_date": "2026-01-17",
+    "home_team_id": 23,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202601170DEN",
+    "game_date": "2026-01-17",
+    "home_team_id": 1,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202601170POR",
+    "game_date": "2026-01-17",
+    "home_team_id": 11,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202601180MEM",
+    "game_date": "2026-01-18",
+    "home_team_id": 21,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202601180CHI",
+    "game_date": "2026-01-18",
+    "home_team_id": 13,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202601180HOU",
+    "game_date": "2026-01-18",
+    "home_team_id": 3,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202601180DEN",
+    "game_date": "2026-01-18",
+    "home_team_id": 1,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202601180SAC",
+    "game_date": "2026-01-18",
+    "home_team_id": 27,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202601180LAL",
+    "game_date": "2026-01-18",
+    "home_team_id": 9,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202601190ATL",
+    "game_date": "2026-01-19",
+    "home_team_id": 15,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202601190CLE",
+    "game_date": "2026-01-19",
+    "home_team_id": 12,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202601190NYK",
+    "game_date": "2026-01-19",
+    "home_team_id": 4,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202601190SAS",
+    "game_date": "2026-01-19",
+    "home_team_id": 6,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202601190PHI",
+    "game_date": "2026-01-19",
+    "home_team_id": 16,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202601190BRK",
+    "game_date": "2026-01-19",
+    "home_team_id": 30,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202601190DET",
+    "game_date": "2026-01-19",
+    "home_team_id": 10,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202601190GSW",
+    "game_date": "2026-01-19",
+    "home_team_id": 23,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202601200PHI",
+    "game_date": "2026-01-20",
+    "home_team_id": 16,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202601200HOU",
+    "game_date": "2026-01-20",
+    "home_team_id": 3,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202601200UTA",
+    "game_date": "2026-01-20",
+    "home_team_id": 7,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202601200DEN",
+    "game_date": "2026-01-20",
+    "home_team_id": 1,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202601200GSW",
+    "game_date": "2026-01-20",
+    "home_team_id": 23,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202601200SAC",
+    "game_date": "2026-01-20",
+    "home_team_id": 27,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202601210CHO",
+    "game_date": "2026-01-21",
+    "home_team_id": 18,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202601210BOS",
+    "game_date": "2026-01-21",
+    "home_team_id": 17,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202601210NYK",
+    "game_date": "2026-01-21",
+    "home_team_id": 4,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202601210MEM",
+    "game_date": "2026-01-21",
+    "home_team_id": 21,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202601210NOP",
+    "game_date": "2026-01-21",
+    "home_team_id": 20,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202601210MIL",
+    "game_date": "2026-01-21",
+    "home_team_id": 24,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202601210SAC",
+    "game_date": "2026-01-21",
+    "home_team_id": 27,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202601220ORL",
+    "game_date": "2026-01-22",
+    "home_team_id": 14,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202601220PHI",
+    "game_date": "2026-01-22",
+    "home_team_id": 16,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202601220WAS",
+    "game_date": "2026-01-22",
+    "home_team_id": 26,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202601220DAL",
+    "game_date": "2026-01-22",
+    "home_team_id": 25,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202601220MIN",
+    "game_date": "2026-01-22",
+    "home_team_id": 8,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202601220UTA",
+    "game_date": "2026-01-22",
+    "home_team_id": 7,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202601220POR",
+    "game_date": "2026-01-22",
+    "home_team_id": 11,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202601230DET",
+    "game_date": "2026-01-23",
+    "home_team_id": 10,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202601230ATL",
+    "game_date": "2026-01-23",
+    "home_team_id": 15,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202601230BRK",
+    "game_date": "2026-01-23",
+    "home_team_id": 30,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202601230CLE",
+    "game_date": "2026-01-23",
+    "home_team_id": 12,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202601230MEM",
+    "game_date": "2026-01-23",
+    "home_team_id": 21,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202601230OKC",
+    "game_date": "2026-01-23",
+    "home_team_id": 2,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202601230MIL",
+    "game_date": "2026-01-23",
+    "home_team_id": 24,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202601230POR",
+    "game_date": "2026-01-23",
+    "home_team_id": 11,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202601240CHO",
+    "game_date": "2026-01-24",
+    "home_team_id": 18,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202601240PHI",
+    "game_date": "2026-01-24",
+    "home_team_id": 16,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202601240ORL",
+    "game_date": "2026-01-24",
+    "home_team_id": 14,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202601240CHI",
+    "game_date": "2026-01-24",
+    "home_team_id": 13,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202601240DAL",
+    "game_date": "2026-01-24",
+    "home_team_id": 25,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202601240UTA",
+    "game_date": "2026-01-24",
+    "home_team_id": 7,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202601250DET",
+    "game_date": "2026-01-25",
+    "home_team_id": 10,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202601250MIN",
+    "game_date": "2026-01-25",
+    "home_team_id": 8,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202601250OKC",
+    "game_date": "2026-01-25",
+    "home_team_id": 2,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202601250SAS",
+    "game_date": "2026-01-25",
+    "home_team_id": 6,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202601250PHO",
+    "game_date": "2026-01-25",
+    "home_team_id": 22,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202601260ATL",
+    "game_date": "2026-01-26",
+    "home_team_id": 15,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202601260CHO",
+    "game_date": "2026-01-26",
+    "home_team_id": 18,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202601260CLE",
+    "game_date": "2026-01-26",
+    "home_team_id": 12,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202601260BOS",
+    "game_date": "2026-01-26",
+    "home_team_id": 17,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202601260CHI",
+    "game_date": "2026-01-26",
+    "home_team_id": 13,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202601260HOU",
+    "game_date": "2026-01-26",
+    "home_team_id": 3,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202601260MIN",
+    "game_date": "2026-01-26",
+    "home_team_id": 8,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202601270WAS",
+    "game_date": "2026-01-27",
+    "home_team_id": 26,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202601270NYK",
+    "game_date": "2026-01-27",
+    "home_team_id": 4,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202601270OKC",
+    "game_date": "2026-01-27",
+    "home_team_id": 2,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202601270PHI",
+    "game_date": "2026-01-27",
+    "home_team_id": 16,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202601270DEN",
+    "game_date": "2026-01-27",
+    "home_team_id": 1,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202601270PHO",
+    "game_date": "2026-01-27",
+    "home_team_id": 22,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202601280CLE",
+    "game_date": "2026-01-28",
+    "home_team_id": 12,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202601280IND",
+    "game_date": "2026-01-28",
+    "home_team_id": 29,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202601280BOS",
+    "game_date": "2026-01-28",
+    "home_team_id": 17,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202601280MIA",
+    "game_date": "2026-01-28",
+    "home_team_id": 5,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202601280TOR",
+    "game_date": "2026-01-28",
+    "home_team_id": 19,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202601280MEM",
+    "game_date": "2026-01-28",
+    "home_team_id": 21,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202601280DAL",
+    "game_date": "2026-01-28",
+    "home_team_id": 25,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202601280UTA",
+    "game_date": "2026-01-28",
+    "home_team_id": 7,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202601280HOU",
+    "game_date": "2026-01-28",
+    "home_team_id": 3,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202601290PHI",
+    "game_date": "2026-01-29",
+    "home_team_id": 16,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202601290WAS",
+    "game_date": "2026-01-29",
+    "home_team_id": 26,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202601290ATL",
+    "game_date": "2026-01-29",
+    "home_team_id": 15,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202601290CHI",
+    "game_date": "2026-01-29",
+    "home_team_id": 13,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202601290DAL",
+    "game_date": "2026-01-29",
+    "home_team_id": 25,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202601290DEN",
+    "game_date": "2026-01-29",
+    "home_team_id": 1,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202601290PHO",
+    "game_date": "2026-01-29",
+    "home_team_id": 22,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202601290MIN",
+    "game_date": "2026-01-29",
+    "home_team_id": 8,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202601300WAS",
+    "game_date": "2026-01-30",
+    "home_team_id": 26,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202601300BOS",
+    "game_date": "2026-01-30",
+    "home_team_id": 17,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202601300NOP",
+    "game_date": "2026-01-30",
+    "home_team_id": 20,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202601300NYK",
+    "game_date": "2026-01-30",
+    "home_team_id": 4,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202601300ORL",
+    "game_date": "2026-01-30",
+    "home_team_id": 14,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202601300PHO",
+    "game_date": "2026-01-30",
+    "home_team_id": 22,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202601300UTA",
+    "game_date": "2026-01-30",
+    "home_team_id": 7,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202601300GSW",
+    "game_date": "2026-01-30",
+    "home_team_id": 23,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202601310CHO",
+    "game_date": "2026-01-31",
+    "home_team_id": 18,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202601310IND",
+    "game_date": "2026-01-31",
+    "home_team_id": 29,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202601310PHI",
+    "game_date": "2026-01-31",
+    "home_team_id": 16,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202601310MEM",
+    "game_date": "2026-01-31",
+    "home_team_id": 21,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202601310MIA",
+    "game_date": "2026-01-31",
+    "home_team_id": 5,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202601310HOU",
+    "game_date": "2026-01-31",
+    "home_team_id": 3,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202602010BOS",
+    "game_date": "2026-02-01",
+    "home_team_id": 17,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202602010DET",
+    "game_date": "2026-02-01",
+    "home_team_id": 10,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202602010MIA",
+    "game_date": "2026-02-01",
+    "home_team_id": 5,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202602010TOR",
+    "game_date": "2026-02-01",
+    "home_team_id": 19,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202602010WAS",
+    "game_date": "2026-02-01",
+    "home_team_id": 26,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202602010NYK",
+    "game_date": "2026-02-01",
+    "home_team_id": 4,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202602010POR",
+    "game_date": "2026-02-01",
+    "home_team_id": 11,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202602010SAS",
+    "game_date": "2026-02-01",
+    "home_team_id": 6,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202602010DEN",
+    "game_date": "2026-02-01",
+    "home_team_id": 1,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202602020CHO",
+    "game_date": "2026-02-02",
+    "home_team_id": 18,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202602020IND",
+    "game_date": "2026-02-02",
+    "home_team_id": 29,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202602020MEM",
+    "game_date": "2026-02-02",
+    "home_team_id": 21,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202602030DET",
+    "game_date": "2026-02-03",
+    "home_team_id": 10,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202602030IND",
+    "game_date": "2026-02-03",
+    "home_team_id": 29,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202602030WAS",
+    "game_date": "2026-02-03",
+    "home_team_id": 26,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202602030BRK",
+    "game_date": "2026-02-03",
+    "home_team_id": 30,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202602030MIA",
+    "game_date": "2026-02-03",
+    "home_team_id": 5,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202602030DAL",
+    "game_date": "2026-02-03",
+    "home_team_id": 25,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202602030MIL",
+    "game_date": "2026-02-03",
+    "home_team_id": 24,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202602030OKC",
+    "game_date": "2026-02-03",
+    "home_team_id": 2,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202602030GSW",
+    "game_date": "2026-02-03",
+    "home_team_id": 23,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202602030POR",
+    "game_date": "2026-02-03",
+    "home_team_id": 11,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202602040NYK",
+    "game_date": "2026-02-04",
+    "home_team_id": 4,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202602040TOR",
+    "game_date": "2026-02-04",
+    "home_team_id": 19,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202602040HOU",
+    "game_date": "2026-02-04",
+    "home_team_id": 3,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202602040MIL",
+    "game_date": "2026-02-04",
+    "home_team_id": 24,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202602040SAS",
+    "game_date": "2026-02-04",
+    "home_team_id": 6,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202602040SAC",
+    "game_date": "2026-02-04",
+    "home_team_id": 27,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202602050DET",
+    "game_date": "2026-02-05",
+    "home_team_id": 10,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202602050ORL",
+    "game_date": "2026-02-05",
+    "home_team_id": 14,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202602050ATL",
+    "game_date": "2026-02-05",
+    "home_team_id": 15,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202602050TOR",
+    "game_date": "2026-02-05",
+    "home_team_id": 19,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202602050HOU",
+    "game_date": "2026-02-05",
+    "home_team_id": 3,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202602050DAL",
+    "game_date": "2026-02-05",
+    "home_team_id": 25,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202602050LAL",
+    "game_date": "2026-02-05",
+    "home_team_id": 9,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202602050PHO",
+    "game_date": "2026-02-05",
+    "home_team_id": 22,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202602060BOS",
+    "game_date": "2026-02-06",
+    "home_team_id": 17,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202602060DET",
+    "game_date": "2026-02-06",
+    "home_team_id": 10,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202602060MIL",
+    "game_date": "2026-02-06",
+    "home_team_id": 24,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202602060MIN",
+    "game_date": "2026-02-06",
+    "home_team_id": 8,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202602060POR",
+    "game_date": "2026-02-06",
+    "home_team_id": 11,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202602070BRK",
+    "game_date": "2026-02-07",
+    "home_team_id": 30,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202602070OKC",
+    "game_date": "2026-02-07",
+    "home_team_id": 2,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202602070SAS",
+    "game_date": "2026-02-07",
+    "home_team_id": 6,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202602070ORL",
+    "game_date": "2026-02-07",
+    "home_team_id": 14,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202602070ATL",
+    "game_date": "2026-02-07",
+    "home_team_id": 15,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202602070CHI",
+    "game_date": "2026-02-07",
+    "home_team_id": 13,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202602070LAL",
+    "game_date": "2026-02-07",
+    "home_team_id": 9,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202602070PHO",
+    "game_date": "2026-02-07",
+    "home_team_id": 22,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202602070POR",
+    "game_date": "2026-02-07",
+    "home_team_id": 11,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202602070SAC",
+    "game_date": "2026-02-07",
+    "home_team_id": 27,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202602080BOS",
+    "game_date": "2026-02-08",
+    "home_team_id": 17,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202602080WAS",
+    "game_date": "2026-02-08",
+    "home_team_id": 26,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202602080TOR",
+    "game_date": "2026-02-08",
+    "home_team_id": 19,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202602090CHO",
+    "game_date": "2026-02-09",
+    "home_team_id": 18,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202602090BRK",
+    "game_date": "2026-02-09",
+    "home_team_id": 30,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202602090MIA",
+    "game_date": "2026-02-09",
+    "home_team_id": 5,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202602090ORL",
+    "game_date": "2026-02-09",
+    "home_team_id": 14,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202602090MIN",
+    "game_date": "2026-02-09",
+    "home_team_id": 8,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202602090NOP",
+    "game_date": "2026-02-09",
+    "home_team_id": 20,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202602090DEN",
+    "game_date": "2026-02-09",
+    "home_team_id": 1,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202602090GSW",
+    "game_date": "2026-02-09",
+    "home_team_id": 23,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202602090LAL",
+    "game_date": "2026-02-09",
+    "home_team_id": 9,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202602090POR",
+    "game_date": "2026-02-09",
+    "home_team_id": 11,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202602100NYK",
+    "game_date": "2026-02-10",
+    "home_team_id": 4,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202602100PHO",
+    "game_date": "2026-02-10",
+    "home_team_id": 22,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202602100LAL",
+    "game_date": "2026-02-10",
+    "home_team_id": 9,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202602110CHO",
+    "game_date": "2026-02-11",
+    "home_team_id": 18,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202602110CLE",
+    "game_date": "2026-02-11",
+    "home_team_id": 12,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202602110ORL",
+    "game_date": "2026-02-11",
+    "home_team_id": 14,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202602110BOS",
+    "game_date": "2026-02-11",
+    "home_team_id": 17,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202602110BRK",
+    "game_date": "2026-02-11",
+    "home_team_id": 30,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202602110PHI",
+    "game_date": "2026-02-11",
+    "home_team_id": 16,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202602110TOR",
+    "game_date": "2026-02-11",
+    "home_team_id": 19,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202602110MIN",
+    "game_date": "2026-02-11",
+    "home_team_id": 8,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202602110NOP",
+    "game_date": "2026-02-11",
+    "home_team_id": 20,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202602110DEN",
+    "game_date": "2026-02-11",
+    "home_team_id": 1,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202602110PHO",
+    "game_date": "2026-02-11",
+    "home_team_id": 22,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202602110UTA",
+    "game_date": "2026-02-11",
+    "home_team_id": 7,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202602110GSW",
+    "game_date": "2026-02-11",
+    "home_team_id": 23,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202602120OKC",
+    "game_date": "2026-02-12",
+    "home_team_id": 2,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202602120UTA",
+    "game_date": "2026-02-12",
+    "home_team_id": 7,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202602120LAL",
+    "game_date": "2026-02-12",
+    "home_team_id": 9,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202602190CHO",
+    "game_date": "2026-02-19",
+    "home_team_id": 18,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202602190CLE",
+    "game_date": "2026-02-19",
+    "home_team_id": 12,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202602190PHI",
+    "game_date": "2026-02-19",
+    "home_team_id": 16,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202602190WAS",
+    "game_date": "2026-02-19",
+    "home_team_id": 26,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202602190NYK",
+    "game_date": "2026-02-19",
+    "home_team_id": 4,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202602190CHI",
+    "game_date": "2026-02-19",
+    "home_team_id": 13,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202602190SAS",
+    "game_date": "2026-02-19",
+    "home_team_id": 6,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202602190GSW",
+    "game_date": "2026-02-19",
+    "home_team_id": 23,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202602190SAC",
+    "game_date": "2026-02-19",
+    "home_team_id": 27,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202602200CHO",
+    "game_date": "2026-02-20",
+    "home_team_id": 18,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202602200MEM",
+    "game_date": "2026-02-20",
+    "home_team_id": 21,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202602200WAS",
+    "game_date": "2026-02-20",
+    "home_team_id": 26,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202602200ATL",
+    "game_date": "2026-02-20",
+    "home_team_id": 15,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202602200MIN",
+    "game_date": "2026-02-20",
+    "home_team_id": 8,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202602200NOP",
+    "game_date": "2026-02-20",
+    "home_team_id": 20,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202602200OKC",
+    "game_date": "2026-02-20",
+    "home_team_id": 2,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202602200POR",
+    "game_date": "2026-02-20",
+    "home_team_id": 11,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202602210PHO",
+    "game_date": "2026-02-21",
+    "home_team_id": 22,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202602210NOP",
+    "game_date": "2026-02-21",
+    "home_team_id": 20,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202602210CHI",
+    "game_date": "2026-02-21",
+    "home_team_id": 13,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202602210MIA",
+    "game_date": "2026-02-21",
+    "home_team_id": 5,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202602210SAS",
+    "game_date": "2026-02-21",
+    "home_team_id": 6,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202602210NYK",
+    "game_date": "2026-02-21",
+    "home_team_id": 4,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202602220OKC",
+    "game_date": "2026-02-22",
+    "home_team_id": 2,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202602220ATL",
+    "game_date": "2026-02-22",
+    "home_team_id": 15,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202602220GSW",
+    "game_date": "2026-02-22",
+    "home_team_id": 23,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202602220MIL",
+    "game_date": "2026-02-22",
+    "home_team_id": 24,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202602220IND",
+    "game_date": "2026-02-22",
+    "home_team_id": 29,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202602220WAS",
+    "game_date": "2026-02-22",
+    "home_team_id": 26,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202602220LAL",
+    "game_date": "2026-02-22",
+    "home_team_id": 9,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202602220MIN",
+    "game_date": "2026-02-22",
+    "home_team_id": 8,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202602220CHI",
+    "game_date": "2026-02-22",
+    "home_team_id": 13,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202602220PHO",
+    "game_date": "2026-02-22",
+    "home_team_id": 22,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202602230DET",
+    "game_date": "2026-02-23",
+    "home_team_id": 10,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202602230MEM",
+    "game_date": "2026-02-23",
+    "home_team_id": 21,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202602230HOU",
+    "game_date": "2026-02-23",
+    "home_team_id": 3,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202602240IND",
+    "game_date": "2026-02-24",
+    "home_team_id": 29,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202602240ATL",
+    "game_date": "2026-02-24",
+    "home_team_id": 15,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202602240BRK",
+    "game_date": "2026-02-24",
+    "home_team_id": 30,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202602240CLE",
+    "game_date": "2026-02-24",
+    "home_team_id": 12,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202602240TOR",
+    "game_date": "2026-02-24",
+    "home_team_id": 19,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202602240CHI",
+    "game_date": "2026-02-24",
+    "home_team_id": 13,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202602240MIL",
+    "game_date": "2026-02-24",
+    "home_team_id": 24,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202602240NOP",
+    "game_date": "2026-02-24",
+    "home_team_id": 20,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202602240PHO",
+    "game_date": "2026-02-24",
+    "home_team_id": 22,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202602240POR",
+    "game_date": "2026-02-24",
+    "home_team_id": 11,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202602240LAL",
+    "game_date": "2026-02-24",
+    "home_team_id": 9,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202602250DET",
+    "game_date": "2026-02-25",
+    "home_team_id": 10,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202602250MEM",
+    "game_date": "2026-02-25",
+    "home_team_id": 21,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202602250TOR",
+    "game_date": "2026-02-25",
+    "home_team_id": 19,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202602250HOU",
+    "game_date": "2026-02-25",
+    "home_team_id": 3,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202602250MIL",
+    "game_date": "2026-02-25",
+    "home_team_id": 24,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202602250DEN",
+    "game_date": "2026-02-25",
+    "home_team_id": 1,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202602260IND",
+    "game_date": "2026-02-26",
+    "home_team_id": 29,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202602260PHI",
+    "game_date": "2026-02-26",
+    "home_team_id": 16,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202602260ATL",
+    "game_date": "2026-02-26",
+    "home_team_id": 15,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202602260BRK",
+    "game_date": "2026-02-26",
+    "home_team_id": 30,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202602260ORL",
+    "game_date": "2026-02-26",
+    "home_team_id": 14,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202602260CHI",
+    "game_date": "2026-02-26",
+    "home_team_id": 13,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202602260DAL",
+    "game_date": "2026-02-26",
+    "home_team_id": 25,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202602260PHO",
+    "game_date": "2026-02-26",
+    "home_team_id": 22,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202602260UTA",
+    "game_date": "2026-02-26",
+    "home_team_id": 7,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202602270DET",
+    "game_date": "2026-02-27",
+    "home_team_id": 10,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202602270BOS",
+    "game_date": "2026-02-27",
+    "home_team_id": 17,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202602270MIL",
+    "game_date": "2026-02-27",
+    "home_team_id": 24,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202602270DAL",
+    "game_date": "2026-02-27",
+    "home_team_id": 25,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202602270OKC",
+    "game_date": "2026-02-27",
+    "home_team_id": 2,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202602280CHO",
+    "game_date": "2026-02-28",
+    "home_team_id": 18,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202602280MIA",
+    "game_date": "2026-02-28",
+    "home_team_id": 5,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202602280WAS",
+    "game_date": "2026-02-28",
+    "home_team_id": 26,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202602280GSW",
+    "game_date": "2026-02-28",
+    "home_team_id": 23,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202602280UTA",
+    "game_date": "2026-02-28",
+    "home_team_id": 7,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202603010NYK",
+    "game_date": "2026-03-01",
+    "home_team_id": 4,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202603010BRK",
+    "game_date": "2026-03-01",
+    "home_team_id": 30,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202603010CHI",
+    "game_date": "2026-03-01",
+    "home_team_id": 13,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202603010DEN",
+    "game_date": "2026-03-01",
+    "home_team_id": 1,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202603010IND",
+    "game_date": "2026-03-01",
+    "home_team_id": 29,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202603010ATL",
+    "game_date": "2026-03-01",
+    "home_team_id": 15,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202603010ORL",
+    "game_date": "2026-03-01",
+    "home_team_id": 14,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202603010BOS",
+    "game_date": "2026-03-01",
+    "home_team_id": 17,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202603010DAL",
+    "game_date": "2026-03-01",
+    "home_team_id": 25,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202603010LAL",
+    "game_date": "2026-03-01",
+    "home_team_id": 9,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202603020WAS",
+    "game_date": "2026-03-02",
+    "home_team_id": 26,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202603020MIL",
+    "game_date": "2026-03-02",
+    "home_team_id": 24,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202603020UTA",
+    "game_date": "2026-03-02",
+    "home_team_id": 7,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202603030CHO",
+    "game_date": "2026-03-03",
+    "home_team_id": 18,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202603030CLE",
+    "game_date": "2026-03-03",
+    "home_team_id": 12,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202603030ORL",
+    "game_date": "2026-03-03",
+    "home_team_id": 14,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202603030MIA",
+    "game_date": "2026-03-03",
+    "home_team_id": 5,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202603030TOR",
+    "game_date": "2026-03-03",
+    "home_team_id": 19,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202603030CHI",
+    "game_date": "2026-03-03",
+    "home_team_id": 13,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202603030MIN",
+    "game_date": "2026-03-03",
+    "home_team_id": 8,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202603030PHI",
+    "game_date": "2026-03-03",
+    "home_team_id": 16,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202603030LAL",
+    "game_date": "2026-03-03",
+    "home_team_id": 9,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202603030SAC",
+    "game_date": "2026-03-03",
+    "home_team_id": 27,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202603040NYK",
+    "game_date": "2026-03-04",
+    "home_team_id": 4,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202603040BOS",
+    "game_date": "2026-03-04",
+    "home_team_id": 17,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202603040PHI",
+    "game_date": "2026-03-04",
+    "home_team_id": 16,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202603040MEM",
+    "game_date": "2026-03-04",
+    "home_team_id": 21,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202603040MIL",
+    "game_date": "2026-03-04",
+    "home_team_id": 24,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202603050ORL",
+    "game_date": "2026-03-05",
+    "home_team_id": 14,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202603050WAS",
+    "game_date": "2026-03-05",
+    "home_team_id": 26,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202603050HOU",
+    "game_date": "2026-03-05",
+    "home_team_id": 3,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202603050MIA",
+    "game_date": "2026-03-05",
+    "home_team_id": 5,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202603050MIN",
+    "game_date": "2026-03-05",
+    "home_team_id": 8,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202603050SAS",
+    "game_date": "2026-03-05",
+    "home_team_id": 6,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202603050PHO",
+    "game_date": "2026-03-05",
+    "home_team_id": 22,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202603050DEN",
+    "game_date": "2026-03-05",
+    "home_team_id": 1,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202603050SAC",
+    "game_date": "2026-03-05",
+    "home_team_id": 27,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202603060BOS",
+    "game_date": "2026-03-06",
+    "home_team_id": 17,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202603060CHO",
+    "game_date": "2026-03-06",
+    "home_team_id": 18,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202603060HOU",
+    "game_date": "2026-03-06",
+    "home_team_id": 3,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202603060DEN",
+    "game_date": "2026-03-06",
+    "home_team_id": 1,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202603060PHO",
+    "game_date": "2026-03-06",
+    "home_team_id": 22,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202603060LAL",
+    "game_date": "2026-03-06",
+    "home_team_id": 9,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202603070MIN",
+    "game_date": "2026-03-07",
+    "home_team_id": 8,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202603070ATL",
+    "game_date": "2026-03-07",
+    "home_team_id": 15,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202603070DET",
+    "game_date": "2026-03-07",
+    "home_team_id": 10,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202603070MIL",
+    "game_date": "2026-03-07",
+    "home_team_id": 24,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202603070OKC",
+    "game_date": "2026-03-07",
+    "home_team_id": 2,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202603080CLE",
+    "game_date": "2026-03-08",
+    "home_team_id": 12,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202603080LAL",
+    "game_date": "2026-03-08",
+    "home_team_id": 9,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202603080MIA",
+    "game_date": "2026-03-08",
+    "home_team_id": 5,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202603080TOR",
+    "game_date": "2026-03-08",
+    "home_team_id": 19,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202603080NOP",
+    "game_date": "2026-03-08",
+    "home_team_id": 20,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202603080MIL",
+    "game_date": "2026-03-08",
+    "home_team_id": 24,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202603080SAS",
+    "game_date": "2026-03-08",
+    "home_team_id": 6,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202603080POR",
+    "game_date": "2026-03-08",
+    "home_team_id": 11,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202603080SAC",
+    "game_date": "2026-03-08",
+    "home_team_id": 27,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202603080PHO",
+    "game_date": "2026-03-08",
+    "home_team_id": 22,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202603090CLE",
+    "game_date": "2026-03-09",
+    "home_team_id": 12,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202603090BRK",
+    "game_date": "2026-03-09",
+    "home_team_id": 30,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202603090OKC",
+    "game_date": "2026-03-09",
+    "home_team_id": 2,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202603090UTA",
+    "game_date": "2026-03-09",
+    "home_team_id": 7,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202603100PHI",
+    "game_date": "2026-03-10",
+    "home_team_id": 16,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202603100ATL",
+    "game_date": "2026-03-10",
+    "home_team_id": 15,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202603100BRK",
+    "game_date": "2026-03-10",
+    "home_team_id": 30,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202603100MIA",
+    "game_date": "2026-03-10",
+    "home_team_id": 5,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202603100HOU",
+    "game_date": "2026-03-10",
+    "home_team_id": 3,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202603100MIL",
+    "game_date": "2026-03-10",
+    "home_team_id": 24,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202603100SAS",
+    "game_date": "2026-03-10",
+    "home_team_id": 6,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202603100GSW",
+    "game_date": "2026-03-10",
+    "home_team_id": 23,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202603100POR",
+    "game_date": "2026-03-10",
+    "home_team_id": 11,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202603100SAC",
+    "game_date": "2026-03-10",
+    "home_team_id": 27,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202603100LAL",
+    "game_date": "2026-03-10",
+    "home_team_id": 9,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202603110ORL",
+    "game_date": "2026-03-11",
+    "home_team_id": 14,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202603110NOP",
+    "game_date": "2026-03-11",
+    "home_team_id": 20,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202603110UTA",
+    "game_date": "2026-03-11",
+    "home_team_id": 7,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202603110DEN",
+    "game_date": "2026-03-11",
+    "home_team_id": 1,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202603110SAC",
+    "game_date": "2026-03-11",
+    "home_team_id": 27,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202603120DET",
+    "game_date": "2026-03-12",
+    "home_team_id": 10,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202603120IND",
+    "game_date": "2026-03-12",
+    "home_team_id": 29,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202603120ORL",
+    "game_date": "2026-03-12",
+    "home_team_id": 14,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202603120ATL",
+    "game_date": "2026-03-12",
+    "home_team_id": 15,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202603120MIA",
+    "game_date": "2026-03-12",
+    "home_team_id": 5,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202603120MEM",
+    "game_date": "2026-03-12",
+    "home_team_id": 21,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202603120SAS",
+    "game_date": "2026-03-12",
+    "home_team_id": 6,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202603120OKC",
+    "game_date": "2026-03-12",
+    "home_team_id": 2,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202603120LAL",
+    "game_date": "2026-03-12",
+    "home_team_id": 9,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202603130DAL",
+    "game_date": "2026-03-13",
+    "home_team_id": 25,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202603130DET",
+    "game_date": "2026-03-13",
+    "home_team_id": 10,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202603130IND",
+    "game_date": "2026-03-13",
+    "home_team_id": 29,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202603130TOR",
+    "game_date": "2026-03-13",
+    "home_team_id": 19,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202603130HOU",
+    "game_date": "2026-03-13",
+    "home_team_id": 3,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202603130GSW",
+    "game_date": "2026-03-13",
+    "home_team_id": 23,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202603130POR",
+    "game_date": "2026-03-13",
+    "home_team_id": 11,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202603140PHI",
+    "game_date": "2026-03-14",
+    "home_team_id": 16,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202603140ATL",
+    "game_date": "2026-03-14",
+    "home_team_id": 15,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202603140SAS",
+    "game_date": "2026-03-14",
+    "home_team_id": 6,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202603140BOS",
+    "game_date": "2026-03-14",
+    "home_team_id": 17,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202603140MIA",
+    "game_date": "2026-03-14",
+    "home_team_id": 5,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202603140LAL",
+    "game_date": "2026-03-14",
+    "home_team_id": 9,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202603150OKC",
+    "game_date": "2026-03-15",
+    "home_team_id": 2,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202603150CLE",
+    "game_date": "2026-03-15",
+    "home_team_id": 12,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202603150MIL",
+    "game_date": "2026-03-15",
+    "home_team_id": 24,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202603150TOR",
+    "game_date": "2026-03-15",
+    "home_team_id": 19,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202603150PHI",
+    "game_date": "2026-03-15",
+    "home_team_id": 16,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202603150NYK",
+    "game_date": "2026-03-15",
+    "home_team_id": 4,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202603150SAC",
+    "game_date": "2026-03-15",
+    "home_team_id": 27,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202603160ATL",
+    "game_date": "2026-03-16",
+    "home_team_id": 15,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202603160WAS",
+    "game_date": "2026-03-16",
+    "home_team_id": 26,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202603160BOS",
+    "game_date": "2026-03-16",
+    "home_team_id": 17,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202603160BRK",
+    "game_date": "2026-03-16",
+    "home_team_id": 30,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202603160CHI",
+    "game_date": "2026-03-16",
+    "home_team_id": 13,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202603160NOP",
+    "game_date": "2026-03-16",
+    "home_team_id": 20,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202603160HOU",
+    "game_date": "2026-03-16",
+    "home_team_id": 3,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202603170CHO",
+    "game_date": "2026-03-17",
+    "home_team_id": 18,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202603170ORL",
+    "game_date": "2026-03-17",
+    "home_team_id": 14,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202603170WAS",
+    "game_date": "2026-03-17",
+    "home_team_id": 26,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202603170NYK",
+    "game_date": "2026-03-17",
+    "home_team_id": 4,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202603170MIL",
+    "game_date": "2026-03-17",
+    "home_team_id": 24,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202603170MIN",
+    "game_date": "2026-03-17",
+    "home_team_id": 8,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202603170DEN",
+    "game_date": "2026-03-17",
+    "home_team_id": 1,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202603170SAC",
+    "game_date": "2026-03-17",
+    "home_team_id": 27,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202603180BOS",
+    "game_date": "2026-03-18",
+    "home_team_id": 17,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202603180BRK",
+    "game_date": "2026-03-18",
+    "home_team_id": 30,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202603180IND",
+    "game_date": "2026-03-18",
+    "home_team_id": 29,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202603180CHI",
+    "game_date": "2026-03-18",
+    "home_team_id": 13,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202603180MIN",
+    "game_date": "2026-03-18",
+    "home_team_id": 8,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202603180DAL",
+    "game_date": "2026-03-18",
+    "home_team_id": 25,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202603180MEM",
+    "game_date": "2026-03-18",
+    "home_team_id": 21,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202603180HOU",
+    "game_date": "2026-03-18",
+    "home_team_id": 3,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202603190CHO",
+    "game_date": "2026-03-19",
+    "home_team_id": 18,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202603190WAS",
+    "game_date": "2026-03-19",
+    "home_team_id": 26,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202603190CHI",
+    "game_date": "2026-03-19",
+    "home_team_id": 13,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202603190MIA",
+    "game_date": "2026-03-19",
+    "home_team_id": 5,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202603190SAS",
+    "game_date": "2026-03-19",
+    "home_team_id": 6,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202603190UTA",
+    "game_date": "2026-03-19",
+    "home_team_id": 7,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202603190SAC",
+    "game_date": "2026-03-19",
+    "home_team_id": 27,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202603200BRK",
+    "game_date": "2026-03-20",
+    "home_team_id": 30,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202603200DET",
+    "game_date": "2026-03-20",
+    "home_team_id": 10,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202603200HOU",
+    "game_date": "2026-03-20",
+    "home_team_id": 3,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202603200MEM",
+    "game_date": "2026-03-20",
+    "home_team_id": 21,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202603200MIN",
+    "game_date": "2026-03-20",
+    "home_team_id": 8,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202603200DEN",
+    "game_date": "2026-03-20",
+    "home_team_id": 1,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202603210WAS",
+    "game_date": "2026-03-21",
+    "home_team_id": 26,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202603210CHO",
+    "game_date": "2026-03-21",
+    "home_team_id": 18,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202603210NOP",
+    "game_date": "2026-03-21",
+    "home_team_id": 20,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202603210ORL",
+    "game_date": "2026-03-21",
+    "home_team_id": 14,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202603210ATL",
+    "game_date": "2026-03-21",
+    "home_team_id": 15,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202603210HOU",
+    "game_date": "2026-03-21",
+    "home_team_id": 3,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202603210SAS",
+    "game_date": "2026-03-21",
+    "home_team_id": 6,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202603210UTA",
+    "game_date": "2026-03-21",
+    "home_team_id": 7,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202603210PHO",
+    "game_date": "2026-03-21",
+    "home_team_id": 22,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202603220DEN",
+    "game_date": "2026-03-22",
+    "home_team_id": 1,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202603220SAC",
+    "game_date": "2026-03-22",
+    "home_team_id": 27,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202603220NYK",
+    "game_date": "2026-03-22",
+    "home_team_id": 4,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202603220BOS",
+    "game_date": "2026-03-22",
+    "home_team_id": 17,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202603220PHO",
+    "game_date": "2026-03-22",
+    "home_team_id": 22,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202603230DET",
+    "game_date": "2026-03-23",
+    "home_team_id": 10,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202603230MIA",
+    "game_date": "2026-03-23",
+    "home_team_id": 5,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202603230ORL",
+    "game_date": "2026-03-23",
+    "home_team_id": 14,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202603230PHI",
+    "game_date": "2026-03-23",
+    "home_team_id": 16,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202603230ATL",
+    "game_date": "2026-03-23",
+    "home_team_id": 15,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202603230CHI",
+    "game_date": "2026-03-23",
+    "home_team_id": 13,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202603230UTA",
+    "game_date": "2026-03-23",
+    "home_team_id": 7,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202603230DAL",
+    "game_date": "2026-03-23",
+    "home_team_id": 25,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202603230POR",
+    "game_date": "2026-03-23",
+    "home_team_id": 11,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202603240CHO",
+    "game_date": "2026-03-24",
+    "home_team_id": 18,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202603240NYK",
+    "game_date": "2026-03-24",
+    "home_team_id": 4,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202603240CLE",
+    "game_date": "2026-03-24",
+    "home_team_id": 12,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202603240PHO",
+    "game_date": "2026-03-24",
+    "home_team_id": 22,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202603250DET",
+    "game_date": "2026-03-25",
+    "home_team_id": 10,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202603250IND",
+    "game_date": "2026-03-25",
+    "home_team_id": 29,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202603250PHI",
+    "game_date": "2026-03-25",
+    "home_team_id": 16,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202603250BOS",
+    "game_date": "2026-03-25",
+    "home_team_id": 17,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202603250CLE",
+    "game_date": "2026-03-25",
+    "home_team_id": 12,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202603250MEM",
+    "game_date": "2026-03-25",
+    "home_team_id": 21,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202603250UTA",
+    "game_date": "2026-03-25",
+    "home_team_id": 7,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202603250MIN",
+    "game_date": "2026-03-25",
+    "home_team_id": 8,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202603250DEN",
+    "game_date": "2026-03-25",
+    "home_team_id": 1,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202603250GSW",
+    "game_date": "2026-03-25",
+    "home_team_id": 23,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202603250POR",
+    "game_date": "2026-03-25",
+    "home_team_id": 11,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202603260CHO",
+    "game_date": "2026-03-26",
+    "home_team_id": 18,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202603260DET",
+    "game_date": "2026-03-26",
+    "home_team_id": 10,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202603260ORL",
+    "game_date": "2026-03-26",
+    "home_team_id": 14,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202603270BOS",
+    "game_date": "2026-03-27",
+    "home_team_id": 17,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202603270CLE",
+    "game_date": "2026-03-27",
+    "home_team_id": 12,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202603270MEM",
+    "game_date": "2026-03-27",
+    "home_team_id": 21,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202603270OKC",
+    "game_date": "2026-03-27",
+    "home_team_id": 2,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202603270TOR",
+    "game_date": "2026-03-27",
+    "home_team_id": 19,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202603270DEN",
+    "game_date": "2026-03-27",
+    "home_team_id": 1,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202603270GSW",
+    "game_date": "2026-03-27",
+    "home_team_id": 23,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202603270POR",
+    "game_date": "2026-03-27",
+    "home_team_id": 11,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202603270LAL",
+    "game_date": "2026-03-27",
+    "home_team_id": 9,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202603280MIL",
+    "game_date": "2026-03-28",
+    "home_team_id": 24,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202603280MIN",
+    "game_date": "2026-03-28",
+    "home_team_id": 8,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202603280CHO",
+    "game_date": "2026-03-28",
+    "home_team_id": 18,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202603280ATL",
+    "game_date": "2026-03-28",
+    "home_team_id": 15,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202603280MEM",
+    "game_date": "2026-03-28",
+    "home_team_id": 21,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202603280PHO",
+    "game_date": "2026-03-28",
+    "home_team_id": 22,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202603290IND",
+    "game_date": "2026-03-29",
+    "home_team_id": 29,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202603290BRK",
+    "game_date": "2026-03-29",
+    "home_team_id": 30,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202603290CHO",
+    "game_date": "2026-03-29",
+    "home_team_id": 18,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202603290POR",
+    "game_date": "2026-03-29",
+    "home_team_id": 11,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202603290TOR",
+    "game_date": "2026-03-29",
+    "home_team_id": 19,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202603290NOP",
+    "game_date": "2026-03-29",
+    "home_team_id": 20,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202603290OKC",
+    "game_date": "2026-03-29",
+    "home_team_id": 2,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202603290DEN",
+    "game_date": "2026-03-29",
+    "home_team_id": 1,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202603300MIA",
+    "game_date": "2026-03-30",
+    "home_team_id": 5,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202603300ATL",
+    "game_date": "2026-03-30",
+    "home_team_id": 15,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202603300MEM",
+    "game_date": "2026-03-30",
+    "home_team_id": 21,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202603300SAS",
+    "game_date": "2026-03-30",
+    "home_team_id": 6,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202603300DAL",
+    "game_date": "2026-03-30",
+    "home_team_id": 25,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202603300UTA",
+    "game_date": "2026-03-30",
+    "home_team_id": 7,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202603300OKC",
+    "game_date": "2026-03-30",
+    "home_team_id": 2,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202603300LAL",
+    "game_date": "2026-03-30",
+    "home_team_id": 9,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202603310ORL",
+    "game_date": "2026-03-31",
+    "home_team_id": 14,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202603310BRK",
+    "game_date": "2026-03-31",
+    "home_team_id": 30,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202603310DET",
+    "game_date": "2026-03-31",
+    "home_team_id": 10,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202603310HOU",
+    "game_date": "2026-03-31",
+    "home_team_id": 3,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202603310MIL",
+    "game_date": "2026-03-31",
+    "home_team_id": 24,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202603310LAL",
+    "game_date": "2026-03-31",
+    "home_team_id": 9,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202604010WAS",
+    "game_date": "2026-04-01",
+    "home_team_id": 26,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202604010MIA",
+    "game_date": "2026-04-01",
+    "home_team_id": 5,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202604010ORL",
+    "game_date": "2026-04-01",
+    "home_team_id": 14,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202604010CHI",
+    "game_date": "2026-04-01",
+    "home_team_id": 13,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202604010HOU",
+    "game_date": "2026-04-01",
+    "home_team_id": 3,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202604010MEM",
+    "game_date": "2026-04-01",
+    "home_team_id": 21,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202604010TOR",
+    "game_date": "2026-04-01",
+    "home_team_id": 19,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202604010UTA",
+    "game_date": "2026-04-01",
+    "home_team_id": 7,
+    "away_team_id": 1,
+    "season": 2026
+  },
+  {
+    "game_id": "202604010GSW",
+    "game_date": "2026-04-01",
+    "home_team_id": 23,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202604020CHO",
+    "game_date": "2026-04-02",
+    "home_team_id": 18,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202604020DET",
+    "game_date": "2026-04-02",
+    "home_team_id": 10,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202604020OKC",
+    "game_date": "2026-04-02",
+    "home_team_id": 2,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202604020GSW",
+    "game_date": "2026-04-02",
+    "home_team_id": 23,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202604020POR",
+    "game_date": "2026-04-02",
+    "home_team_id": 11,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202604030CHO",
+    "game_date": "2026-04-03",
+    "home_team_id": 18,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202604030PHI",
+    "game_date": "2026-04-03",
+    "home_team_id": 16,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202604030BRK",
+    "game_date": "2026-04-03",
+    "home_team_id": 30,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202604030NYK",
+    "game_date": "2026-04-03",
+    "home_team_id": 4,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202604030HOU",
+    "game_date": "2026-04-03",
+    "home_team_id": 3,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202604030MEM",
+    "game_date": "2026-04-03",
+    "home_team_id": 21,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202604030MIL",
+    "game_date": "2026-04-03",
+    "home_team_id": 24,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202604030DAL",
+    "game_date": "2026-04-03",
+    "home_team_id": 25,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202604030SAC",
+    "game_date": "2026-04-03",
+    "home_team_id": 27,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202604040MIA",
+    "game_date": "2026-04-04",
+    "home_team_id": 5,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202604040DEN",
+    "game_date": "2026-04-04",
+    "home_team_id": 1,
+    "away_team_id": 6,
+    "season": 2026
+  },
+  {
+    "game_id": "202604040PHI",
+    "game_date": "2026-04-04",
+    "home_team_id": 16,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202604050BOS",
+    "game_date": "2026-04-05",
+    "home_team_id": 17,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202604050BRK",
+    "game_date": "2026-04-05",
+    "home_team_id": 30,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202604050CHI",
+    "game_date": "2026-04-05",
+    "home_team_id": 13,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202604050MIL",
+    "game_date": "2026-04-05",
+    "home_team_id": 24,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202604050CLE",
+    "game_date": "2026-04-05",
+    "home_team_id": 12,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202604050MIN",
+    "game_date": "2026-04-05",
+    "home_team_id": 8,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202604050NOP",
+    "game_date": "2026-04-05",
+    "home_team_id": 20,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202604050OKC",
+    "game_date": "2026-04-05",
+    "home_team_id": 2,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202604050DAL",
+    "game_date": "2026-04-05",
+    "home_team_id": 25,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202604050GSW",
+    "game_date": "2026-04-05",
+    "home_team_id": 23,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202604060ATL",
+    "game_date": "2026-04-06",
+    "home_team_id": 15,
+    "away_team_id": 4,
+    "season": 2026
+  },
+  {
+    "game_id": "202604060ORL",
+    "game_date": "2026-04-06",
+    "home_team_id": 14,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202604060MEM",
+    "game_date": "2026-04-06",
+    "home_team_id": 21,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202604060SAS",
+    "game_date": "2026-04-06",
+    "home_team_id": 6,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202604060DEN",
+    "game_date": "2026-04-06",
+    "home_team_id": 1,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202604070WAS",
+    "game_date": "2026-04-07",
+    "home_team_id": 26,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202604070BOS",
+    "game_date": "2026-04-07",
+    "home_team_id": 17,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202604070BRK",
+    "game_date": "2026-04-07",
+    "home_team_id": 30,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202604070TOR",
+    "game_date": "2026-04-07",
+    "home_team_id": 19,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202604070IND",
+    "game_date": "2026-04-07",
+    "home_team_id": 29,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202604070NOP",
+    "game_date": "2026-04-07",
+    "home_team_id": 20,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202604070GSW",
+    "game_date": "2026-04-07",
+    "home_team_id": 23,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202604070LAL",
+    "game_date": "2026-04-07",
+    "home_team_id": 9,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202604070PHO",
+    "game_date": "2026-04-07",
+    "home_team_id": 22,
+    "away_team_id": 3,
+    "season": 2026
+  },
+  {
+    "game_id": "202604080CLE",
+    "game_date": "2026-04-08",
+    "home_team_id": 12,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202604080DET",
+    "game_date": "2026-04-08",
+    "home_team_id": 10,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202604080ORL",
+    "game_date": "2026-04-08",
+    "home_team_id": 14,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202604080DEN",
+    "game_date": "2026-04-08",
+    "home_team_id": 1,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202604080SAS",
+    "game_date": "2026-04-08",
+    "home_team_id": 6,
+    "away_team_id": 11,
+    "season": 2026
+  },
+  {
+    "game_id": "202604080PHO",
+    "game_date": "2026-04-08",
+    "home_team_id": 22,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202604090TOR",
+    "game_date": "2026-04-09",
+    "home_team_id": 19,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202604090WAS",
+    "game_date": "2026-04-09",
+    "home_team_id": 26,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202604090BRK",
+    "game_date": "2026-04-09",
+    "home_team_id": 30,
+    "away_team_id": 29,
+    "season": 2026
+  },
+  {
+    "game_id": "202604090NYK",
+    "game_date": "2026-04-09",
+    "home_team_id": 4,
+    "away_team_id": 17,
+    "season": 2026
+  },
+  {
+    "game_id": "202604090HOU",
+    "game_date": "2026-04-09",
+    "home_team_id": 3,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202604090GSW",
+    "game_date": "2026-04-09",
+    "home_team_id": 23,
+    "away_team_id": 9,
+    "season": 2026
+  },
+  {
+    "game_id": "202604100WAS",
+    "game_date": "2026-04-10",
+    "home_team_id": 26,
+    "away_team_id": 5,
+    "season": 2026
+  },
+  {
+    "game_id": "202604100CHO",
+    "game_date": "2026-04-10",
+    "home_team_id": 18,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202604100ATL",
+    "game_date": "2026-04-10",
+    "home_team_id": 15,
+    "away_team_id": 12,
+    "season": 2026
+  },
+  {
+    "game_id": "202604100BOS",
+    "game_date": "2026-04-10",
+    "home_team_id": 17,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202604100IND",
+    "game_date": "2026-04-10",
+    "home_team_id": 29,
+    "away_team_id": 16,
+    "season": 2026
+  },
+  {
+    "game_id": "202604100NYK",
+    "game_date": "2026-04-10",
+    "home_team_id": 4,
+    "away_team_id": 19,
+    "season": 2026
+  },
+  {
+    "game_id": "202604100CHI",
+    "game_date": "2026-04-10",
+    "home_team_id": 13,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202604100MIL",
+    "game_date": "2026-04-10",
+    "home_team_id": 24,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202604100SAS",
+    "game_date": "2026-04-10",
+    "home_team_id": 6,
+    "away_team_id": 25,
+    "season": 2026
+  },
+  {
+    "game_id": "202604100DEN",
+    "game_date": "2026-04-10",
+    "home_team_id": 1,
+    "away_team_id": 2,
+    "season": 2026
+  },
+  {
+    "game_id": "202604100HOU",
+    "game_date": "2026-04-10",
+    "home_team_id": 3,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
+    "game_id": "202604100UTA",
+    "game_date": "2026-04-10",
+    "home_team_id": 7,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202604100SAC",
+    "game_date": "2026-04-10",
+    "home_team_id": 27,
+    "away_team_id": 23,
+    "season": 2026
+  },
+  {
+    "game_id": "202604100LAL",
+    "game_date": "2026-04-10",
+    "home_team_id": 9,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202604120BOS",
+    "game_date": "2026-04-12",
+    "home_team_id": 17,
+    "away_team_id": 14,
+    "season": 2026
+  },
+  {
+    "game_id": "202604120CLE",
+    "game_date": "2026-04-12",
+    "home_team_id": 12,
+    "away_team_id": 26,
+    "season": 2026
+  },
+  {
+    "game_id": "202604120IND",
+    "game_date": "2026-04-12",
+    "home_team_id": 29,
+    "away_team_id": 10,
+    "season": 2026
+  },
+  {
+    "game_id": "202604120MIA",
+    "game_date": "2026-04-12",
+    "home_team_id": 5,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
+    "game_id": "202604120NYK",
+    "game_date": "2026-04-12",
+    "home_team_id": 4,
+    "away_team_id": 18,
+    "season": 2026
+  },
+  {
+    "game_id": "202604120PHI",
+    "game_date": "2026-04-12",
+    "home_team_id": 16,
+    "away_team_id": 24,
+    "season": 2026
+  },
+  {
+    "game_id": "202604120TOR",
+    "game_date": "2026-04-12",
+    "home_team_id": 19,
+    "away_team_id": 30,
+    "season": 2026
+  },
+  {
+    "game_id": "202604120DAL",
+    "game_date": "2026-04-12",
+    "home_team_id": 25,
+    "away_team_id": 13,
+    "season": 2026
+  },
+  {
+    "game_id": "202604120HOU",
+    "game_date": "2026-04-12",
+    "home_team_id": 3,
+    "away_team_id": 21,
+    "season": 2026
+  },
+  {
+    "game_id": "202604120LAL",
+    "game_date": "2026-04-12",
+    "home_team_id": 9,
+    "away_team_id": 7,
+    "season": 2026
+  },
+  {
+    "game_id": "202604120MIN",
+    "game_date": "2026-04-12",
+    "home_team_id": 8,
+    "away_team_id": 20,
+    "season": 2026
+  },
+  {
+    "game_id": "202604120OKC",
+    "game_date": "2026-04-12",
+    "home_team_id": 2,
+    "away_team_id": 22,
+    "season": 2026
+  },
+  {
+    "game_id": "202604120POR",
+    "game_date": "2026-04-12",
+    "home_team_id": 11,
+    "away_team_id": 27,
+    "season": 2026
+  },
+  {
+    "game_id": "202604120SAS",
+    "game_date": "2026-04-12",
+    "home_team_id": 6,
+    "away_team_id": 1,
+    "season": 2026
+  }
+]

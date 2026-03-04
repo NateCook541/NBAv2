@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-
 from models.predict import predict, predictTeamRoster
 
 app = FastAPI(

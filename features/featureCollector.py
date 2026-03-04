@@ -63,7 +63,7 @@ def _injuryContext(teamID, date, conn):
         SELECT SUM(avg_pts) AS total_missing
         FROM (
             SELECT player_id, AVG(points) AS avg_pts
-     Player_game_logs
+            FROM Player_game_logs
             GROUP BY player_id
         ) p_avg
         WHERE player_id IN (
@@ -101,7 +101,7 @@ def _oppContext(oppTeamID, date, conn):
 # Builds the feature vector for training
 def buildFeatures(playerID, date, teamID, oppTeamID, conn):
     rolling = _rollingStats(playerID, date, conn)
-    if rolling is None or rolling.empty() or rolling['points'].isna().all():
+    if rolling is None or rolling.empty or rolling['points'].isna().all():
         return None
 
     baseline = rolling.head(10).mean()

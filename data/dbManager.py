@@ -66,17 +66,7 @@ dbSchema = {
             comment       TEXT,
             PRIMARY KEY (status_log_id, scrape_date, game_id)
         )
-    """,
-    "Results": """
-        CREATE TABLE IF NOT EXISTS Results (
-            game_id      TEXT    PRIMARY KEY,
-            home_team_id INTEGER NOT NULL,
-            away_team_id INTEGER NOT NULL,
-            home_score   INTEGER NOT NULL,
-            away_score   INTEGER NOT NULL,
-            winner_id    INTEGER NOT NULL
-        )
-    """,
+    """, 
 }
 
 # FIXME: Understand...
@@ -203,19 +193,4 @@ class DBManager:
             conn.cursor().executemany(sql, data)
 
         print(f"Upserted {len(data)} status records")
-
-    # RESULTS
-
-    def upsertResults(self, data):
-        sql = """
-            INSERT OR REPLACE INTO Results
-                (game_id, home_team_id, away_team_id, home_score, away_score, winner_id)
-            VALUES
-                (:game_id, :home_team_id, :away_team_id, :home_score, :away_score, :winner_id)
-        """
-
-        with self._connect() as conn:
-            conn.cursor().executemany(sql, data)
-
-        print(f"Upserted {len(data)} results records")
 

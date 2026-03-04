@@ -3,16 +3,20 @@ import re
 import json
 import unicodedata
 import sqlite3
+import requests
 from datetime import date
 from datetime import datetime
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 
 # Add docstings fat bum
+
+BREF_BASE = "https://www.basketball-reference.com"
 
 class ScrapeEngine:
     # db path defaults to NBA.db
@@ -42,21 +46,32 @@ class ScrapeEngine:
     # Sets up the driver to be used in scrapping functions, gives basic options along with a true/false headless option
     def _setupDriver(self, headless):
         options = Options()
-
+        options.page_load_strategy = 'eager'
         if headless:
-            options.add_argument("--headless=new")  # modern headless mode
-
+            options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
-        options.add_argument("--remote-debugging-port=9222")
+        options.add_argument("--disable-extensions")
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument("--ignore-certificate-errors")
         options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        options.add_experimental_option("useAutomationExtension", False)
-        driver = webdriver.Chrome(options=options)
-
-        driver.set_page_load_timeout(30)
+        options.add_argument(
+            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+        )
+        options.binary_location = "/usr/bin/chromium-browser"
+        service = Service("/usr/bin/chromedriver")
+        driver = webdriver.Chrome(service=service, options=options)
+        driver.execute_cdp_cmd("Network.setUserAgentOverride", {
+            "userAgent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+            )
+        })
+        driver.set_page_load_timeout(90)
         return driver
+  
 
     # Trys to open and read json file, if fails return empty list    
     def _loadJson(self, path): 
@@ -98,6 +113,24 @@ class ScrapeEngine:
     def _stripComments(self, html):
         return re.sub(r"<!--(.*?)-->", r"\1", html, flags=re.DOTALL)
 
+    # Helper using requests package to gfet b-ref for basketball ref
+    def _brefGet(self, url):
+    
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/145.0.0.0 Safari/537.36"
+            ),
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        }
+        time.sleep(4)  # B-Ref rate limits — be polite
+        response = requests.get(url, headers=headers, timeout=30)
+        response.encoding = "utf-8"
+        response.raise_for_status()
+        return response.text
+
     # SCRAPPERS
 
     def scrapeGames(self, season=2026):
@@ -116,17 +149,10 @@ class ScrapeEngine:
 
         try:
             print(f"Opening URL - {url}")
-            self.driver.get(url)
-
-            # FIXME: understand....
-            WebDriverWait(self.driver, 10).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, "filter"))
-            )
-
-            # Start up beautifulSoup to parse the HTML
-            soupInit = BeautifulSoup(self.driver.page_source, "html.parser")
-        
-            # Filter the div elements in the html source 
+            html = self._brefGet(url)
+            
+            # Parse the initial page to find month links
+            soupInit = BeautifulSoup(html, 'html.parser') 
             filterDiv = soupInit.find("div", class_="filter")
 
             # FIXME: understand....
@@ -134,7 +160,7 @@ class ScrapeEngine:
                 monthLinks = filterDiv.find_all(
                     "a", href=re.compile(r"games-.*\.html")
                 )
-                monthURLs = [url + link["href"] for link in monthLinks]
+                monthURLs = [BREF_BASE + link["href"] for link in monthLinks]
             else:
                 monthURLs = [url]
 
@@ -143,12 +169,9 @@ class ScrapeEngine:
                 monthLabel = url.split('-')[-1].replace('.html', "").capitalize()
                 print(f"---------Scraping {monthLabel}----------")
 
-                self.driver.get(url)
-                time.sleep(2)
-
                 # Clean the HTML by removing comments using re package and five the clean HTML to beatufiulSoup to parse
-                cleanHTML = re.sub(r"<!--|-->", "", self.driver.page_source)
-                soup = BeautifulSoup(cleanHTML, "html.parser")
+                cleanHTML = self._brefGet(url)
+                soup = BeautifulSoup(cleanHTML, 'html.parser')
                 
                 # Find the schedule table and if no table for that month found skip over and continue
                 table = soup.find("table", {"id": "schedule"})
@@ -170,8 +193,8 @@ class ScrapeEngine:
                         continue
 
                     # Gets the visitor and home team name and skips if not found
-                    visitorTD = row.find("th", {"data-stat": "visitor_team_name"})
-                    homeTD = row.find("th", {"data-stat": "home_team_name"})
+                    visitorTD = row.find("td", {"data-stat": "visitor_team_name"})
+                    homeTD = row.find("td", {"data-stat": "home_team_name"})
                     if not visitorTD or not homeTD:
                         continue
                     
@@ -190,11 +213,11 @@ class ScrapeEngine:
                     dateText = dateTH.text.strip()
                     try:
                         dateParaOne = datetime.strptime(
-                                dateText, "%a, %b %d, %y"
+                                dateText, "%a, %b %d, %Y"
                         )
 
                         allGames.append({
-                            "game_id": game_id,
+                            "game_id": gameID,
                             "game_date": dateParaOne.strftime("%Y-%m-%d"),
                             "home_team_id": int(homeID),
                             "away_team_id": int(awayID),
@@ -264,18 +287,18 @@ class ScrapeEngine:
         for game in gamesList:
             gameID = game["game_id"]
             homeTeamID = game["home_team_id"]
-            url = f"{url}/{gameID}.html"
+            url = f"https://www.basketball-reference.com/boxscores/{gameID}.html"
             print(f"Scrapping log {url}")
 
             try:
                 # Get the url for the driver and sleeps to not make site agery
-                self.driver.get(url)
-                self.driver.sleep(5)
+                html = self._brefGet(url)
 
                 # Gets the data from the tables on each game log without comments to loop through to get indivudal player stats
-                soup = BeautifulSoup(self._stripComments(self.driver.page_source), "html.parser")
+                soup = BeautifulSoup(html, "html.parser")
                 tables = soup.find_all("table", id=re.compile(r"box-[A-Z]{3}-game-basic"))
 
+                print(f"  Found {len(tables)} tables in {gameID}")
                 for table in tables:
                     # This chuck gets the team stats and maps it using the given team map in the class vars
                     abbrMatch = re.search(r"box-([A-Z]{3})-game-basic", table["id"])
@@ -301,41 +324,42 @@ class ScrapeEngine:
                             continue
 
                         nameTH = row.find("th", {"data-stat": "player"})
-                    if not nameTH:
-                        continue
+                        if not nameTH:
+                            continue
                     
-                    # Gets the player name to pull their stats
-                    cleanName = self._normalizeName(nameTH.get_text())
-                    playerID = self.playerLookup.get(cleanName)
-                    if playerID is None:
-                        print(f"Player: {cleanName} not in lookup")
-                        continue
+                        # Gets the player name to pull their stats
+                        cleanName = self._normalizeName(nameTH.get_text())
+                        playerID = self.playerLookup.get(cleanName)
+                        if playerID is None:
+                            print(f"Player: {cleanName} not in lookup")
+                            continue
                     
-                    # Returns each listed stats for each player in the table
-                    def getStat(stat, default=0, asFloat=False):
-                        cell = row.find("td", {"data-stat": stat})
-                        val = cell.get_text().strip if cell else ""
-                        if not val or val == ".":
-                            return default
-                        return float(val) if asFloat else int(val)
-                    # For each player get the stat amnd append it to the logs list
-                    mpCell = row.find("td", {"data-stat": "mp"})
-                    logs.append({
-                        "log_id": None,
-                        "player_id": playerID,
-                        "game_id": gameID,
-                        "minutes": self._convertMins(mpCell.get_text() if mpCell else ""),
-                        "points": getStat("pts"),
-                        "rebounds": getStat("trb"),
-                        "assists": getStat("ast"),
-                        "steals": getStat("stl"),
-                        "blocks": getStat("blk"),
-                        "turnovers": getStat("tov"),
-                        "fg_pct": getStat("fg_pct", default=0.0, asFloat=True),
-                        "is_starter": onStarters,
-                        "is_home": isHome,
-                        "rest_days": daysRest,
-                    })
+                        # Returns each listed stats for each player in the table
+                        def getStat(stat, default=0, asFloat=False):
+                            cell = row.find("td", {"data-stat": stat})
+                            val = cell.get_text().strip() if cell else ""
+                            if not val or val == ".":
+                                return default
+                            return float(val) if asFloat else int(val)
+                        
+                        # For each player get the stat amnd append it to the logs list
+                        mpCell = row.find("td", {"data-stat": "mp"})
+                        logs.append({
+                            "log_id": None,
+                            "player_id": playerID,
+                            "game_id": gameID,
+                            "minutes": self._convertMins(mpCell.get_text() if mpCell else ""),
+                            "points": getStat("pts"),
+                            "rebounds": getStat("trb"),
+                            "assists": getStat("ast"),
+                            "steals": getStat("stl"),
+                            "blocks": getStat("blk"),
+                            "turnovers": getStat("tov"),
+                            "fg_pct": getStat("fg_pct", default=0.0, asFloat=True),
+                            "is_starter": onStarters,
+                            "is_home": isHome,
+                            "rest_days": daysRest,
+                        })
 
             except Exception as e:
                 print(f"Failed to scrape game {gameID}: {e}")
@@ -364,7 +388,7 @@ class ScrapeEngine:
         def processAnchor(anchor):
             nonlocal nextID
             try:
-                href = anchor.get_attribuite("href") or ""
+                href = anchor.get_attribute("href") or ""
             except Exception:
                 return
 
@@ -406,7 +430,7 @@ class ScrapeEngine:
                     tds = row.find_elements(By.TAG_NAME, "td")
                     if len(tds) >= 4:
                         candidate = tds[3].text.strip()
-                        if candiate and re.match(r"^[A-Za-z\-]{1,4}$", candidate):
+                        if candidate and re.match(r"^[A-Za-z\-]{1,4}$", candidate):
                             position = candidate
             except Exception:
                 pass
@@ -431,7 +455,8 @@ class ScrapeEngine:
         try:
             print(f"Opening URL -- {url}")
             self.driver.get(url)
-            WebDriverWait(self.driver, 15).until(
+            time.sleep(5)
+            WebDriverWait(self.driver, 30).until(
                 EC.presence_of_all_elements_located((By.CSS_SELECTOR, "a[href*='/player/']"))
             )
 
@@ -493,14 +518,23 @@ class ScrapeEngine:
 
         try:
             print(f"Opening URL -- {url}")
-            self.driver.get(url)
-            WebDriverWait(self.driver, 15).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, "td[data-stat='team] a"))
-            )
             
-            # Strip comments as the advanced talbe is hidden inside them
-            soup = BeautifulSoup(self._stripComments(self.driver.page_source), "html.parser")
+            raw_html = self._brefGet(url)
+            soup = BeautifulSoup(raw_html, "html.parser")
+
+            # 1. First, try to find it normally (sometimes it's there)
             table = soup.find("table", {"id": "advanced-team"})
+
+            # 2. If not found, hunt through the HTML comments
+            if not table:
+                print("Table not in main HTML, searching comments...")
+                comments = soup.find_all(string=lambda text: isinstance(text, Comment))
+                for comment in comments:
+                    if 'id="advanced-team"' in comment:
+                        # We found the right comment! Parse it as its own little soup.
+                        comment_soup = BeautifulSoup(comment, "html.parser")
+                        table = comment_soup.find("table", {"id": "advanced-team"})
+                        break
             if not table:
                 print("Advanced-team table not found")
                 return []
@@ -510,7 +544,7 @@ class ScrapeEngine:
                     continue
 
                 teamTD = row.find("td", {"data-stat": "team"})
-                if not teamID:
+                if not teamTD:
                     continue
 
                 a = teamTD.find("a")
@@ -591,10 +625,10 @@ class ScrapeEngine:
                 titleDiv = section.find("div", class_="Table__Title")
                 espnName = titleDiv.get_text().strip() if titleDiv else None
                 abbr = self.fullNameConversion.get(espnName)
-                rawID = self.teamMpa.get(abbr) if abbr else None
+                rawID = self.teamMap.get(abbr) if abbr else None
                 if not rawID:
                     continue
-                teamID = int(raw)
+                teamID = int(rawID)
                 targetGameID = nextGameLookup.get(teamID)
 
                 tbody = section.find("tbody", class_="Table__TBODY")
@@ -635,84 +669,7 @@ class ScrapeEngine:
             print(f"Error in scrapeStatus: {e}")
 
         return statusData
-
-    def scrapeResults(self):
-        """
-        Overveiw:
-            Scrapes basketball reference and scrapes which team won eacg game in a season, along with the total scores for each team
-        Params
-            None
-        Returns:
-            A list containing results of the games
-        """
-        url = "https://www.basketball-reference.com/leagues/NBA_2026_games.html"
-        results = []
-
-        try:
-            print(f"Opening {startURL}")
-            self.driver.get(startURL)
-            WebDriverWait(self.driver, 10).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, "filter"))
-            )
-
-            soupInit = BeautifulSoup(self.driver.page_source, "html.parser")
-            filterDiv = soupInit.find("div", class_="filter")
-            monthLinks = filterDiv.find_all("a", href=re.compile(r"games-.*\.html"))
-            monthURLs = [url + link["href"] for link in monthLinks] or [url]
-
-            for monthURL in monthURLs:
-                self.driver.get(monthURL)
-                time.sleep(2)
-                soup = BeautifulSoup(self._stripComments(self.driver.page_source), "html.parser")
-                table = soup.find("table", {"id": "schedule"})
-                if not table:
-                    continue
-
-                for row in table.find("tbody").find_all("tr"):
-                    if row.get("class") and "thead" in row["class"]:
-                        continue
-
-                    visitorPtsTD = row.find("td", {"data-stat": "visitor_pts"})
-                    homePtsTD    = row.find("td", {"data-stat": "home_pts"})
-                    if not visitorPtsTD or not visitorPtsTD.text.strip():
-                        continue
-
-                    try:
-                        visitorPts = int(visitorPtsTD.text)
-                        homePts    = int(homePtsTD.text)
-                    except (ValueError, AttributeError):
-                        continue
-
-                    dateTH = row.find("th", {"data-stat": "date_game"})
-                    gameID = dateTH.get("csk") if dateTH else None
-                    if not gameID:
-                        continue
-
-                    homeName = (row.find("td", {"data-stat": "home_team_name"}) or {}).text.strip()
-                    awayName = (row.find("td", {"data-stat": "visitor_team_name"}) or {}).text.strip()
-                    homeAbbr = self.fullNameConversion.get(homeName)
-                    awayAbbr = self.fullNameConversion.get(awayName)
-                    homeID   = int(self.teamMap[homeAbbr]) if homeAbbr and homeAbbr in self.teamMap else None
-                    awayID   = int(self.teamMap[awayAbbr]) if awayAbbr and awayAbbr in self.teamMap else None
-                    if not homeID or not awayID:
-                        continue
-
-                    results.append({
-                        "game_id":      gameID,
-                        "home_team_id": homeID,
-                        "away_team_id": awayID,
-                        "home_score":   homePts,
-                        "away_score":   visitorPts,
-                        "winner_id":    homeID if homePts > visitorPts else awayID,
-                    })
-
-            print(f"Total results scraped: {len(results)}")
-
-        except Exception as e:
-            print(f"Error in scrapeResults: {e}")
-
-        return results
-
+ 
     def close(self):
         """
             Overview:
@@ -727,12 +684,15 @@ class ScrapeEngine:
     # Gets the last date data was added to db
     def getLastScrapeDate(self):
         conn = sqlite3.connect(self.db)
-        # FIXME: Might have tp change later
-        res = conn.execute("SELECT MAX(game_date) FROM Games WHERE game_date IS NOT NULL").fetchone()
+        res = conn.execute("""
+            SELECT MAX(g.game_date) 
+            FROM Player_game_logs pgl
+            JOIN Games g ON pgl.game_id = g.game_id
+        """).fetchone()
         conn.close()
 
         if res[0]:
             return res[0]
         else:
-            "2025-10-01"
+            return "2025-10-01" 
 

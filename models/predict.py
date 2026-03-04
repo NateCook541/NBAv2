@@ -4,7 +4,7 @@ import joblib
 import pandas as pd
 from pathlib import Path
 
-from features.featureCollecter import buildFeatures
+from features.featureCollector import buildFeatures
 
 #FIXME: Add docstrings bum
 

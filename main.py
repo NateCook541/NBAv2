@@ -29,15 +29,23 @@ def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None):
     db.initSchema()
 
     engine = ScrapeEngine(db=dbPath, headless=True)
+    
 
     try:
         print("\n--------Scraping--------")
         teams = engine.scrapeTeams()
+
         players = engine.scrapePlayers()
+        with open(f"{outputDir}/players.json", "w") as f:
+            json.dump(players, f, indent=2)
+
         games = engine.scrapeGames()
+        with open(f"{outputDir}/games.json", "w") as f:
+            json.dump(games, f, indent=2)
+
         logs = engine.scrapeLogs(numGames=numLogGames)
-        status = engine.scrapeStatus()
-        results = engine.scrapeResults()
+        status = engine.scrapeStatus()    
+        
     finally:
         engine.close()
 
@@ -47,7 +55,6 @@ def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None):
     db.upsertGames(games)
     db.upsertLogs(logs)
     db.upsertStatus(status)
-    db.upsertResults(results)
 
     print("\n--------DB Updated Complete--------")
 
