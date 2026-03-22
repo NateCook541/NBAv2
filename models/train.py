@@ -1,11 +1,12 @@
 import sqlite3
 import joblib
 import pandas as pd
+import numpy as np
 from pathlib import Path
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from xgboost import XGBRegressor
-
+from models.evaluate import evaluateModel, plotPredictions, plotResiduals, plotResidualVsPred
 
 from features.featureCollector import buildFeatures, featureOrder
 
@@ -62,13 +63,13 @@ def generateTrainingData():
     return X, y
 
 
-def trainModel(save):
+def trainModel(save=True, plot=False):
     X, y = generateTrainingData()
 
     mask = X["avgPts10"] > 0
     X, y = X[mask], y[mask]
 
-    # Uses basic hyperparameters (tried expermenting so far the best are actually these)
+    # Uses basic hyperparameters (Note - Test other models/parameters (Mabye TPOT might help here?))
     XTrain, XTest, yTrain, yTest = train_test_split(X, y, test_size=0.2, random_state=42)
     model = XGBRegressor(
         n_estimators  = 100,
@@ -80,11 +81,12 @@ def trainModel(save):
 
     model.fit(XTrain, yTrain)
 
-    predictions = model.predict(XTest)
-    mae = mean_absolute_error(yTest, predictions)
-
-    print (f"XGBoost MAE: {mae:.2f} points")
-
+    predictions = evaluateModel(model, XTest, yTest)
+    if plot:
+        plotPredictions(yTest, predictions)
+        plotResiduals(yTest, predictions)
+        plotResidualVsPred(predictions, yTest)
+    
     # Get the feature importance data as well
     importance = pd.DataFrame({
         "feature": XTest.columns,
@@ -92,7 +94,7 @@ def trainModel(save):
     }).sort_values("importance", ascending=False)
     print("\nFeature importances:")
     print(importance.to_string(index=False))
-
+    
     if save:
         modelPath = Path(__file__).parent / "nba_model.joblib"
         joblib.dump(model, modelPath)

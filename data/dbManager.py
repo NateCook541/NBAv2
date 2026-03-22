@@ -56,20 +56,19 @@ dbSchema = {
     """,
     "Status": """
         CREATE TABLE IF NOT EXISTS Status (
-            status_log_id INTEGER,
             player_id     INTEGER NOT NULL,
             team_id       INTEGER NOT NULL,
             game_id       TEXT,
-            scrape_date   TEXT    NOT NULL,
+            scrape_date   TEXT NOT NULL,
+            report_time   TEXT,
             status        TEXT,
-            return_date   TEXT,
+            reason        TEXT,
             comment       TEXT,
-            PRIMARY KEY (status_log_id, scrape_date, game_id)
+            PRIMARY KEY (player_id, game_id, scrape_date)
         )
-    """, 
+    """,
 }
 
-# FIXME: Understand...
 extraIndexes = [
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_player_game ON Player_game_logs (player_id, game_id)",
 ]
@@ -184,13 +183,18 @@ class DBManager:
     def upsertStatus(self, data):
         sql = """
             INSERT OR IGNORE INTO Status
-                (status_log_id, player_id, team_id, game_id, scrape_date, status, return_date, comment)
+                (player_id, team_id, game_id, scrape_date, report_time, status, reason, comment)
             VALUES
-                (:status_log_id, :player_id, :team_id, :game_id, :scrape_date, :status, :return_date, :comment)
+                (:player_id, :team_id, :game_id, :scrape_date, :report_time, :status, :reason, :comment)
         """
 
         with self._connect() as conn:
             conn.cursor().executemany(sql, data)
 
         print(f"Upserted {len(data)} status records")
+
+    def getLastStatusDate(self):
+        with self._connect() as conn:
+            res = conn.execute("SELECT MAX(scrape_date) FROM Status").fetchone()
+        return res[0] if res and res[0] else None
 

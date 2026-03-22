@@ -21,14 +21,14 @@ def _loadModel():
     modelPath = Path(__file__).parent / "nba_model.joblib"
     if not modelPath.exists():
         raise FileNotFoundError(
-                "Non trained model found"
+                "No trained model found"
         )
 
     return joblib.load(modelPath)
 
 
 # PUBLIC API
-
+# Note - Future me now. I don't know why I wrote public api here LOL, its so stupid im keeping it
 
 def predict(playerName, gameDate):
     model = _loadModel()
@@ -139,19 +139,4 @@ if __name__ == '__main__':
     else:
         status = (f"[{result['injury_status']}]" if result["injury_status"] else "")
         print(f"{result['player']}{status}: {result['predicted_points']} pts on {result['date']}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

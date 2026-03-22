@@ -1,5 +1,6 @@
 import argparse
 import json
+import subprocess
 from pathlib import Path
 
 from data.scrapperEngine import ScrapeEngine
@@ -59,15 +60,34 @@ def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None):
     print("\n--------DB Updated Complete--------")
 
 
-def retrainModel():
+def retrainModel(plot=True):
     from models.train import trainModel
     print("\n--------Training Model--------")
-    trainModel(save=True)
+    trainModel(save=True, plot=plot)
     print("--------Training complete--------")
 
 
-# ENTRY POINT
+def uploadDB(localPath="NBA.db",
+        vmUser = "cookn1",
+        vmIP = "136.117.146.128",
+        vmPath = "~/nbaapi/NBAv2/",
+        keyPath="~/.ssh/google_compute_engine"):
 
+    print("\n--------Uploading DB--------")
+        
+    cmd = [
+        "scp",
+        "-i", keyPath,
+        localPath,
+        f"{vmUser}@{vmIP}:{vmPath}"
+    ]
+
+    subprocess.run(cmd, check=True)
+
+    print("\n--------Uploading Complete--------")
+
+
+# ENTRY POINT
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="NBA prediction pipeline")
@@ -77,17 +97,24 @@ if __name__ == "__main__":
                         help="Retrain without scraping")
     parser.add_argument("--num-games",  type=int, default=None,
                         help="Limit log scraping to N games (debug only)")
+    parser.add_argument("--upload", action="store_true",
+                    help="Upload DB to VM")
+    parser.add_argument("--plots", action="store_true",
+                    help="Show training evaluation plots")
     parser.add_argument("--db",  default="NBA.db",  help="SQLite DB path")
     parser.add_argument("--out", default="output",  help="JSON output dir")
     args = parser.parse_args()
 
     if args.train_only:
-        retrainModel()
+        retrainModel(plot=args.plots)
     elif args.train:
         scrape(dbPath=args.db, outputDir=args.out, numLogGames=args.num_games)
-        retrainModel()
+        retrainModel(plot=args.plots)
     else:
         scrape(dbPath=args.db, outputDir=args.out, numLogGames=args.num_games)
+    
+    if args.upload:
+        uploadDB(localPath=args.db) 
 
 # :steam_smile
 

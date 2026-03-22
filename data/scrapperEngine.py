@@ -588,6 +588,8 @@ class ScrapeEngine:
         return teamsOut
 
 
+    
+
     def scrapeStatus(self):
         """
         Overveiw:
