@@ -29,7 +29,7 @@ def generateTrainingData():
         FROM Player_game_logs pgl
         JOIN Games   g ON pgl.game_id   = g.game_id
         JOIN Players p ON pgl.player_id = p.player_id
-        WHERE pgl.minutes > 0
+        WHERE pgl.minutes >= 10 -- train only when greater than 10 minutes played
         ORDER BY g.game_date
         """
     logs = pd.read_sql_query(logsQuery, conn)
@@ -69,15 +69,22 @@ def trainModel(save=True, metrics=False):
     mask = X["avgPts10"] > 0
     X, y = X[mask], y[mask]
 
+    # Have to use this instead of test, train, split as to prevent r2 score being inflated from games already being seen
+    splitIdx = int(len(X) * 0.8)
+    XTrain, XTest = X.iloc[:splitIdx], X.iloc[splitIdx:]
+    yTrain, yTest = y.iloc[:splitIdx], y.iloc[splitIdx:]
+
     # Uses basic hyperparameters (Note - Test other models/parameters (Mabye TPOT might help here?))
-    XTrain, XTest, yTrain, yTest = train_test_split(X, y, test_size=0.2, random_state=42)
     model = XGBRegressor(
-        n_estimators  = 100,
-        max_depth     = 5,
-        learning_rate = 0.1,
-        objective     = "reg:squarederror",
-        random_state  = 42,
-    ) 
+        n_estimators=400,
+        max_depth=6,
+        learning_rate=0.05,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        min_child_weight=5,
+        objective="reg:squarederror",
+        random_state=42,
+    )
 
     model.fit(XTrain, yTrain)
     

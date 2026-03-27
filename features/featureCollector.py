@@ -1,18 +1,18 @@
 import sqlite3
 import pandas as pd
+from datetime import datetime, timedelta
 
 #FIXME: add docstrings later
 
 # Column order the model was trained on
 featureOrder = [
     "avgPts10", "avgMin10", "avgFG10", "avgPPM10",
-    "formPts5", "formMin5",
-    "missing_ppg_injury", "starters_out_count", "injury_data_exists", "injury_opportunity",
+    "formPts5", "formMin5", "minStd10",
+    "missing_ppg_injury", "starters_out_count", "injury_opportunity",
+    "player_status_flag", "player_is_questionable",
     "opp_def_rtg", "opp_pace",
     "is_home", "rest_days",
 ]
-
-
 
 # PRIVATE HELPERS
 
@@ -33,7 +33,9 @@ def _rollingStats(playerID, date, conn):
 
 
 def _injuryContext(teamID, date, conn):
-    defaults = {"missing_ppg": 0.0, "starters_out": 0, "data_exists": 0}
+    
+    # Reports are filled out the day before the game is actually played so we check both day before as well as game date
+    dayBefore = (datetime.strptime(date, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
 
     # Identify starts by querying for players who started >= 50% of games in 100 game window
     startersQuery = """
@@ -52,11 +54,11 @@ def _injuryContext(teamID, date, conn):
         SELECT COUNT(*) AS starters_out
         FROM Status
         WHERE team_id = ?
-          AND scrape_date = ?
+          AND scrape_date IN (?, ?)
           AND status IN ('Out', 'Doubtful')
           AND player_id IN (SELECT player_id FROM RecentStarts)
     """
-    startersDF = pd.read_sql_query(startersQuery, conn, params=[date, teamID, date])
+    startersDF = pd.read_sql_query(startersQuery, conn, params=[date, teamID, dayBefore, date])
 
     # Get the missing points from injuryed players by getting avg points for all and summing
     missingPPGQuery = """
@@ -69,11 +71,11 @@ def _injuryContext(teamID, date, conn):
         WHERE player_id IN (
             SELECT player_id FROM Status
             WHERE team_id = ?
-              AND scrape_date = ?
+              AND scrape_date IN (?, ?)
               AND status IN ('Out', 'Doubtful')
         )
     """
-    missingDF = pd.read_sql_query(missingPPGQuery, conn, params=[teamID, date])
+    missingDF = pd.read_sql_query(missingPPGQuery, conn, params=[teamID, dayBefore, date])
 
     startersOut = int(startersDF["starters_out"].iloc[0]) if not startersDF.empty else 0
     missingPPG = float(missingDF["total_missing"].iloc[0] or 0.0) if not missingDF.empty else 0
@@ -97,6 +99,28 @@ def _oppContext(oppTeamID, date, conn):
     return {"def_rtg": float(df["def_rtg"].iloc[0] or 0.0),
             "pace": float(df["pace"].iloc[0] or 0.0)}
 
+# Used for player status feature which gathers the specfic players injury context (Important for players going into games listed as doutful)
+def _playerStatusContext(playerID, date, conn):
+    query = """
+        SELECT status FROM Status
+        WHERE player_id = ?
+          AND scrape_date = ?
+        LIMIT 1
+    """
+    # Check for the day before not day of
+    dayBefore = (datetime.strptime(date, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
+    df = pd.read_sql_query(query, conn, params=[playerID, dayBefore])
+
+    if df.empty:
+        return {"player_status_flag": 0, "player_is_questionable": 0}
+
+    status = df["status"].iloc[0]
+    return {
+        # 1 if any flag at all (Out/Doubtful/Questionable) 0 if available or no record
+        "player_status_flag":    0 if status in ("Available", None, "") else 1,
+        # A flag specifically for questionable as these players play but for few mins or not as hard, in both cases less points are typically scored
+        "player_is_questionable": 1 if status == "Questionable" else 0,
+    }
 
 # Builds the feature vector for training
 def buildFeatures(playerID, date, teamID, oppTeamID, conn):
@@ -110,6 +134,7 @@ def buildFeatures(playerID, date, teamID, oppTeamID, conn):
     # Get injury (status) and oppnenet features
     injuryFeatures = _injuryContext(teamID, date, conn)
     oppFeatures = _oppContext(oppTeamID, date, conn)
+    playerStatus = _playerStatusContext(playerID, date, conn)
 
     # Read the home and rest days stats
     isHome = int(rolling.iloc[0]["is_home"]) if "is_home" in rolling.columns else 0
@@ -124,10 +149,12 @@ def buildFeatures(playerID, date, teamID, oppTeamID, conn):
         "avgPPM10":              baseline["points"] / avgMin,
         "formPts5":              ewma["points"],
         "formMin5":              ewma["minutes"],
+        "minStd10":              float(rolling.head(10)["minutes"].std() or 0.0),
         "missing_ppg_injury":    injuryFeatures["missing_ppg"],
         "starters_out_count":    injuryFeatures["starters_out"],
-        "injury_data_exists":    injuryFeatures["data_exists"],
         "injury_opportunity":    injuryFeatures["missing_ppg"] * (baseline["points"] / avgMin),
+        "player_status_flag":    playerStatus["player_status_flag"],
+        "player_is_questionable":playerStatus["player_is_questionable"],
         "opp_def_rtg":           oppFeatures["def_rtg"],
         "opp_pace":              oppFeatures["pace"],
         "is_home":               isHome,
