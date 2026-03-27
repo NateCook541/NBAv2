@@ -7413,6 +7413,13 @@
     "season": 2026
   },
   {
+    "game_id": "202604010ORL",
+    "game_date": "2026-04-01",
+    "home_team_id": 14,
+    "away_team_id": 15,
+    "season": 2026
+  },
+  {
     "game_id": "202604010WAS",
     "game_date": "2026-04-01",
     "home_team_id": 26,
@@ -7424,13 +7431,6 @@
     "game_date": "2026-04-01",
     "home_team_id": 5,
     "away_team_id": 17,
-    "season": 2026
-  },
-  {
-    "game_id": "202604010ORL",
-    "game_date": "2026-04-01",
-    "home_team_id": 14,
-    "away_team_id": 15,
     "season": 2026
   },
   {
@@ -7700,17 +7700,17 @@
     "season": 2026
   },
   {
+    "game_id": "202604070IND",
+    "game_date": "2026-04-07",
+    "home_team_id": 29,
+    "away_team_id": 8,
+    "season": 2026
+  },
+  {
     "game_id": "202604070WAS",
     "game_date": "2026-04-07",
     "home_team_id": 26,
     "away_team_id": 13,
-    "season": 2026
-  },
-  {
-    "game_id": "202604070BOS",
-    "game_date": "2026-04-07",
-    "home_team_id": 17,
-    "away_team_id": 18,
     "season": 2026
   },
   {
@@ -7728,10 +7728,10 @@
     "season": 2026
   },
   {
-    "game_id": "202604070IND",
+    "game_id": "202604070BOS",
     "game_date": "2026-04-07",
-    "home_team_id": 29,
-    "away_team_id": 8,
+    "home_team_id": 17,
+    "away_team_id": 18,
     "season": 2026
   },
   {

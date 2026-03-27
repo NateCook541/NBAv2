@@ -1,11 +1,7 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
-import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-
-OUTPUT_DIR = Path("/mnt/c/Users/natec/Pictures/NBA")
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 def evaluateModel(model, XTest, yTest):
 
@@ -42,47 +38,6 @@ def evaluateModel(model, XTest, yTest):
 
     return predictions
 
-def plotPredictions(yTest, predictions):
 
-    plt.figure(figsize=(6,6))
-    plt.scatter(yTest, predictions, alpha=0.3)
-    plt.plot([0,50],[0,50], color="red")
-    plt.xlabel("Actual Points")
-    plt.ylabel("Predicted Points")
-    plt.title("Prediction vs Actual")
-    path = OUTPUT_DIR / "prediction_vs_actual.png"
-    plt.savefig(path, dpi=150, bbox_inches="tight")
-    plt.close()
-
-    print(f"Saved plot → {path}")
-
-def plotResiduals(yTest, predictions):
-
-    residuals = predictions - yTest
-
-    plt.figure(figsize=(6,4))
-    plt.hist(residuals, bins=40)
-    plt.title("Residual Distribution")
-    plt.xlabel("Prediction Error")
-    path = OUTPUT_DIR / "residual_histogram.png"
-    plt.savefig(path, dpi=150, bbox_inches="tight")
-    plt.close()
-
-    print(f"Saved plot → {path}")
-
-def plotResidualVsPred(predictions, yTest):
-
-    residuals = predictions - yTest
-
-    plt.figure(figsize=(6,4))
-    plt.scatter(predictions, residuals, alpha=0.3)
-    plt.axhline(0, color="red")
-    plt.xlabel("Predicted Points")
-    plt.ylabel("Residual")
-    plt.title("Residual vs Prediction")
-    path = OUTPUT_DIR / "residual_vs_pred.png"
-    plt.savefig(path, dpi=150, bbox_inches="tight")
-    plt.close()
-
-    print(f"Saved plot → {path}")
+#FIXME: Add plots here mabye?
 

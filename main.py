@@ -24,7 +24,7 @@ def _doubleCheckTeamMap(outputDir="output"):
             json.dump(TeamMap, f, indent=2)
         print(f"Created {path}")
 
-def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None):
+def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None, backfillFrom=None):
     _doubleCheckTeamMap(outputDir)
     db = DBManager(dbPath)
     db.initSchema()
@@ -45,12 +45,17 @@ def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None):
             json.dump(games, f, indent=2)
 
         logs = engine.scrapeLogs(numGames=numLogGames)
-        status = engine.scrapeStatus()    
+        
+        if backfillFrom:
+            status = engine.scrapeStatusRange(backfillFrom)
+        else:
+            status = engine.scrapeAutoFill()
         
     finally:
         engine.close()
 
     print("\n--------Loading Items into DB--------")
+
     db.upsertTeams(teams)
     db.upsertPlayers(players)
     db.upsertGames(games)
@@ -60,61 +65,46 @@ def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None):
     print("\n--------DB Updated Complete--------")
 
 
-def retrainModel(plot=True):
+def retrainModel(metrics=True):
     from models.train import trainModel
     print("\n--------Training Model--------")
-    trainModel(save=True, plot=plot)
+    trainModel(save=True, metrics=metrics)
     print("--------Training complete--------")
-
-
-def uploadDB(localPath="NBA.db",
-        vmUser = "cookn1",
-        vmIP = "136.117.146.128",
-        vmPath = "~/nbaapi/NBAv2/",
-        keyPath="~/.ssh/google_compute_engine"):
-
-    print("\n--------Uploading DB--------")
-        
-    cmd = [
-        "scp",
-        "-i", keyPath,
-        localPath,
-        f"{vmUser}@{vmIP}:{vmPath}"
-    ]
-
-    subprocess.run(cmd, check=True)
-
-    print("\n--------Uploading Complete--------")
-
 
 # ENTRY POINT
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="NBA prediction pipeline")
-    parser.add_argument("--train",      action="store_true",
-                        help="Refresh data then retrain model")
-    parser.add_argument("--train-only", action="store_true",
-                        help="Retrain without scraping")
+    
+    # Scrape args
+    parser.add_argument("--scrape", action="store_true",
+                        help="Scrape data and store in DB")
+    parser.add_argument("--backfill-from", type=str, default=None, metavar="YYYY-MM-DD",
+                        help="Backfill status data from this date instead of auto-detecting. "
+                             "Example: --backfill-from 2023-10-01")
     parser.add_argument("--num-games",  type=int, default=None,
                         help="Limit log scraping to N games (debug only)")
-    parser.add_argument("--upload", action="store_true",
-                    help="Upload DB to VM")
-    parser.add_argument("--plots", action="store_true",
-                    help="Show training evaluation plots")
+
+
+    # Train args
+    parser.add_argument("--train", action="store_true",
+                        help="Train model")
+    parser.add_argument("--metrics", action="store_true",
+                    help="Show training metrics")
+
+
+    # Shared args
     parser.add_argument("--db",  default="NBA.db",  help="SQLite DB path")
     parser.add_argument("--out", default="output",  help="JSON output dir")
+    
     args = parser.parse_args()
 
-    if args.train_only:
-        retrainModel(plot=args.plots)
-    elif args.train:
-        scrape(dbPath=args.db, outputDir=args.out, numLogGames=args.num_games)
-        retrainModel(plot=args.plots)
-    else:
-        scrape(dbPath=args.db, outputDir=args.out, numLogGames=args.num_games)
-    
-    if args.upload:
-        uploadDB(localPath=args.db) 
+    if args.train:
+        retrainModel(metrics=args.metrics)
+    if args.scrape:
+        scrape(dbPath=args.db, outputDir=args.out, numLogGames=args.num_games, backfillFrom=args.backfill_from)
+    if not args.train and not args.scrape:
+        parser.print_help()
 
 # :steam_smile
 

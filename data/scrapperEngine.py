@@ -4,8 +4,9 @@ import json
 import unicodedata
 import sqlite3
 import requests
-from datetime import date
-from datetime import datetime
+import asyncio
+import aiohttp
+from datetime import date, datetime, timedelta
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -13,6 +14,44 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
+from nbainjuries import injury, injury_asy
+from data.dbManager import DBManager
+
+# NBA injury uses very slightly seperate full names than ESPN this table is used to convert to abbrs
+# FIXME: Look into removing this and changing helper function slightly to adjust to injury package
+NBA_REPORT_TEAM_MAP = {
+    "Atlanta Hawks": "ATL",
+    "Boston Celtics": "BOS",
+    "Brooklyn Nets": "BRK",
+    "Charlotte Hornets": "CHO",
+    "Chicago Bulls": "CHI",
+    "Cleveland Cavaliers": "CLE",
+    "Dallas Mavericks": "DAL",
+    "Denver Nuggets": "DEN",
+    "Detroit Pistons": "DET",
+    "Golden State Warriors": "GSW",
+    "Houston Rockets": "HOU",
+    "Indiana Pacers": "IND",
+    "LA Clippers": "LAC",
+    "Los Angeles Clippers": "LAC",   # NBA reports use both forms
+    "Los Angeles Lakers": "LAL",
+    "Memphis Grizzlies": "MEM",
+    "Miami Heat": "MIA",
+    "Milwaukee Bucks": "MIL",
+    "Minnesota Timberwolves": "MIN",
+    "New Orleans Pelicans": "NOP",
+    "New York Knicks": "NYK",
+    "Oklahoma City Thunder": "OKC",
+    "Orlando Magic": "ORL",
+    "Philadelphia 76ers": "PHI",
+    "Phoenix Suns": "PHO",
+    "Portland Trail Blazers": "POR",
+    "Sacramento Kings": "SAC",
+    "San Antonio Spurs": "SAS",
+    "Toronto Raptors": "TOR",
+    "Utah Jazz": "UTA",
+    "Washington Wizards": "WAS",
+}
 
 # Add docstings fat bum
 
@@ -130,6 +169,101 @@ class ScrapeEngine:
         response.encoding = "utf-8"
         response.raise_for_status()
         return response.text
+
+    # nbainjures has plyer name last-first format so this just flips itto first-last if needed
+    def _flipName(self, nbaReportName):
+        if not nbaReportName:
+            return ""
+        parts = [p.strip() for p in nbaReportName.split(",", 1)]
+        if len(parts) == 2:
+            return f"{parts[1]} {parts[0]}"
+        return nbaReportName
+    
+    # Aysnc function to get injury data concurrently for all datetimes in the status range
+    async def _fetchBatch(self, targetTimes):
+        async with aiohttp.ClientSession() as session:
+            tasks = [
+                    injury_asy.get_reportdata(dt, session=session)
+                    for dt in targetTimes
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        return list(zip(targetTimes, results))
+
+    # Converts the raw nbainjuries records into dict entrys that work with the status table
+    def _processNbaReportRecords(self, records, scrapeDate, reportTime):
+        if isinstance(records, str):
+            try:
+                records = json.loads(records)
+            except json.JSONDecodeError as e:
+                print(f"Failed to parse records JSON for {scrapeDate}: {e}")
+                return []
+        
+        if not isinstance(records, list) or not records:
+            return []
+
+        games = self._loadJson("output/games.json")
+
+        # Builds a lookup table to match record to correct gameid
+        gameDateTeamLookup = {}
+        for g in games:
+            for side in ("home_team_id", "away_team_id"):
+                key = (g["game_date"], g[side])
+                gameDateTeamLookup[key] = g["game_id"]
+
+        statusData = []
+        skipped = 0
+
+        for rec in records:
+            # Get correct team id
+            teamFullName = rec.get("Team", "")
+            abbr = NBA_REPORT_TEAM_MAP.get(teamFullName)
+            rawTeamID = self.teamMap.get(abbr) if abbr else None
+            if rawTeamID is None:
+                skipped += 1
+                continue
+            teamID = int(rawTeamID)
+
+            # Get correct player id
+            rawPlayerName = rec.get("Player Name") or ""
+            if not rawPlayerName:
+                skipped += 1
+                continue
+
+            flipped = self._flipName(rawPlayerName)
+            normalized = self._normalizeName(flipped)
+            playerID = self.playerLookup.get(normalized)
+            if playerID is None:
+                print(f"Player not in lookup: {rawPlayerName} -> {flipped}")
+                skipped += 1
+                continue
+
+            # Get correct game id (Need to convert format)
+            gameDate = rec.get("Game Date", "")
+            try:
+                gameDateISO = datetime.strptime(gameDate, "%m/%d/%Y").strftime("%Y-%m-%d")
+            except ValueError:
+                gameDateISO = scrapeDate
+
+            gameID = gameDateTeamLookup.get((gameDateISO, teamID))
+
+    
+            # Note gameID can be Null if not in the games.json yet, as we can backfill later after scrapeGames runs
+
+            statusData.append({
+                "player_id": playerID,
+                "team_id": teamID,
+                "game_id": gameID,
+                "scrape_date": scrapeDate,
+                "report_time": reportTime,
+                "status": rec.get("Current Status", ""),
+                "reason": rec.get("Reason", ""),
+                # Comment here mirrors reason so I don't have to change the model / feature building code
+                "comment": rec.get("Reason", "")
+            })
+
+        print(f"Processed {len(statusData)} records, skipped {skipped}")
+        return statusData
 
     # SCRAPPERS
 
@@ -588,90 +722,88 @@ class ScrapeEngine:
         return teamsOut
 
 
-    
+   # SCRAPE STATUS SECTION (3 functions) - Uses nba injurys package instead of web scrapping for consitent data + historical
 
-    def scrapeStatus(self):
-        """
-        Overveiw:
-            Scrapes epsn for a list of all current injured players and lists their estimated return date, along with details of the injury. Also adds the scrape date as the data needs to be time series. 
-        Params
-            None
-        Returns:
-            A list containing injured players along with other information.
-    """
-        url = "https://www.espn.com/nba/injuries"
-        statusData = []
-        nextLogID = 1
-        today = datetime.now().strftime("%Y-%m-%d")
-
-        games = self._loadJson("output/games.json")
-        if isinstance(games, dict):
-            games = []
-        nextGameLookup = {}
-        for game in sorted(games, key=lambda g: g["game_date"]):
-            if game["game_date"] >= today:
-                for side in ("home_team_id", "away_team_id"):
-                    tid = game[side]
-                    if tid not in nextGameLookup:
-                        nextGameLookup[tid] = game["game_id"]
-
-        # Oepn the url and start to parse with soup
+    # The actual scrape status function, now really scrapping at this point but im keeping it as to follow the pattern of the rest of the class
+    # Scrapes todays offical injury report, defualt is 5pm as thats the cuttoff for the teams to submit reports (which is why the defualt is 17)
+    def scrapeStatus(self, reportHour=17, reportMinute=30):
+        today = datetime.now()
+        scrapeDate = today.strftime("%Y-%m-%d")
+        reportDT = today.replace(hour=reportHour, minute=reportMinute, second=0, microsecond=0)
+        reportTime = reportDT.strftime("%H:%M")
+                                    
+        print(f"Scraping NBA injury report for {scrapeDate} at {reportTime}")
         try:
-            print(f"Opening injuries url -- {url}")
-            self.driver.get(url)
-            time.sleep(5)
-            soup = BeautifulSoup(self.driver.page_source, "html.parser")
-            
-            # FIXME: Understand...
-            for section in soup.find_all("div", class_="ResponsiveTable"):
-                titleDiv = section.find("div", class_="Table__Title")
-                espnName = titleDiv.get_text().strip() if titleDiv else None
-                abbr = self.fullNameConversion.get(espnName)
-                rawID = self.teamMap.get(abbr) if abbr else None
-                if not rawID:
-                    continue
-                teamID = int(rawID)
-                targetGameID = nextGameLookup.get(teamID)
-
-                tbody = section.find("tbody", class_="Table__TBODY")
-                if not tbody:
-                    continue
-
-                # FIXME: Understand...
-                for row in tbody.find_all("tr", class_="Table__TR"):
-                    nameTD = row.find("td", class_="col-name")
-                    if not nameTD:
-                        continue
-
-                    cleanName = self._normalizeName(nameTD.get_text().strip())
-                    playerID = self.playerLookup.get(cleanName)
-                    if playerID is None:
-                        print(f"Player {cleanName} ({abbr}) not in lookup")
-                        continue
-
-                    def col(cls):
-                        c = row.find("td", class_=cls)
-                        return c.get_text().strip() if c else ""
-                    
-                    statusData.append({
-                        "status_log_id": nextLogID,
-                        "player_id": playerID,
-                        "team_id": teamID,
-                        "game_id": targetGameID,
-                        "scrape_date": today,
-                        "status": col("col-stat"),
-                        "return_date": col("col-date"),
-                        "comment": col("col-desc"),
-                    })
-                    nextLogID += 1
-
-                print(f"Total status records scraped: {len(statusData)}")
-
+            records = injury.get_reportdata(reportDT)
         except Exception as e:
-            print(f"Error in scrapeStatus: {e}")
+            print(f"Error fetching NBA injury report: {e}")
+            return []
+        
+        if not records:
+            print(f"No injury report data returned (Possiable gap, exg all star break or something")
+            return []
 
-        return statusData
+        print(f"Raw records from NBA report {len(records)}")
+        return self._processNbaReportRecords(records, scrapeDate, reportTime)
+
+    # Backfills injury data for a date range using nbainjures async fetcher
+    def scrapeStatusRange(self, startDate, endDate=None, reportHour=17, reportMinute=30):
+        if endDate is None:
+            endDate= datetime.now().strftime("%Y-%m-%d")
+
+        start = datetime.strptime(startDate, "%Y-%m-%d")
+        end = datetime.strptime(endDate, "%Y-%m-%d")
+
+        targetTimes = []
+        current = start
+        while current <= end:
+            targetTimes.append(current.replace(hour=reportHour, minute=reportMinute))
+            current += timedelta(days=1)
+
+        print(f"Getting NBA reports for {len(targetTimes)} dates {startDate} -> {endDate}")
+
+        allStatus = []
+        for dt in targetTimes:
+            try:
+                records = injury.get_reportdata(dt)
+            except Exception as e:
+                continue
+
+            if not records:
+                continue
+
+            scrapeDate = dt.strftime("%Y-%m-%d")
+            reportTime = dt.strftime("%H:%M")
+            print(f"  {scrapeDate}: {len(records)} raw records")
+            processed = self._processNbaReportRecords(records, scrapeDate, reportTime)
+            allStatus.extend(processed)
  
+        print(f"Total status records from range: {len(allStatus)}")
+        return allStatus
+
+    # Auto detects last date in status table fills forward to today
+    # If table is empty it starts from 2021-10-01
+    def scrapeStatusAutoFill(self, reportHour=17, reportMinute=30):
+        dbManagerClass = DBManager(self.db)
+
+        lastDate = dbManagerClass.getLastStatusDate()
+        if lastDate:
+            startDT = datetime.strptime(lastDate, "%Y-%m-%d") + timedelta(days=1)
+            startDate = startDT.strftime("%Y-%m-%d")
+        else:
+            startDate = "2021-10-01"
+            print("Status table is empty — backfilling from 2021-10-01")
+ 
+        today = datetime.now().strftime("%Y-%m-%d")
+ 
+        if startDate > today:
+            print("Status data is already up to date.")
+            return []
+ 
+        print(f"Auto-filling status from {startDate} to {today}")
+        return self.scrapeStatusRange(startDate, today, reportHour, reportMinute)
+       
+
     def close(self):
         """
             Overview:

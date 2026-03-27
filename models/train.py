@@ -6,7 +6,7 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from xgboost import XGBRegressor
-from models.evaluate import evaluateModel, plotPredictions, plotResiduals, plotResidualVsPred
+from models.evaluate import evaluateModel
 
 from features.featureCollector import buildFeatures, featureOrder
 
@@ -63,7 +63,7 @@ def generateTrainingData():
     return X, y
 
 
-def trainModel(save=True, plot=False):
+def trainModel(save=True, metrics=False):
     X, y = generateTrainingData()
 
     mask = X["avgPts10"] > 0
@@ -80,12 +80,9 @@ def trainModel(save=True, plot=False):
     ) 
 
     model.fit(XTrain, yTrain)
-
-    predictions = evaluateModel(model, XTest, yTest)
-    if plot:
-        plotPredictions(yTest, predictions)
-        plotResiduals(yTest, predictions)
-        plotResidualVsPred(predictions, yTest)
+    
+    if metrics:
+        predictions = evaluateModel(model, XTest, yTest)
     
     # Get the feature importance data as well
     importance = pd.DataFrame({
