@@ -7,7 +7,9 @@ from datetime import datetime, timedelta
 # Column order the model was trained on
 featureOrder = [
     "avgPts10", "avgMin10", "avgFG10", "avgPPM10",
-    "formPts5", "formMin5", "minStd10",
+    "formPts5", "formMin5", "minStd10", "ptsStd10",
+    "ptsMax10", "ptsMin10", "ptsMedian10", "over15_rate",
+    "over20_rate", "over25_rate",
     "missing_ppg_injury", "starters_out_count", "injury_opportunity",
     "player_status_flag", "player_is_questionable",
     "opp_def_rtg", "opp_pace",
@@ -131,6 +133,25 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
     baseline = rolling.head(10).mean()
     ewma = rolling.head(10).ewm(span=5).mean().iloc[-1]
 
+    # Last 10 games for features below (can add more exg last 5)
+    last10 = rolling.head(10)
+
+    # Volatility
+    ptsStd10 = float(last10["points"].std() or 0.0)
+    minStd10 = float(rolling.head(10)["minutes"].std() or 0.0)
+
+    # Ceiling and floor
+    ptsMax10 = float(last10["points"].max())
+    ptsMin10 = float(last10["points"].min())
+
+    # Consistency
+    ptsMedian10 = float(last10["points"].median())
+
+    # % of games over thresholds
+    over15_rate = float((last10["points"] > 15).mean())
+    over20_rate = float((last10["points"] > 20).mean())
+    over25_rate = float((last10["points"] > 25).mean())
+
     # Get injury (status) and oppnenet features
     injuryFeatures = _injuryContext(statusDF, playerAvgCache, teamID, date)
     oppFeatures = _oppContext(teamCache, oppTeamID, date)
@@ -158,7 +179,14 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
         "avgPPM10":              baseline["points"] / avgMin,
         "formPts5":              ewma["points"],
         "formMin5":              ewma["minutes"],
-        "minStd10":              float(rolling.head(10)["minutes"].std() or 0.0),
+        "minStd10":              minStd10,
+        "ptsStd10":              ptsStd10,
+        "ptsMax10":              ptsMax10,
+        "ptsMin10":              ptsMin10,
+        "ptsMedian10":           ptsMedian10,
+        "over15_rate":           over15_rate,
+        "over20_rate":           over20_rate,
+        "over25_rate":           over25_rate,
         "missing_ppg_injury":    injuryFeatures["missing_ppg"],
         "starters_out_count":    injuryFeatures["starters_out"],
         "injury_opportunity":    injuryFeatures["missing_ppg"] * (baseline["points"] / avgMin),
