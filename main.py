@@ -64,6 +64,49 @@ def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None, backfillFrom=N
 
     print("\n--------DB Updated Complete--------")
 
+def scrapeHistorical(seasons, dbPath="NBA.db", outputDir="output"):
+    # Setup DB and Scrapper Engine
+    _doubleCheckTeamMap(outputDir)
+    db = DBManager(dbPath)
+    db.initSchema()
+    engine = ScrapeEngine(db=dbPath, headless=True)
+
+    try:
+        print(f"\n-------- Historical Scrape: {seasons} --------")
+        
+        # Teams
+        teams = engine.scrapeTeamsHistorical(seasons)
+        db.upsertTeams(teams)
+
+        # Players
+        players = engine.scrapePlayersHistorical(seasons)
+        with open(f"{outputDir}/players.json", "w")  as f:
+            json.dump(players, f, indent=2)
+        db.upsertPlayers(players)
+
+        # Games and logs
+        allGames = []
+        for season in seasons:
+            games = engine.scrapeGames(season=season)
+            allGames.extend(games)
+        with open(f"{outputDir}/games.json", "w") as f:
+            json.dump(allGames, f, indent=2)
+        db.upsertGames(allGames)
+
+        for season in seasons:
+            logs = engine.scrapeLogsHistorical(season=season)
+            db.upsertLogs(logs)
+
+        # Status
+        for season in seasons:
+            startDate = f"{season - 1}-10-01"
+            endDate = f"{season}-06-30"
+            status = engine.scrapeStatusRange(startDate, endDate)
+            db.upsertStatus(status)
+    
+    finally:
+        engine.close()
+
 
 def retrainModel(metrics=True):
     from models.train import trainModel
@@ -84,7 +127,11 @@ if __name__ == "__main__":
                              "Example: --backfill-from 2023-10-01")
     parser.add_argument("--num-games",  type=int, default=None,
                         help="Limit log scraping to N games (debug only)")
-
+    
+    # Historical scrapping
+    parser.add_argument("--historical-seasons", type=int,
+                        nargs="+", default=None, metavar="SEASON",
+                        help="Scrape historical data for given season exg --historical-seasons 2024 2025")
 
     # Train args
     parser.add_argument("--train", action="store_true",
@@ -103,7 +150,10 @@ if __name__ == "__main__":
         retrainModel(metrics=args.metrics)
     if args.scrape:
         scrape(dbPath=args.db, outputDir=args.out, numLogGames=args.num_games, backfillFrom=args.backfill_from)
-    if not args.train and not args.scrape:
+    if args.historical_seasons:
+        scrapeHistorical(args.historical_seasons, dbPath=args.db, outputDir=args.out)
+
+    if not args.train and not args.scrape and not args.historical_seasons:
         parser.print_help()
 
 # :steam_smile

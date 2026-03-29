@@ -7,7 +7,7 @@ import requests
 import asyncio
 import aiohttp
 from datetime import date, datetime, timedelta
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -79,7 +79,7 @@ class ScrapeEngine:
         }
 
         self.playerLookup = self._init_playerLookup()
-
+    
     # PRIVATE METHODS
 
     # Sets up the driver to be used in scrapping functions, gives basic options along with a true/false headless option
@@ -502,7 +502,111 @@ class ScrapeEngine:
         # Return final list of all logs
         print(f"Total logs scraped: {len(logs)}")
         return logs
-        
+
+    # Very similar logic to regular logs scraper, but needs to be diffirent as we can't just check the last date added to db
+    def scrapeLogsHistorical(self, season):
+        logs = []
+        restLookup = {}
+        lastGameDate = {}
+
+        games = self._loadJson("output/games.json")
+        # Filter to only games from the target season that are in the past
+        today = datetime.now().strftime("%Y-%m-%d")
+        gamesList = [
+            g for g in games
+            if g.get("season") == season and g["game_date"] <= today
+        ]
+
+        if not gamesList:
+            print(f"No games found for season {season}")
+            return []
+
+        print(f"Scraping logs for {len(gamesList)} games in season {season}")
+
+        sortedGames = sorted(gamesList, key=lambda x: x["game_date"])
+        for g in sortedGames:
+            currentDate = datetime.strptime(g["game_date"], "%Y-%m-%d")
+            for side in ("home_team_id", "away_team_id"):
+                teamid = g[side]
+                restLookup[(g["game_id"], teamid)] = (
+                    (currentDate - lastGameDate[teamid]).days
+                    if teamid in lastGameDate else 20
+                )
+                lastGameDate[teamid] = currentDate
+
+        for game in sortedGames:
+            gameID = game["game_id"]
+            homeTeamID = game["home_team_id"]
+            url = f"{BREF_BASE}/boxscores/{gameID}.html"
+            print(f"Scraping log {url}")
+
+            try:
+                html = self._brefGet(url)
+                soup = BeautifulSoup(html, "html.parser")
+                tables = soup.find_all("table", id=re.compile(r"box-[A-Z]{3}-game-basic"))
+
+                for table in tables:
+                    abbrMatch = re.search(r"box-([A-Z]{3})-game-basic", table["id"])
+                    if not abbrMatch:
+                        continue
+                    abbr = abbrMatch.group(1)
+                    currentTeamID = self.teamMap.get(abbr)
+                    if not currentTeamID:
+                        continue
+                    currentTeamID = int(currentTeamID)
+
+                    isHome = currentTeamID == homeTeamID
+                    daysRest = restLookup.get((gameID, currentTeamID), 0)
+                    onStarters = True
+
+                    for row in table.find("tbody").find_all("tr"):
+                        if "thead" in row.get("class", []):
+                            onStarters = False
+                            continue
+                        if row.find("td", {"data-stat": "reason"}):
+                            continue
+                        nameTH = row.find("th", {"data-stat": "player"})
+                        if not nameTH:
+                            continue
+
+                        cleanName = self._normalizeName(nameTH.get_text())
+                        playerID = self.playerLookup.get(cleanName)
+                        if playerID is None:
+                            print(f"  Player not in lookup: {cleanName}")
+                            continue
+
+                        def getStat(stat, default=0, asFloat=False):
+                            cell = row.find("td", {"data-stat": stat})
+                            val = cell.get_text().strip() if cell else ""
+                            if not val or val == ".":
+                                return default
+                            return float(val) if asFloat else int(val)
+
+                        mpCell = row.find("td", {"data-stat": "mp"})
+                        logs.append({
+                            "log_id":    None,
+                            "player_id": playerID,
+                            "game_id":   gameID,
+                            "minutes":   self._convertMins(mpCell.get_text() if mpCell else ""),
+                            "points":    getStat("pts"),
+                            "rebounds":  getStat("trb"),
+                            "assists":   getStat("ast"),
+                            "steals":    getStat("stl"),
+                            "blocks":    getStat("blk"),
+                            "turnovers": getStat("tov"),
+                            "fg_pct":    getStat("fg_pct", default=0.0, asFloat=True),
+                            "is_starter": onStarters,
+                            "is_home":   isHome,
+                            "rest_days": daysRest,
+                        })
+
+            except Exception as e:
+                print(f"Failed to scrape game {gameID}: {e}")
+                time.sleep(10)
+
+        print(f"Total logs scraped for season {season}: {len(logs)}")
+        return logs
+
     def scrapePlayers(self):
         """
         Overveiw:
@@ -635,6 +739,55 @@ class ScrapeEngine:
         print(f"Total players scraped: {len(players)}")
         return players
 
+    def scrapePlayersHistorical(self, seasons):
+        players = []
+        seenIDs = set()
+        nextID = max(self.playerLookup.values(), default=0) + 1
+
+        for season in seasons:
+            for abbr, teamID in self.teamMap.items():
+                url = f"{BREF_BASE}/teams/{abbr}/{season}.html"
+                try:
+                    html = self._brefGet(url)
+                    soup = BeautifulSoup(html, "html.parser")
+                    rosterTable = soup.find("table", {"id": "roster"})
+                    if not rosterTable:
+                        continue
+
+                    for row in rosterTable.find("tbody").find_all("tr"):
+                        nameTD = row.find("td", {"data-stat": "player"})
+                        if not nameTD:
+                            continue
+
+                        a = nameTD.find("a")
+                        if not a:
+                            continue
+
+                        slug = a.get("href", "")
+                        if slug in seenIDs:
+                            continue
+
+                        name = a.get_text().strip()
+                        posTD = row.find("td", {"data-stat": "pos"})
+                        position = posTD.get_text().strip() if posTD else None
+
+                        players.append({
+                            "player_id": nextID,
+                            "name": name,
+                            "team_id": int(teamID),
+                            "position": position,
+                            "is_active": season == 2026, # Only active players are playing this season but as this is hardcoded need to remember to change in future
+                        })
+                        seenIDs.add(slug)
+                        nextID += 1
+
+                except Exception as e:
+                    print(f"Failed roseter {abbr} {season}: {e}")
+
+        self.playerLookup = {self._normalizeName(p["name"]): p["player_id"] for p in players}
+        return players
+
+
     def scrapeTeams(self):
         """
         Overveiw:
@@ -721,6 +874,75 @@ class ScrapeEngine:
         print(f"Total teams scraped: {len(teamsOut)}")
         return teamsOut
 
+    def scrapeTeamsHistorical(self, seasons):
+        teamsOut = []
+
+        for season in seasons: 
+            url =  f"{BREF_BASE}/leagues/NBA_{season}.html"
+            seasonStartDate = f"{season - 1}-10-01"
+            seen = set()
+
+            try:
+                rawHTML = self._brefGet(url)
+                soup = BeautifulSoup(rawHTML, "html.parser")
+                table = soup.find("table", {"id": "advanced-team"})
+                if not table:
+                    comments = soup.find_all(string=lambda t: isinstance(t, Comment))
+                    for comment in comments:
+                        if 'id="advanced-team"' in comment:
+                            table = BeautifulSoup(comment, "html.parser").find("table", {"id": "advanced-team"})
+                            break
+
+                if not table:
+                    print(f"No advanced-team table for {season}")
+                    continue
+
+                for row in table.find("tbody").find_all("tr"):
+                    if row.get("class") and "thead" in row["class"]:
+                        continue
+                    teamTD = row.find("td", {"data-stat": "team"})
+                    if not teamTD:
+                        continue
+                
+                    a = teamTD.find("a")
+                    if not a:
+                        continue
+
+                    href = a.get("href", "")
+                    abbrMatch = re.search(r"/teams/([A-Z]{2,4})/", href)
+                    abbr = abbrMatch.group(1) if abbrMatch else None
+                
+                    if not abbr or abbr in seen:
+                        continue
+
+                    def cell(stat):
+                        td = row.find("td", {"data-stat": stat})
+                        if td and td.get_text().strip():
+                            try:
+                                return float(td.get_text().strip())
+                            except ValueError:
+                                pass
+                        return None
+
+                    teamID = self.teamMap.get(abbr)
+                    if teamID is None:
+                        continue
+
+                    teamsOut.append({
+                        "team_id": int(teamID),
+                        "name": abbr,
+                        "off_rtg": cell("off_rtg"),
+                        "def_rtg": cell("def_rtg"),
+                        "pace": cell("pace"),
+                        "date": seasonStartDate,
+                    })
+                    seen.add(abbr)
+            
+                print(f"Season {season}: {len([t for t in teamsOut if t['date'] == seasonStartDate])} teams")
+            
+            except Exception as e:
+                print(f"Error scraping teams for {season}: {e}")
+        return teamsOut
 
    # SCRAPE STATUS SECTION (3 functions) - Uses nba injurys package instead of web scrapping for consitent data + historical
 

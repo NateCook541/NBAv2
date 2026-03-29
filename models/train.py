@@ -10,8 +10,60 @@ from models.evaluate import evaluateModel
 
 from features.featureCollector import buildFeatures, featureOrder
 
+def preloadCaches(conn):
+    print(f"Loading caches")
+
+    # Player logs
+    allLogs = pd.read_sql_query("""
+        SELECT pgl.player_id, g.game_date, pgl.points, pgl.minutes, 
+               pgl.fg_pct, pgl.is_home, pgl.rest_days
+        FROM Player_game_logs pgl
+        JOIN Games g ON pgl.game_id = g.game_id
+        ORDER BY pgl.player_id, g.game_date
+    """, conn)
+
+    playerLogCache = {
+        pid: grp.reset_index(drop=True)
+        for pid, grp in allLogs.groupby("player_id")
+    }
+
+    # Player positions
+    players = pd.read_sql_query("SELECT player_id, position FROM Players", conn)
+    posCache = dict(zip(players.player_id, players.position))
+
+    # Team stats
+    teams = pd.read_sql_query("SELECT team_id, date, def_rtg, pace FROM Teams", conn)
+    teams = teams.sort_values(["team_id", "date"])
+    teamCache = {
+        tid: grp.reset_index(drop=True)
+        for tid, grp in teams.groupby("team_id")
+    }
+
+    # Status table
+    status = pd.read_sql_query("SELECT * FROM Status", conn)
+
+    # Player avg points precompute
+    playerAvg = pd.read_sql_query("""
+        SELECT player_id, AVG(points) as avg_pts
+        FROM Player_game_logs
+        GROUP BY player_id
+    """, conn)
+    playerAvgCache = dict(zip(playerAvg.player_id, playerAvg.avg_pts))
+
+    # Player usage rate
+    teamGameTotals = (
+        allLogs.groupby(["game_date", "is_home"])["points"]
+        .sum()
+        .to_dict()
+    )
+        
+    print("Cache loading done")
+    return playerLogCache, posCache, teamCache, status, playerAvgCache, teamGameTotals
+
 def generateTrainingData():
     conn = sqlite3.connect('NBA.db')
+    
+    playerLogCache, posCache, teamCache, statusDF, playerAvgCache, teamGameTotals = preloadCaches(conn) 
 
     logsQuery = """
         SELECT
@@ -25,11 +77,11 @@ def generateTrainingData():
             CASE WHEN g.home_team_id = p.team_id
                  THEN g.away_team_id
                  ELSE g.home_team_id
-            END                 AS opp_team_id
+            END AS opp_team_id
         FROM Player_game_logs pgl
         JOIN Games   g ON pgl.game_id   = g.game_id
         JOIN Players p ON pgl.player_id = p.player_id
-        WHERE pgl.minutes >= 10 -- train only when greater than 10 minutes played
+        WHERE pgl.minutes >= 3 -- train only when greater than 10 minutes played
         ORDER BY g.game_date
         """
     logs = pd.read_sql_query(logsQuery, conn)
@@ -40,20 +92,26 @@ def generateTrainingData():
     targets = []
     skipped = 0
 
-    for _, row in logs.iterrows():
+    for row in logs.itertuples(index=False):
         features = buildFeatures(
-                playerID = int(row["player_id"]),
-                date = row["game_date"],
-                teamID = int(row["team_id"]),
-                oppTeamID = int(row["opp_team_id"]),
-                conn = conn,
+            playerID=row.player_id,
+            date=row.game_date,
+            teamID=row.team_id,
+            oppTeamID=row.opp_team_id,
+            cache=playerLogCache,
+            posCache=posCache,
+            teamCache=teamCache,
+            statusDF=statusDF,
+            playerAvgCache=playerAvgCache,
+            usageRateCache=teamGameTotals,
         )
-        if features is None or features.isnull().any(axis=1).iloc[0]:
+        if features is None:
             skipped += 1
             continue
 
+        
         featureRows.append(features)
-        targets.append(float(row["actual_points"]))
+        targets.append(row.actual_points)
 
     conn.close()
         
@@ -61,7 +119,6 @@ def generateTrainingData():
     X = pd.concat(featureRows, ignore_index=True)
     y = pd.Series(targets, name="points")
     return X, y
-
 
 def trainModel(save=True, metrics=False):
     X, y = generateTrainingData()
@@ -82,6 +139,7 @@ def trainModel(save=True, metrics=False):
         subsample=0.8,
         colsample_bytree=0.8,
         min_child_weight=5,
+        n_jobs=-1,
         objective="reg:squarederror",
         random_state=42,
     )

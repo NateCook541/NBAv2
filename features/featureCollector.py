@@ -12,6 +12,7 @@ featureOrder = [
     "player_status_flag", "player_is_questionable",
     "opp_def_rtg", "opp_pace",
     "is_home", "rest_days",
+    "pos", "usage_rate",
 ]
 
 # PRIVATE HELPERS
@@ -31,85 +32,62 @@ def _rollingStats(playerID, date, conn):
     
     return df if not df.empty else None
 
+# Gets a players stats for the last 20 games but for each player adds it to a cache and then can be fetch mutiple times without having to rehit db a ton
+def _rollingStatsCache(playerID, date, cache):
+    if playerID not in cache:
+        return None
 
-def _injuryContext(teamID, date, conn):
+    df = cache[playerID]
+
+    # 20 games before this date
+    past = df[df["game_date"] < date].tail(20)
+    if past.empty:
+        return None
+
+    return past.drop(columns=["game_date"]).reset_index(drop=True)
+
+def _injuryContext(statusDF, playerAvgCache, teamID, date):
     
     # Reports are filled out the day before the game is actually played so we check both day before as well as game date
     dayBefore = (datetime.strptime(date, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
 
-    # Identify starts by querying for players who started >= 50% of games in 100 game window
-    startersQuery = """
-        WITH RecentStarts AS (
-            SELECT player_id, AVG(is_starter) AS start_rate
-            FROM Player_game_logs
-            WHERE game_id IN (
-                SELECT game_id FROM Games
-                WHERE game_date < ?
-                ORDER BY game_date DESC
-                LIMIT 100
-            )
-            GROUP BY player_id
-            HAVING start_rate >= 0.5
-        )
-        SELECT COUNT(*) AS starters_out
-        FROM Status
-        WHERE team_id = ?
-          AND scrape_date IN (?, ?)
-          AND status IN ('Out', 'Doubtful')
-          AND player_id IN (SELECT player_id FROM RecentStarts)
-    """
-    startersDF = pd.read_sql_query(startersQuery, conn, params=[date, teamID, dayBefore, date])
+    # Get how many starters are out
+    injured = statusDF[
+        (statusDF.team_id == teamID) &
+        (statusDF.scrape_date.isin([date, dayBefore])) &
+        (statusDF.status.isin(["Out", "Doubtful"]))
+    ]
+    startersOut = len(injured)
 
     # Get the missing points from injuryed players by getting avg points for all and summing
-    missingPPGQuery = """
-        SELECT SUM(avg_pts) AS total_missing
-        FROM (
-            SELECT player_id, AVG(points) AS avg_pts
-            FROM Player_game_logs
-            GROUP BY player_id
-        ) p_avg
-        WHERE player_id IN (
-            SELECT player_id FROM Status
-            WHERE team_id = ?
-              AND scrape_date IN (?, ?)
-              AND status IN ('Out', 'Doubtful')
-        )
-    """
-    missingDF = pd.read_sql_query(missingPPGQuery, conn, params=[teamID, dayBefore, date])
+    missingPPG = sum(
+            playerAvgCache.get(pid, 0)
+            for pid in injured.player_id.values
+    )
 
-    startersOut = int(startersDF["starters_out"].iloc[0]) if not startersDF.empty else 0
-    missingPPG = float(missingDF["total_missing"].iloc[0] or 0.0) if not missingDF.empty else 0
-    dataExists = 1 if startersOut > 0 or missingPPG > 0 else 0
+    return {"missing_ppg": missingPPG, "starters_out": startersOut}
 
-    return {"missing_ppg": missingPPG, "starters_out": startersOut, "data_exists": dataExists}
+def _oppContext(teamCache, oppTeamID, date):
+    df = teamCache.get(oppTeamID)
 
-
-def _oppContext(oppTeamID, date, conn):
-    query = """
-        SELECT def_rtg, pace
-        FROM Teams
-        WHERE team_id = ? AND date < ?
-        ORDER BY date DESC
-        LIMIT 1
-    """
-
-    df = pd.read_sql_query(query, conn, params=[oppTeamID, date])
-    if df.empty:
+    if df is None or df.empty:
         return {"def_rtg": 0.0, "pace": 0.0}
-    return {"def_rtg": float(df["def_rtg"].iloc[0] or 0.0),
-            "pace": float(df["pace"].iloc[0] or 0.0)}
+
+    past = df[df["date"] < date]
+    if past.empty:
+        return {"def_rtg": 0.0, "pace": 0.0}
+
+    latest = past.iloc[-1]
+    return {"def_rtg": latest.def_rtg, "pace": latest.pace}
 
 # Used for player status feature which gathers the specfic players injury context (Important for players going into games listed as doutful)
-def _playerStatusContext(playerID, date, conn):
-    query = """
-        SELECT status FROM Status
-        WHERE player_id = ?
-          AND scrape_date = ?
-        LIMIT 1
-    """
+def _playerStatusContext(statusDF, playerID, date): 
     # Check for the day before not day of
     dayBefore = (datetime.strptime(date, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
-    df = pd.read_sql_query(query, conn, params=[playerID, dayBefore])
+    df = statusDF[
+            (statusDF.player_id == playerID) &
+            (statusDF.scrape_date == dayBefore)
+    ]
 
     if df.empty:
         return {"player_status_flag": 0, "player_is_questionable": 0}
@@ -122,19 +100,41 @@ def _playerStatusContext(playerID, date, conn):
         "player_is_questionable": 1 if status == "Questionable" else 0,
     }
 
-# Builds the feature vector for training
-def buildFeatures(playerID, date, teamID, oppTeamID, conn):
-    rolling = _rollingStats(playerID, date, conn)
-    if rolling is None or rolling.empty or rolling['points'].isna().all():
-        return None
+# Gets the usage rate for a player to detemine their importance
+def _getUsageRate(playerID, date, cache, teamGameTotals):
+    if playerID not in cache:
+        return 0.0
+    
+    playerGames = cache[playerID]
+    recent = playerGames[playerGames["game_date"] < date].tail(10)
+    
+    if recent.empty:
+        return 0.0
+    
+    shares = []
+    for _, row in recent.iterrows():
+        teamTotal = teamGameTotals.get((row["game_date"], row["is_home"]), 0)
+        if teamTotal > 0:
+            shares.append(row["points"] / teamTotal)
+    
+    return float(sum(shares) / len(shares)) if shares else 0.0 
 
+# Builds the feature vector for training
+def buildFeatures(playerID, date, teamID, oppTeamID, 
+                  cache, posCache, teamCache, statusDF, playerAvgCache,
+                  usageRateCache):
+    # Gets player rolling stats depending on if cache is used or not
+    rolling = _rollingStatsCache(playerID, date, cache)
+    if rolling is None or rolling.empty:
+        return None
+    
     baseline = rolling.head(10).mean()
     ewma = rolling.head(10).ewm(span=5).mean().iloc[-1]
 
     # Get injury (status) and oppnenet features
-    injuryFeatures = _injuryContext(teamID, date, conn)
-    oppFeatures = _oppContext(oppTeamID, date, conn)
-    playerStatus = _playerStatusContext(playerID, date, conn)
+    injuryFeatures = _injuryContext(statusDF, playerAvgCache, teamID, date)
+    oppFeatures = _oppContext(teamCache, oppTeamID, date)
+    playerStatus = _playerStatusContext(statusDF, playerID, date)
 
     # Read the home and rest days stats
     isHome = int(rolling.iloc[0]["is_home"]) if "is_home" in rolling.columns else 0
@@ -142,6 +142,15 @@ def buildFeatures(playerID, date, teamID, oppTeamID, conn):
 
     avgMin = baseline["minutes"] if baseline["minutes"] > 0 else 1
 
+    # Get player position info 
+    posMap = {"PG": 1, "SG": 2, "SF": 3, "PF": 4, "C": 5, "G": 1.5, "F": 3.5, "G-F": 2, "F-C": 4.5} 
+    #FIXME: Currently just defualts to SF mabye change in future, mabye add a unlisted encodin
+    pos = posMap.get(posCache.get(playerID), 3)
+
+    # Get a players usage rate
+    usageRate = _getUsageRate(playerID, date, cache, usageRateCache)
+    
+    # Full feature vertex
     features = pd.DataFrame([{
         "avgPts10":              baseline["points"],
         "avgMin10":              baseline["minutes"],
@@ -159,8 +168,10 @@ def buildFeatures(playerID, date, teamID, oppTeamID, conn):
         "opp_pace":              oppFeatures["pace"],
         "is_home":               isHome,
         "rest_days":             restDays,
+        "pos":                   pos,
+        "usage_rate":            usageRate,
     }])
 
-    # Make sure the model revices order in which it was trained on
+    # Make sure the model recicves order in which it was trained on
     return features[featureOrder]
 
