@@ -1,10 +1,14 @@
 import argparse
 import json
 import subprocess
+import joblib
 from pathlib import Path
 
 from data.scrapperEngine import ScrapeEngine
 from data.dbManager import DBManager
+
+from models.train import preloadCaches, generateTrainingData
+from models.evaluate import evaluateModel
 
 TeamMap = {
     "DEN": 1,  "OKC": 2,  "HOU": 3,  "NYK": 4,  "MIA": 5,
@@ -114,6 +118,25 @@ def retrainModel(metrics=True):
     trainModel(save=True, metrics=metrics)
     print("--------Training complete--------")
 
+def evaluateCurrentModel(dbPath="NBA.db"):
+    modelPath = Path("models/nba_model.joblib")
+    if not modelPath.exists():
+        print("No saved model found")
+        return
+
+    model = joblib.load(modelPath)
+    print("\n-------- Evaluating Saved Model --------")
+
+    X, y = generateTrainingData()
+
+    splitIdx = int(len(X) * 0.8)
+    XTest = X.iloc[splitIdx:]
+    yTest = y.iloc[splitIdx:]
+
+    evaluateModel(model, XTest, yTest)
+    print("-------- Evaluation Complete --------")
+
+
 # ENTRY POINT
 
 if __name__ == "__main__":
@@ -139,6 +162,10 @@ if __name__ == "__main__":
     parser.add_argument("--metrics", action="store_true",
                     help="Show training metrics")
 
+    # Evalute the current model with out retrain
+    parser.add_argument("--evaluate", action="store_true",
+                        help="Show metrics for current saved model without having to retrain")
+
 
     # Shared args
     parser.add_argument("--db",  default="NBA.db",  help="SQLite DB path")
@@ -148,12 +175,14 @@ if __name__ == "__main__":
 
     if args.train:
         retrainModel(metrics=args.metrics)
+    if args.evaluate:
+        evaluateCurrentModel(dbPath=args.db)
     if args.scrape:
         scrape(dbPath=args.db, outputDir=args.out, numLogGames=args.num_games, backfillFrom=args.backfill_from)
     if args.historical_seasons:
         scrapeHistorical(args.historical_seasons, dbPath=args.db, outputDir=args.out)
 
-    if not args.train and not args.scrape and not args.historical_seasons:
+    if not args.train and not args.scrape and not args.historical_seasons and not args.evaluate:
         parser.print_help()
 
 # :steam_smile

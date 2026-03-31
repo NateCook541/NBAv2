@@ -17,21 +17,25 @@ def _normalizeName(name):
         ).lower().strip()
 
 # Loads the trained model from the disk. Raises FileNotFound if no model trained/found
-def _loadModel():
+def _loadModelBundle():
     modelPath = Path(__file__).parent / "nba_model.joblib"
+    calibratorPath = Path(__file__).parent / "nba_calibrator.joblib"
     if not modelPath.exists():
         raise FileNotFoundError(
                 "No trained model found"
         )
 
-    return joblib.load(modelPath)
+    model  = joblib.load(modelPath)
+    bundle = joblib.load(calibratorPath) if calibratorPath.exists() else None
+
+    return model, bundle
 
 
 # PUBLIC API
 # Note - Future me now. I don't know why I wrote public api here LOL, its so stupid im keeping it
 
 def predict(playerName, gameDate):
-    model = _loadModel()
+    model, bundle = _loadModelBundle()
     conn = sqlite3.connect('NBA.db')
 
     try:
@@ -101,6 +105,19 @@ def predict(playerName, gameDate):
                 "predicted_points": round(predicted, 1),
                 "injury_status": injuryStatus,
         }
+
+        if bundle:
+            from models.evaluate import calibratedProbOver
+            line = predicted  # default: use predicted pts as the line
+            prob = calibratedProbOver(
+                predicted, line,
+                bundle["residualStd"],
+                bundle["calibrator"],
+                df=bundle["df"]
+            )
+
+            result["prob_over_line"] = round(prob, 3)
+            result["line_used"] = round(line, 1)
 
     finally:
         conn.close()
