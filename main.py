@@ -10,6 +10,8 @@ from data.dbManager import DBManager
 from models.train import preloadCaches, generateTrainingData
 from models.evaluate import evaluateModel
 
+from betting.oddsCollector import pullHistoricalProps
+
 TeamMap = {
     "DEN": 1,  "OKC": 2,  "HOU": 3,  "NYK": 4,  "MIA": 5,
     "SAS": 6,  "UTA": 7,  "MIN": 8,  "LAL": 9,  "DET": 10,
@@ -166,6 +168,11 @@ if __name__ == "__main__":
     parser.add_argument("--evaluate", action="store_true",
                         help="Show metrics for current saved model without having to retrain")
 
+    # Props args
+    parser.add_argument("--pull-props", nargs=2,
+                        metavar=("START_DATE", "END_DATE"),
+                        help="Pull historical props exg --pull-props 2025-02-01 2025-02-28")
+
 
     # Shared args
     parser.add_argument("--db",  default="NBA.db",  help="SQLite DB path")
@@ -181,8 +188,10 @@ if __name__ == "__main__":
         scrape(dbPath=args.db, outputDir=args.out, numLogGames=args.num_games, backfillFrom=args.backfill_from)
     if args.historical_seasons:
         scrapeHistorical(args.historical_seasons, dbPath=args.db, outputDir=args.out)
+    if args.pull_props:
+        pullHistoricalProps(args.pull_props[0], args.pull_props[1], dbPath=args.db)
 
-    if not args.train and not args.scrape and not args.historical_seasons and not args.evaluate:
+    if not args.train and not args.scrape and not args.historical_seasons and not args.evaluate and not args.pull_props:
         parser.print_help()
 
 # :steam_smile

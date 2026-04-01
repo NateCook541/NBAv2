@@ -67,10 +67,23 @@ dbSchema = {
             PRIMARY KEY (player_id, game_id, scrape_date)
         )
     """,
+    "Props": """
+        CREATE TABLE IF NOT EXISTS Props (
+            prop_id       INTEGER PRIMARY KEY AUTOINCREMENT,
+            game_date     TEXT    NOT NULL,
+            player_name   TEXT    NOT NULL,
+            line          REAL    NOT NULL,
+            over_odds     INTEGER,
+            under_odds    INTEGER,
+            bookmaker     TEXT,
+            fetched_at    TEXT    NOT NULL
+        )
+    """,
 }
 
 extraIndexes = [
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_player_game ON Player_game_logs (player_id, game_id)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_prop_unique ON Props (game_date, player_name, line, bookmaker)",
 ]
 
 # A small SQLite wrapper for the scrapped NBA data
@@ -197,4 +210,19 @@ class DBManager:
         with self._connect() as conn:
             res = conn.execute("SELECT MAX(scrape_date) FROM Status").fetchone()
         return res[0] if res and res[0] else None
+    
+    # PROPS
+
+    def upsertProps(self, data):
+        sql = """
+            INSERT OR IGNORE INTO Props
+                (game_date, player_name, line, over_odds, under_odds, bookmaker, fetched_at)
+            VALUES
+                (:game_date, :player_name, :line, :over_odds, :under_odds, :bookmaker, :fetched_at)
+        """
+        
+        with self._connect() as conn:
+            conn.cursor().executemany(sql, data)
+
+        print(f"Upserted {len(data)} prop records")
 
