@@ -7,6 +7,7 @@ from pathlib import Path
 from scipy.stats import t as t_dist
 
 from features.featureCollector import buildFeatures
+from models.train import preloadCaches
 # FIXME: When I move calibration stuff over I need to remember to fix this import
 from models.evaluate import calibratedProbOver
 
@@ -174,6 +175,8 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
         actuals = _loadActuals(conn)
         playerMap = _loadPlayerMap(conn)
         oppMap = _loadOppMap(conn)
+
+        playerLogCache, posCache, teamCache, statusDF, playerAvgCache, teamGameTotal = preloadCaches(conn)
     finally:
         conn.close()
 
@@ -207,11 +210,9 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
             continue
 
         # Build features and predict
-        conn2 = sqlite3.connect(dbPath)
-        try:
-            features = buildFeatures(playerID, date, teamID, oppTeamID. conn2)
-        finally:
-            conn2.close()
+        features = buildFeatures(playerID, date, teamID, oppTeamID, playerLogCache, posCache, teamCache, statusDF,
+                                 playerAvgCache, teamGameTotal)
+        
 
         if features is None:
             skipped += 1
@@ -246,7 +247,7 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
             continue
 
         # Size the bet with kelly formula
-        stake = _kellyFraction(edge, prop.over_odds, fraction=kellyFrac) * currentBank
+        stake = _kellyFractional(edge, prop.over_odds, fraction=kellyFrac) * currentBank
         stake = round(min(stake, currentBank * 0.10), 2) # Hard cap at 10% of current bankroll
 
         won = actualPts > prop.line

@@ -4,7 +4,7 @@ import subprocess
 import joblib
 from pathlib import Path
 
-#from data.scrapperEngine import ScrapeEngine
+from data.scrapperEngine import ScrapeEngine
 from data.dbManager import DBManager
 
 from models.train import preloadCaches, generateTrainingData
@@ -202,7 +202,7 @@ if __name__ == "__main__":
         runBacktest(dbPath=args.db, edgeThresh=args.edge_thresh, bankroll=args.bankroll)
 
 
-    if not args.train and not args.scrape and not args.historical_seasons and not args.evaluate and not args.pull_props and args.backtest:
+    if not args.train and not args.scrape and not args.historical_seasons and not args.evaluate and not args.pull_props and not args.backtest:
         parser.print_help()
 
 # :steam_smile
