@@ -4,13 +4,14 @@ import subprocess
 import joblib
 from pathlib import Path
 
-from data.scrapperEngine import ScrapeEngine
+#from data.scrapperEngine import ScrapeEngine
 from data.dbManager import DBManager
 
 from models.train import preloadCaches, generateTrainingData
 from models.evaluate import evaluateModel
 
 from betting.oddsCollector import pullHistoricalProps
+from betting.backtest import runBacktest
 
 TeamMap = {
     "DEN": 1,  "OKC": 2,  "HOU": 3,  "NYK": 4,  "MIA": 5,
@@ -173,6 +174,13 @@ if __name__ == "__main__":
                         metavar=("START_DATE", "END_DATE"),
                         help="Pull historical props exg --pull-props 2025-02-01 2025-02-28")
 
+    # Backtesint args
+    parser.add_argument("--backtest", action="store_true",
+                        help="Run backtest against stored props")
+    parser.add_argument("--edge-thresh", type=float, default=0.03,
+                        help="Minium edge to place a bet (default: 0.03)")
+    parser.add_argument("--bankroll", type=float, default=1000.0,
+                        help="Starting bankroll in dollars (default: 1000)")
 
     # Shared args
     parser.add_argument("--db",  default="NBA.db",  help="SQLite DB path")
@@ -190,8 +198,11 @@ if __name__ == "__main__":
         scrapeHistorical(args.historical_seasons, dbPath=args.db, outputDir=args.out)
     if args.pull_props:
         pullHistoricalProps(args.pull_props[0], args.pull_props[1], dbPath=args.db)
+    if args.backtest:
+        runBacktest(dbPath=args.db, edgeThresh=args.edge_thresh, bankroll=args.bankroll)
 
-    if not args.train and not args.scrape and not args.historical_seasons and not args.evaluate and not args.pull_props:
+
+    if not args.train and not args.scrape and not args.historical_seasons and not args.evaluate and not args.pull_props and args.backtest:
         parser.print_help()
 
 # :steam_smile

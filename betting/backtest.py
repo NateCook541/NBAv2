@@ -2,7 +2,7 @@ import sqlite3
 import joblib
 import numpy as np
 import pandas as pd
-import unicodeddata
+import unicodedata
 from pathlib import Path
 from scipy.stats import t as t_dist
 
@@ -13,6 +13,44 @@ from models.evaluate import calibratedProbOver
 # FIXME: Look into moving all this into a class?
 
 # HELPERS
+
+
+def _printSummary(df, startingBank, finalBank, skipped):
+    bets = df[df["bet"] == True]
+
+    print(f"\n{'='*50}")
+    print("BACKTEST SUMARY") 
+    print(f"\n{'='*50}")
+    print(f"Props evaluated: {len(df)}")
+    print(f"Skipped: {skipped}")
+    print(f"Bets placed: {len(bets)}")
+    
+    if len(bets) == 0:
+        print("No bets placed")
+        return
+
+    wins = (bets["pnl"] > 0).sum()
+    losses = (bets["pnl"] < 0).sum()
+    winRate = wins / len(bets)
+    totalPnl = bets["pnl"].sum()
+    roi = totalPnl / bets["stake"].sum()
+
+    print(f"Win/Loss: {wins}W / {losses}L ({winRate:.1%})")
+    print(f"Total R&L: ${totalPnl:.2f}")
+    print(f"ROI: {roi:.1%}")
+    print(f"Starting bankroll: ${startingBank:.2f}")
+    print(f"Final bankroll: ${finalBank:.2f}") 
+    print(f"Return: {((finalBank - startingBank) / startingBank):.1%}")
+
+    print(f"\nTop 5 bets by edge:")
+    print(bets.sort_values("edge", ascending=False)[
+        ["date", "player", "line", "predicted", "actual", "edge", "pnl"]
+    ].head(5).to_string(index=False))
+    
+    print(f"\nWorst 5 bets by P&L:")
+    print(bets.sort_values("pnl")[
+        ["date", "player", "line", "predicted", "actual", "edge", "pnl"]
+    ].head(5).to_string(index=False))
 
 def _normalizeName(name):
     return "".join(
@@ -92,6 +130,7 @@ def _loadActuals(conn):
 def _loadPlayerMap(conn):
     df = pd.read_sql_query("SELECT player_id, name, team_id FROM Players", conn)
     df["name_norm"] = df["name"].apply(_normalizeName)
+    df = df.sort_values("player_id").drop_duplicates(subset="name_norm", keep="last")
     return df.set_index("name_norm")[["player_id", "team_id"]].to_dict("index")
 
 
@@ -102,7 +141,7 @@ def _loadOppMap(conn):
     """, conn)
 
     result = {}
-    for _, in df.iterrows():
+    for _, row in df.iterrows():
         result[(row.home_team_id, row.game_date)] = row.away_team_id
         result[(row.away_team_id, row.game_date)] = row.home_team_id
     return result
@@ -114,7 +153,180 @@ def _loadOppMap(conn):
 # The dates let you set a timeframe but default to none currently due to size of data
 # edge thr
 def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03,
-                bankroll=1000, kellyFrac=0.25, df=3)
+                bankroll=1000, kellyFrac=0.25, tdf=3):
+    
+    # Load model + cailbrator
+    modelPath = Path("models/nba_model.joblib")
+    cailbratorPath = Path("models/nba_calibrator.joblib")
+
+    if not modelPath.exists() or not cailbratorPath.exists():
+        raise FileNotFoundError("Model or cailbrator not found")
+
+    model = joblib.load(modelPath)
+    bundle = joblib.load(cailbratorPath)
+    cal = bundle["calibrator"]
+    residualStd = bundle["residualStd"]
+
+    conn = sqlite3.connect(dbPath)
+
+    try:
+        props = _loadProps(conn, startDate, endDate)
+        actuals = _loadActuals(conn)
+        playerMap = _loadPlayerMap(conn)
+        oppMap = _loadOppMap(conn)
+    finally:
+        conn.close()
+
+    print(f"Loaded {len(props)} props | edge threshold: {edgeThresh:.0%} | bankroll: ${bankroll:.0f}")
+
+    results = []
+    currentBank = bankroll
+    skipped = 0
+
+    for _, prop in props.iterrows():
+        nameNorm = _normalizeName(prop.player_name)
+        date = prop.game_date
+
+        if nameNorm not in playerMap:
+            skipped += 1
+            continue
+
+        playerInfo = playerMap[nameNorm]
+        playerID = playerInfo["player_id"]
+        teamID = playerInfo["team_id"]
+        oppTeamID = oppMap.get((teamID, date))
+
+        if oppTeamID is None:
+            skipped += 1
+            continue
+
+        # Get actual points from logs
+        actualPts = actuals.get((nameNorm, date))
+        if actualPts is None:
+            skipped += 1
+            continue
+
+        # Build features and predict
+        conn2 = sqlite3.connect(dbPath)
+        try:
+            features = buildFeatures(playerID, date, teamID, oppTeamID. conn2)
+        finally:
+            conn2.close()
+
+        if features is None:
+            skipped += 1
+            continue
+
+        predicted = float(model.predict(features)[0])
+
+        # Calibrated prob
+        myProb = calibratedProbOver(predicted, prop.line, residualStd, cal, df=tdf)
+
+        # Fair prob (no vig)
+        fairOverProb, _ = _removeVig(prop.over_odds, prop.under_odds)
+
+        edge = myProb - fairOverProb
+
+        # Only Bet if edge is greater than treshhold defined in parameters
+        if edge <= edgeThresh:
+            results.append({
+                "date": date,
+                "player": prop.player_name,
+                "line": prop.line,
+                "predicted": round(predicted, 1),
+                "actual": actualPts,
+                "my_prob": round(myProb, 3),
+                "book_prob": round(fairOverProb, 3),
+                "edge": round(edge, 3),
+                "bet": False,
+                "stake": 0.0,
+                "pnl": 0.0,
+                "bankroll": round(currentBank, 2),
+            })
+            continue
+
+        # Size the bet with kelly formula
+        stake = _kellyFraction(edge, prop.over_odds, fraction=kellyFrac) * currentBank
+        stake = round(min(stake, currentBank * 0.10), 2) # Hard cap at 10% of current bankroll
+
+        won = actualPts > prop.line
+        pnl = stake * _payoutMultiplier(prop.over_odds) if won else -stake
+        currentBank += pnl
+
+        results.append({
+                "date": date,
+                "player": prop.player_name,
+                "line": prop.line,
+                "predicted": round(predicted, 1),
+                "actual": actualPts,
+                "my_prob": round(myProb, 3),
+                "book_prob": round(fairOverProb, 3),
+                "edge": round(edge, 3),
+                "bet": True,
+                "stake": round(stake, 2),
+                "pnl": round(pnl, 2),
+                "bankroll": round(currentBank, 2),
+            })
+
+        resultsDF = pd.DataFrame(results)
+        _printSummary(resultsDF, bankroll, currentBank, skipped)
+        return resultsDF
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
