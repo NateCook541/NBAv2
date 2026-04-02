@@ -4,7 +4,7 @@ import subprocess
 import joblib
 from pathlib import Path
 
-from data.scrapperEngine import ScrapeEngine
+#from data.scrapperEngine import ScrapeEngine
 from data.dbManager import DBManager
 
 from models.train import preloadCaches, generateTrainingData

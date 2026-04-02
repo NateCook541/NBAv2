@@ -186,12 +186,18 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
     currentBank = bankroll
     skipped = 0
 
+    # Skipped vars to let us know what is skipping
+    noPlayerMatch = 0
+    noOppMatch = 0
+    noActuals = 0
+    noFeatures = 0
+
     for _, prop in props.iterrows():
         nameNorm = _normalizeName(prop.player_name)
         date = prop.game_date
 
         if nameNorm not in playerMap:
-            skipped += 1
+            noPlayerMatch += 1
             continue
 
         playerInfo = playerMap[nameNorm]
@@ -200,13 +206,13 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
         oppTeamID = oppMap.get((teamID, date))
 
         if oppTeamID is None:
-            skipped += 1
+            noOppMatch += 1
             continue
 
         # Get actual points from logs
         actualPts = actuals.get((nameNorm, date))
         if actualPts is None:
-            skipped += 1
+            noActuals += 1
             continue
 
         # Build features and predict
@@ -215,7 +221,7 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
         
 
         if features is None:
-            skipped += 1
+            noFeatures += 1
             continue
 
         predicted = float(model.predict(features)[0])
@@ -269,84 +275,15 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
                 "bankroll": round(currentBank, 2),
             })
 
-        resultsDF = pd.DataFrame(results)
-        _printSummary(resultsDF, bankroll, currentBank, skipped)
-        return resultsDF
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
+    resultsDF = pd.DataFrame(results)
+        
+    # Display skip vars
+    print(f"\nSkip breakdown")
+    print(f"No player match {noPlayerMatch}")
+    print(f"No opp match {noOppMatch}")
+    print(f"No actuals {noActuals}")
+    print(f"No features {noFeatures}")
+
+    _printSummary(resultsDF, bankroll, currentBank, skipped)
+    return resultsDF
 
