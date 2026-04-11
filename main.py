@@ -4,12 +4,13 @@ import subprocess
 import joblib
 from pathlib import Path
 
-#from data.scrapperEngine import ScrapeEngine
+from data.scrapperEngine import ScrapeEngine
 from data.dbManager import DBManager
 
 from models.train import preloadCaches, generateTrainingData
 from models.evaluate import evaluateModel
 
+from betting.cailbrator import printCalMetrics
 from betting.oddsCollector import pullHistoricalProps
 from betting.backtest import runBacktest
 
@@ -43,10 +44,10 @@ def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None, backfillFrom=N
         print("\n--------Scraping--------")
         teams = engine.scrapeTeams()
 
-        players = engine.scrapePlayers()
+        players = engine.scrapePlayersHistorical(seasons=[2026])
         with open(f"{outputDir}/players.json", "w") as f:
             json.dump(players, f, indent=2)
-
+        
         games = engine.scrapeGames()
         with open(f"{outputDir}/games.json", "w") as f:
             json.dump(games, f, indent=2)
@@ -56,7 +57,7 @@ def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None, backfillFrom=N
         if backfillFrom:
             status = engine.scrapeStatusRange(backfillFrom)
         else:
-            status = engine.scrapeAutoFill()
+            status = engine.scrapeStatusAutoFill()
         
     finally:
         engine.close()
@@ -121,6 +122,12 @@ def retrainModel(metrics=True):
     trainModel(save=True, metrics=metrics)
     print("--------Training complete--------")
 
+def trainMinutes():
+    from models.train import trainMinutes
+    print("\n--------Training Minutes Model--------")
+    trainMinutes(save=True)
+    print("--------Training complete--------")
+
 def evaluateCurrentModel(dbPath="NBA.db"):
     modelPath = Path("models/nba_model.joblib")
     if not modelPath.exists():
@@ -137,6 +144,20 @@ def evaluateCurrentModel(dbPath="NBA.db"):
     yTest = y.iloc[splitIdx:]
 
     evaluateModel(model, XTest, yTest)
+    print("-------- Evaluation Complete --------")
+
+def evaluateCailbrator():
+    cailbratorPath = Path("models/nba_cailbrator.joblib")
+    cailbrator = joblib.load(cailbrator)
+    print("\n-------- Evaluating Saved Cailbrator --------")
+
+    X, y = generateTrainingData()
+
+    splitIdx = int(len(X) * 0.8)
+    XTest = X.iloc[splitIdx:]
+    yTest = y.iloc[splitIdx:]
+
+    printCalMetrics(model, XTest, yTest)
     print("-------- Evaluation Complete --------")
 
 
@@ -169,12 +190,20 @@ if __name__ == "__main__":
     parser.add_argument("--evaluate", action="store_true",
                         help="Show metrics for current saved model without having to retrain")
 
+    # Train and evaluate cailbrator
+    parser.add_argument("--cailbrator", action="store_true",
+                        help="Train and then display the cailbrator")
+
+    # Train the minutes model
+    parser.add_argument("--train-minutes", action="store_true",
+                        help="Train minutes model")
+
     # Props args
     parser.add_argument("--pull-props", nargs=2,
                         metavar=("START_DATE", "END_DATE"),
                         help="Pull historical props exg --pull-props 2025-02-01 2025-02-28")
 
-    # Backtesint args
+    # Backtest args
     parser.add_argument("--backtest", action="store_true",
                         help="Run backtest against stored props")
     parser.add_argument("--edge-thresh", type=float, default=0.03,
@@ -200,9 +229,13 @@ if __name__ == "__main__":
         pullHistoricalProps(args.pull_props[0], args.pull_props[1], dbPath=args.db)
     if args.backtest:
         runBacktest(dbPath=args.db, edgeThresh=args.edge_thresh, bankroll=args.bankroll)
+    if args.cailbrator:
+        evalutateCailbrator()
+    if args.train_minutes:
+        trainMinutes()
 
 
-    if not args.train and not args.scrape and not args.historical_seasons and not args.evaluate and not args.pull_props and not args.backtest:
+    if not args.train and not args.scrape and not args.historical_seasons and not args.evaluate and not args.pull_props and not args.backtest and not args.cailbrator and not args.train_minutes:
         parser.print_help()
 
 # :steam_smile

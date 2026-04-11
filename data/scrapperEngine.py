@@ -6,6 +6,7 @@ import sqlite3
 import requests
 import asyncio
 import aiohttp
+import pandas as pd
 from datetime import date, datetime, timedelta
 from bs4 import BeautifulSoup, Comment
 from selenium import webdriver
@@ -139,7 +140,7 @@ class ScrapeEngine:
 
         return lookup
 
-    #
+    # Converts a string of mins to a int in format we need
     def _convertMins(self, minString):
         if not minString or ':' not in minString:
             return 0.0
@@ -151,6 +152,26 @@ class ScrapeEngine:
     # Strips comments in html page using re
     def _stripComments(self, html):
         return re.sub(r"<!--(.*?)-->", r"\1", html, flags=re.DOTALL)
+
+    # Finds if a player is already stored in db
+    def _getExistingPlayers(self):
+        try:
+            conn = sqlite3.connect(self.db)
+            existing = pd.read_sql_query(
+                        "SELECT player_id, name FROM Players", conn
+            )
+            conn.close()
+
+            if not existing.empty:
+                return {
+                    self._normalizeName(row["name"]): row["player_id"]
+                    for _, row in existing.iterrows()
+                }
+
+        except Exception as e:
+            print(f"Failed to load existing players from DB: {e}")
+
+        return {}
 
     # Helper using requests package to gfet b-ref for basketball ref
     def _brefGet(self, url):
@@ -618,9 +639,22 @@ class ScrapeEngine:
         """
 
         url = "https://www.nba.com/players"
+        
+        # Need to make a quick connect and query to get existing info
+        conn = sqlite3.connect(self.db)
+        existing = pd.read_sql_query("""
+            SELECT player_id, name FROM Players
+        """, conn)
+        conn.close()
+
+        existingMap = {
+            self._normalizeName(row["name"]): row["player_id"]
+            for _, row in existing.iterrows()
+        }
+        nextID = int(existing["player_id"].max()) + 1 if not existing.empty else 1
+
         players = []
         seenHrefs = set()
-        nextID = 1
     
         # Gets the href anchors for each element (player on the site to process)
         def processAnchor(anchor):
@@ -675,10 +709,18 @@ class ScrapeEngine:
 
             # Get the team id by using the abbrvation and the team map class var
             teamID = int(self.teamMap[teamAbbr]) if teamAbbr and teamAbbr in self.teamMap else None
+           
+            normalized = self._normalizeName(name)
             
+            if normalized in existingMap:
+                playerID = existingMap[normalized]
+            else:
+                playerID = nextID
+                nextID += 1
+
             # Append stats to the players list and mark the href as seen
             players.append({
-                "player_id": nextID,
+                "player_id": playerID,
                 "name": name,
                 "team_id": teamID,
                 "position": position,
@@ -687,7 +729,6 @@ class ScrapeEngine:
             seenHrefs.add(href)
 
             print(f"  [{nextID}] {name} -- team:{teamAbbr} pos:{position}")
-            nextID += 1
 
         # FIXME: Understand...
         try:
@@ -740,9 +781,12 @@ class ScrapeEngine:
         return players
 
     def scrapePlayersHistorical(self, seasons):
+        
+        existingMap = self._getExistingPlayers()
+        seenSlugs = set() 
         players = []
-        seenIDs = set()
-        nextID = max(self.playerLookup.values(), default=0) + 1
+        nextID = max(existingMap.values(), default=0) + 1
+        assignedIDs = set(existingMap.values())
 
         for season in seasons:
             for abbr, teamID in self.teamMap.items():
@@ -764,29 +808,40 @@ class ScrapeEngine:
                             continue
 
                         slug = a.get("href", "")
-                        if slug in seenIDs:
+                        if slug in seenSlugs:
                             continue
 
                         name = a.get_text().strip()
                         posTD = row.find("td", {"data-stat": "pos"})
                         position = posTD.get_text().strip() if posTD else None
+                        normalized = self._normalizeName(name)
+                        
+                        if normalized in existingMap:
+                            playerID = existingMap[normalized]
+                        else:
+                            while nextID in assignedIDs:
+                                playerID = nextID
+                                existingMap[normalized] = playerID # This prevents duplicates
+                                nextID += 1
+                                assignedIDs.add(playerID)
 
                         players.append({
-                            "player_id": nextID,
+                            "player_id": playerID,
                             "name": name,
                             "team_id": int(teamID),
                             "position": position,
                             "is_active": season == 2026, # Only active players are playing this season but as this is hardcoded need to remember to change in future
                         })
-                        seenIDs.add(slug)
-                        nextID += 1
+                        seenSlugs.add(slug)
+                        print(f"[{playerID}] {name} -- team:{abbr} pos:{position}")
 
                 except Exception as e:
                     print(f"Failed roseter {abbr} {season}: {e}")
 
         self.playerLookup = {self._normalizeName(p["name"]): p["player_id"] for p in players}
+        print(f"Total players scraped: {len(players)}")
+        
         return players
-
 
     def scrapeTeams(self):
         """

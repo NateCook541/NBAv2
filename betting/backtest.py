@@ -9,7 +9,7 @@ from scipy.stats import t as t_dist
 from features.featureCollector import buildFeatures
 from models.train import preloadCaches
 # FIXME: When I move calibration stuff over I need to remember to fix this import
-from models.evaluate import calibratedProbOver
+from betting.cailbrator import calibratedProbOver
 
 # FIXME: Look into moving all this into a class?
 
@@ -107,7 +107,7 @@ def _loadProps(conn, startDate=None, endDate=None):
         query += " AND p.game_date >= ?"
         params.append(startDate)
     if endDate:
-        query += " AND p.game_date >= ?"
+        query += " AND p.game_date <= ?"
         params.append(endDate)
 
 
@@ -135,16 +135,30 @@ def _loadPlayerMap(conn):
     return df.set_index("name_norm")[["player_id", "team_id"]].to_dict("index")
 
 
-# Create a map for team_id and game_date to opp_team_id
+# Create a opp map keyed by player_id and game_date (this handles players getting traded midseason
 def _loadOppMap(conn):
     df = pd.read_sql_query("""
-        SELECT game_date, home_team_id, away_team_id FROM Games
+        SELECT pgl.player_id, g.game_date,
+               g.home_team_id, g.away_team_id, pgl.is_home
+        FROM Player_game_logs pgl
+        JOIN Games g ON pgl.game_id = g.game_id
     """, conn)
 
     result = {}
     for _, row in df.iterrows():
-        result[(row.home_team_id, row.game_date)] = row.away_team_id
-        result[(row.away_team_id, row.game_date)] = row.home_team_id
+        if row.is_home:
+            teamID = row.home_team_id
+            oppTeamID = row.away_team_id
+        else:
+            teamID = row.away_team_id
+            oppTeamID = row.home_team_id
+
+        result[(int(row.player_id), row.game_date)] = {
+            "team_id": teamID,
+            "opp_team_id": oppTeamID,
+
+        }
+
     return result
 
 
@@ -176,7 +190,7 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
         playerMap = _loadPlayerMap(conn)
         oppMap = _loadOppMap(conn)
 
-        playerLogCache, posCache, teamCache, statusDF, playerAvgCache, teamGameTotal = preloadCaches(conn)
+        playerLogCache, posCache, teamCache, statusDF, playerAvgCache, teamGameTotal, oppPosCache = preloadCaches(conn)
     finally:
         conn.close()
 
@@ -192,6 +206,8 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
     noActuals = 0
     noFeatures = 0
 
+    noLine = 0
+
     for _, prop in props.iterrows():
         nameNorm = _normalizeName(prop.player_name)
         date = prop.game_date
@@ -202,12 +218,16 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
 
         playerInfo = playerMap[nameNorm]
         playerID = playerInfo["player_id"]
-        teamID = playerInfo["team_id"]
-        oppTeamID = oppMap.get((teamID, date))
 
-        if oppTeamID is None:
+        gameContext = oppMap.get((playerID, date))
+
+    
+        if gameContext is None:
             noOppMatch += 1
             continue
+    
+        teamID = gameContext["team_id"]
+        oppTeamID = gameContext["opp_team_id"]
 
         # Get actual points from logs
         actualPts = actuals.get((nameNorm, date))
@@ -217,15 +237,21 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
 
         # Build features and predict
         features = buildFeatures(playerID, date, teamID, oppTeamID, playerLogCache, posCache, teamCache, statusDF,
-                                 playerAvgCache, teamGameTotal)
+                                 playerAvgCache, teamGameTotal, oppPosCache)
         
 
         if features is None:
             noFeatures += 1
             continue
 
-        predicted = float(model.predict(features)[0])
+        # Filter out lines that are 10+ pts from players last 10 avg and filter out lines that are less than 10
+        avgPts = features["avgPts10"].iloc[0]
+        if prop.line < 10 or abs(prop.line - avgPts) > 5:
+            noLine += 1
+            continue
 
+        predicted = float(model.predict(features)[0])
+        
         # Calibrated prob
         myProb = calibratedProbOver(predicted, prop.line, residualStd, cal, df=tdf)
 
@@ -233,6 +259,9 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
         fairOverProb, _ = _removeVig(prop.over_odds, prop.under_odds)
 
         edge = myProb - fairOverProb
+        
+        # Drop any edge above 15% as too large and something is wrong (exg unknow injury)
+        edge = min(edge, 0.15)
 
         # Only Bet if edge is greater than treshhold defined in parameters
         if edge <= edgeThresh:
@@ -253,8 +282,10 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
             continue
 
         # Size the bet with kelly formula
-        stake = _kellyFractional(edge, prop.over_odds, fraction=kellyFrac) * currentBank
-        stake = round(min(stake, currentBank * 0.10), 2) # Hard cap at 10% of current bankroll
+        #stake = _kellyFractional(edge, prop.over_odds, fraction=kellyFrac) * currentBank
+        #stake = round(min(stake, currentBank * 0.10), 2) # Hard cap at 10% of current bankroll
+
+        stake = 10
 
         won = actualPts > prop.line
         pnl = stake * _payoutMultiplier(prop.over_odds) if won else -stake
@@ -283,6 +314,9 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
     print(f"No opp match {noOppMatch}")
     print(f"No actuals {noActuals}")
     print(f"No features {noFeatures}")
+
+    print(f"\nLines skip breakdown")
+    print(f"Lines skipped {noLine}")
 
     _printSummary(resultsDF, bankroll, currentBank, skipped)
     return resultsDF

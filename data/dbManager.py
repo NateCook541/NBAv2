@@ -84,6 +84,7 @@ dbSchema = {
 extraIndexes = [
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_player_game ON Player_game_logs (player_id, game_id)",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_prop_unique ON Props (game_date, player_name, line, bookmaker)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_player_name ON Players (name)",
 ]
 
 # A small SQLite wrapper for the scrapped NBA data
