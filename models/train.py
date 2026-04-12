@@ -3,21 +3,47 @@ import joblib
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error
 from xgboost import XGBRegressor
 from datetime import datetime, timedelta
 
 from models.evaluate import evaluateModel
 from features.featureCollector import buildFeatures, featureOrder
+from betting.cailbrator import fitCalibrator
+
+
+def _modelMetaPath():
+    return Path(__file__).parent / "nba_model_meta.joblib"
+
+
+def _minutesMetaPath():
+    return Path(__file__).parent / "nba_minutes_model_meta.joblib"
+
+
+def _splitChronologically(X, y, dates, holdout_ratio=0.2):
+    if len(X) < 10:
+        raise ValueError("Not enough rows to create a chronological split")
+
+    splitIdx = max(1, int(len(X) * (1 - holdout_ratio)))
+    splitIdx = min(splitIdx, len(X) - 1)
+
+    return (
+        X.iloc[:splitIdx],
+        X.iloc[splitIdx:],
+        y.iloc[:splitIdx],
+        y.iloc[splitIdx:],
+        dates.iloc[:splitIdx],
+        dates.iloc[splitIdx:],
+    )
 
 def preloadCaches(conn):
     print(f"Loading caches")
 
     # Player logs
     allLogs = pd.read_sql_query("""
-        SELECT pgl.player_id, g.game_date, pgl.points, pgl.minutes, 
-               pgl.fg_pct, pgl.is_home, pgl.rest_days
+        SELECT pgl.player_id, pgl.game_id, g.game_date, pgl.points, pgl.minutes, 
+               pgl.fg_pct, pgl.is_home, pgl.rest_days,
+               CASE WHEN pgl.is_home = 1 THEN g.home_team_id ELSE g.away_team_id END AS team_id
         FROM Player_game_logs pgl
         JOIN Games g ON pgl.game_id = g.game_id
         ORDER BY pgl.player_id, g.game_date
@@ -43,29 +69,7 @@ def preloadCaches(conn):
     # Status table
     status = pd.read_sql_query("SELECT * FROM Status", conn)
 
-    # Player avg points precompute
-    playerAvg = pd.read_sql_query("""
-        SELECT player_id, AVG(points) as avg_pts
-        FROM Player_game_logs
-        GROUP BY player_id
-    """, conn)
-    playerAvgCache = dict(zip(playerAvg.player_id, playerAvg.avg_pts))
-
-    # Player usage rate
-    teamGameTotals = (
-        allLogs.groupby(["game_date", "is_home"])["points"]
-        .sum()
-        .to_dict()
-    )
-
-    playerUsageCache = {}
-    for pid, grp in allLogs.groupby("player_id"):
-        shares = []
-        for _, row in grp.iterrows():
-            teamTotal = teamGameTotals.get((row["game_date"], row["is_home"]), 0)
-            if teamTotal > 0:
-                shares.append(row["points"] / teamTotal)
-        playerUsageCache[pid] = float(sum(shares) / len(shares)) if shares else 0.0
+    teamGameTotals = allLogs.groupby(["game_id", "team_id"])["points"].sum().to_dict()
 
     # Pos opp query
     oppPosLogs = pd.read_sql_query("""
@@ -101,18 +105,20 @@ def preloadCaches(conn):
 
     print("Cache loading done")
 
-    return playerLogCache, posCache, teamCache, status, playerAvgCache, playerUsageCache, oppPosCache, teamGameTotals
+    return playerLogCache, posCache, teamCache, status, oppPosCache, teamGameTotals
 
-def generateTrainingData():
-    conn = sqlite3.connect('NBA.db')
+def generateTrainingData(dbPath="NBA.db", startDate=None, endDate=None, minutesModel=None):
+    conn = sqlite3.connect(dbPath)
     
-    playerLogCache, posCache, teamCache, statusDF, playerAvgCache, playerUsageCache, oppPosCache, teamGameTotals = preloadCaches(conn) 
+    playerLogCache, posCache, teamCache, statusDF, oppPosCache, teamGameTotals = preloadCaches(conn) 
 
     logsQuery = """
         SELECT
             pgl.player_id,
             pgl.game_id,
             pgl.points          AS actual_points,
+            pgl.is_home,
+            pgl.rest_days,
             g.game_date,
             g.home_team_id,
             g.away_team_id,
@@ -125,18 +131,27 @@ def generateTrainingData():
         JOIN Games   g ON pgl.game_id   = g.game_id
         JOIN Players p ON pgl.player_id = p.player_id
         WHERE pgl.minutes >= 3 -- train only when greater than 10 minutes played
-        ORDER BY g.game_date
-        """
-    logs = pd.read_sql_query(logsQuery, conn)
+    """
+    params = []
+    if startDate:
+        logsQuery += " AND g.game_date >= ?"
+        params.append(startDate)
+    if endDate:
+        logsQuery += " AND g.game_date < ?"
+        params.append(endDate)
+    logsQuery += " ORDER BY g.game_date, pgl.game_id, pgl.player_id"
+    logs = pd.read_sql_query(logsQuery, conn, params=params)
     logs = logs.dropna(subset=["team_id", "opp_team_id"])
     print(f"Building features for {len(logs)} log rows")
         
     featureRows = []
     targets = []
+    validDates = []
     skipped = 0
 
-    minutesModelPath = Path("models/nba_minutes_model.joblib")
-    minutesModel = joblib.load(minutesModelPath) if minutesModelPath.exists() else None
+    if minutesModel is None:
+        minutesModelPath = Path("models/nba_minutes_model.joblib")
+        minutesModel = joblib.load(minutesModelPath) if minutesModelPath.exists() else None
 
     for row in logs.itertuples(index=False):
         features = buildFeatures(
@@ -148,11 +163,11 @@ def generateTrainingData():
             posCache=posCache,
             teamCache=teamCache,
             statusDF=statusDF,
-            playerAvgCache=playerAvgCache,
-            usageRateCache=playerUsageCache,
             oppPosCache=oppPosCache,
             teamGameTotals=teamGameTotals,
-            minutesModel=minutesModel
+            minutesModel=minutesModel,
+            currentIsHome=row.is_home,
+            currentRestDays=row.rest_days,
         )
         if features is None:
             skipped += 1
@@ -160,26 +175,25 @@ def generateTrainingData():
         
         featureRows.append(features)
         targets.append(row.actual_points)
+        validDates.append(row.game_date)
 
     conn.close()
         
     print(f"Built {len(featureRows)} rows  |  skipped {skipped} (insufficient history)")
     X = pd.concat(featureRows, ignore_index=True)
     y = pd.Series(targets, name="points")
-    return X, y
+    dates = pd.Series(validDates, name="game_date")
+    return X, y, dates
 
-def trainModel(save=True, metrics=False):
-    X, y = generateTrainingData()
+def trainModel(save=True, metrics=False, dbPath="NBA.db", train_end_date=None):
+    minutesModel = trainMinutes(save=save, dbPath=dbPath, endDate=train_end_date)
+    X, y, dates = generateTrainingData(dbPath=dbPath, endDate=train_end_date, minutesModel=minutesModel)
 
     mask = X["avgPts10"] > 0
-    X, y = X[mask], y[mask]
+    X, y, dates = X[mask].reset_index(drop=True), y[mask].reset_index(drop=True), dates[mask].reset_index(drop=True)
 
-    # Have to use this instead of test, train, split as to prevent r2 score being inflated from games already being seen
-    splitIdx = int(len(X) * 0.8)
-    XTrain, XTest = X.iloc[:splitIdx], X.iloc[splitIdx:]
-    yTrain, yTest = y.iloc[:splitIdx], y.iloc[splitIdx:]
+    XTrain, XCal, yTrain, yCal, trainDates, calDates = _splitChronologically(X, y, dates)
 
-    # Uses basic hyperparameters (Note - Test other models/parameters (Mabye TPOT might help here?))
     model = XGBRegressor(
         n_estimators=400,
         max_depth=6,
@@ -195,11 +209,29 @@ def trainModel(save=True, metrics=False):
     model.fit(XTrain, yTrain)
     
     if metrics:
-        predictions = evaluateModel(model, XTest, yTest)
+        predictions = evaluateModel(model, XCal, yCal)
+    else:
+        predictions = model.predict(XCal)
+
+    residualStd = float(np.std(yCal.values - predictions))
+    calibratorPath = Path(__file__).parent / "nba_calibrator.joblib"
+    calibrator = fitCalibrator(
+        predictions,
+        yCal,
+        residualStd,
+        df=3,
+        savePath=calibratorPath if save else None,
+        metadata={
+            "train_end_date": train_end_date,
+            "calibration_start_date": calDates.iloc[0],
+            "calibration_end_date": calDates.iloc[-1],
+            "rows": int(len(yCal)),
+        },
+    )
     
     # Get the feature importance data as well
     importance = pd.DataFrame({
-        "feature": XTest.columns,
+        "feature": XCal.columns,
         "importance": model.feature_importances_,
     }).sort_values("importance", ascending=False)
     print("\nFeature importances:")
@@ -208,17 +240,33 @@ def trainModel(save=True, metrics=False):
     if save:
         modelPath = Path(__file__).parent / "nba_model.joblib"
         joblib.dump(model, modelPath)
+        joblib.dump({
+            "train_end_date": train_end_date,
+            "train_start_date": trainDates.iloc[0],
+            "train_last_date": trainDates.iloc[-1],
+            "calibration_start_date": calDates.iloc[0],
+            "calibration_end_date": calDates.iloc[-1],
+            "train_rows": int(len(XTrain)),
+            "calibration_rows": int(len(XCal)),
+        }, _modelMetaPath())
         print(f"\nModel saved to {modelPath}")
 
-    return model
+    return model, {
+        "calibrator": calibrator,
+        "df": 3,
+        "residualStd": residualStd,
+        "train_end_date": train_end_date,
+        "calibration_start_date": calDates.iloc[0],
+        "calibration_end_date": calDates.iloc[-1],
+    }
 
 
 # Minutes model training
 
 
-def trainMinutes(save=True):
-    conn = sqlite3.connect("NBA.db")
-    playerLogCache, posCache, teamCache, statusDF, playerAvgCache, playerUsageCache, oppPosCache, teamGameTotals = preloadCaches(conn)
+def trainMinutes(save=True, dbPath="NBA.db", endDate=None):
+    conn = sqlite3.connect(dbPath)
+    playerLogCache, posCache, teamCache, statusDF, oppPosCache, teamGameTotals = preloadCaches(conn)
 
     logsQuery = """
         SELECT pgl.player_id, pgl.minutes AS actual_minutes,
@@ -230,20 +278,25 @@ def trainMinutes(save=True):
         JOIN Games g   ON pgl.game_id   = g.game_id
         JOIN Players p ON pgl.player_id = p.player_id
         WHERE pgl.minutes >= 3
-        ORDER BY g.game_date
     """
-    logs = pd.read_sql_query(logsQuery, conn)
+    params = []
+    if endDate:
+        logsQuery += " AND g.game_date < ?"
+        params.append(endDate)
+    logsQuery += " ORDER BY g.game_date, pgl.game_id, pgl.player_id"
+    logs = pd.read_sql_query(logsQuery, conn, params=params)
     conn.close()
 
     featureRows = []
     targets = []
+    validDates = []
 
     for row in logs.itertuples(index=False):
         rolling = playerLogCache.get(row.player_id)
         if rolling is None:
             continue
 
-        past = rolling[rolling["game_date"] < row.game_date].tail(10)
+        past = rolling[rolling["game_date"] < row.game_date].tail(10).sort_values("game_date", ascending=False)
         if len(past) < 5:
             continue
 
@@ -276,14 +329,14 @@ def trainMinutes(save=True):
             "pos": posVal,
         })
         targets.append(row.actual_minutes)
+        validDates.append(row.game_date)
 
 
     X = pd.DataFrame(featureRows)
     y = pd.Series(targets)
 
-    splitIdx = int(len(X) * 0.8)
-    XTrain, XTest = X.iloc[:splitIdx], X.iloc[splitIdx:]
-    yTrain, yTest = y.iloc[:splitIdx], y.iloc[splitIdx:]
+    dates = pd.Series(validDates, name="game_date")
+    XTrain, XTest, yTrain, yTest, trainDates, testDates = _splitChronologically(X, y, dates)
 
     model = XGBRegressor(
             n_estimators=300,
@@ -302,7 +355,15 @@ def trainMinutes(save=True):
     if save:
         path = Path("models/nba_minutes_model.joblib")
         joblib.dump(model, path)
+        joblib.dump({
+            "train_end_date": endDate,
+            "train_start_date": trainDates.iloc[0],
+            "train_last_date": trainDates.iloc[-1],
+            "validation_start_date": testDates.iloc[0],
+            "validation_end_date": testDates.iloc[-1],
+            "train_rows": int(len(XTrain)),
+            "validation_rows": int(len(XTest)),
+        }, _minutesMetaPath())
         print(f"Minutes model saved to {path}")
     
     return model
-

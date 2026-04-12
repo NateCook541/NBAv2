@@ -5,6 +5,7 @@ import pandas as pd
 from pathlib import Path
 
 from features.featureCollector import buildFeatures
+from models.train import preloadCaches
 
 #FIXME: Add docstrings bum
 
@@ -70,6 +71,7 @@ def predict(playerName, gameDate):
         homeTeam = int(gameRow.iloc[0]["home_team_id"])
         awayTeam = int(gameRow.iloc[0]["away_team_id"])
         oppTeamID = awayTeam if homeTeam == teamID else homeTeam
+        isHome = 1 if homeTeam == teamID else 0
 
         # Get injury status
         injuryRow = pd.read_sql_query(
@@ -90,8 +92,26 @@ def predict(playerName, gameDate):
                 "injury_status":    "Out",
             }
         
+        playerLogCache, posCache, teamCache, statusDF, oppPosCache, teamGameTotals = preloadCaches(conn)
+        minutesModelPath = Path(__file__).parent / "nba_minutes_model.joblib"
+        minutesModel = joblib.load(minutesModelPath) if minutesModelPath.exists() else None
+
         # If not build features and run the prediction
-        features = buildFeatures(playerID, gameDate, teamID, oppTeamID, conn)
+        features = buildFeatures(
+            playerID=playerID,
+            date=gameDate,
+            teamID=teamID,
+            oppTeamID=oppTeamID,
+            cache=playerLogCache,
+            posCache=posCache,
+            teamCache=teamCache,
+            statusDF=statusDF,
+            oppPosCache=oppPosCache,
+            teamGameTotals=teamGameTotals,
+            minutesModel=minutesModel,
+            currentIsHome=isHome,
+            currentRestDays=None,
+        )
         if features is None:
             return None
 
@@ -156,4 +176,3 @@ if __name__ == '__main__':
     else:
         status = (f"[{result['injury_status']}]" if result["injury_status"] else "")
         print(f"{result['player']}{status}: {result['predicted_points']} pts on {result['date']}")
-

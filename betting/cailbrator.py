@@ -1,3 +1,11 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import joblib
+from scipy.stats import t as t_dist
+from pathlib import Path
+from sklearn.isotonic import IsotonicRegression
+
 def printCalMetrics(model, XTest, yTest):
     predictions = model.predict(XTest)
     residuals = yTest.values - predictions
@@ -55,7 +63,7 @@ def calibrationCheck(predictions, yTest, residualStd, calibrator=None, df=3):
 
 # Fits a isotonic regression calibrator for a playerAvg line and saves it
 # This lets us know the true prob -> actual hit rate mapping
-def fitCalibrator(predictions, yTest, residualsStd, df=3, savePath=None):
+def fitCalibrator(predictions, yTest, residualsStd, df=3, savePath=None, metadata=None):
 
     actuals = yTest.values if hasattr(yTest, "values") else yTest
 
@@ -69,7 +77,10 @@ def fitCalibrator(predictions, yTest, residualsStd, df=3, savePath=None):
     calibrator.fit(rawProbs, yBinary)
 
     if savePath:
-        joblib.dump({"calibrator": calibrator, "df": df, "residualStd": residualsStd}, savePath)
+        payload = {"calibrator": calibrator, "df": df, "residualStd": residualsStd}
+        if metadata:
+            payload.update(metadata)
+        joblib.dump(payload, savePath)
         print(f"Calibator saved to {savePath}")
 
     return calibrator
@@ -99,4 +110,3 @@ def displayCalibration(calDF):
     plt.savefig(savePath)
     plt.close()
     print(f"\nCalibration plot saved to {savePath}")
-

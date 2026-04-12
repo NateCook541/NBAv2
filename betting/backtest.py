@@ -7,14 +7,12 @@ from pathlib import Path
 from scipy.stats import t as t_dist
 
 from features.featureCollector import buildFeatures
-from models.train import preloadCaches
-# FIXME: When I move calibration stuff over I need to remember to fix this import
+from models.train import preloadCaches, trainModel, trainMinutes
 from betting.cailbrator import calibratedProbOver
 
 # FIXME: Look into moving all this into a class?
 
 # HELPERS
-
 
 def _printSummary(df, startingBank, finalBank, skipped):
     bets = df[df["bet"] == True]
@@ -139,7 +137,7 @@ def _loadPlayerMap(conn):
 def _loadOppMap(conn):
     df = pd.read_sql_query("""
         SELECT pgl.player_id, g.game_date,
-               g.home_team_id, g.away_team_id, pgl.is_home
+               g.home_team_id, g.away_team_id, pgl.is_home, pgl.rest_days
         FROM Player_game_logs pgl
         JOIN Games g ON pgl.game_id = g.game_id
     """, conn)
@@ -156,10 +154,43 @@ def _loadOppMap(conn):
         result[(int(row.player_id), row.game_date)] = {
             "team_id": teamID,
             "opp_team_id": oppTeamID,
-
+            "is_home": int(row.is_home),
+            "rest_days": int(row.rest_days) if pd.notna(row.rest_days) else 0,
         }
 
     return result
+
+
+def _loadSavedModelMeta():
+    metaPath = Path("models/nba_model_meta.joblib")
+    if not metaPath.exists():
+        return None
+    return joblib.load(metaPath)
+
+
+def _loadSavedMinutesMeta():
+    metaPath = Path("models/nba_minutes_model_meta.joblib")
+    if not metaPath.exists():
+        return None
+    return joblib.load(metaPath)
+
+
+def _bundleIsBacktestSafe(modelMeta, minutesMeta, calBundle, backtestStartDate):
+    if modelMeta is None or minutesMeta is None or calBundle is None:
+        return False
+
+    trainEndDate = modelMeta.get("train_end_date")
+    minutesTrainEndDate = minutesMeta.get("train_end_date")
+    calEndDate = calBundle.get("calibration_end_date")
+
+    if not trainEndDate or not minutesTrainEndDate or not calEndDate:
+        return False
+
+    return (
+        trainEndDate <= backtestStartDate and
+        minutesTrainEndDate <= backtestStartDate and
+        calEndDate < backtestStartDate
+    )
 
 
 # MAIN BACKTEST
@@ -174,25 +205,53 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
     modelPath = Path("models/nba_model.joblib")
     cailbratorPath = Path("models/nba_calibrator.joblib")
 
-    if not modelPath.exists() or not cailbratorPath.exists():
-        raise FileNotFoundError("Model or cailbrator not found")
-
-    model = joblib.load(modelPath)
-    bundle = joblib.load(cailbratorPath)
-    cal = bundle["calibrator"]
-    residualStd = bundle["residualStd"]
-
     conn = sqlite3.connect(dbPath)
 
     try:
         props = _loadProps(conn, startDate, endDate)
+        if props.empty:
+            raise ValueError("No props found for the requested backtest window")
+
+        backtestStartDate = str(props["game_date"].min())
         actuals = _loadActuals(conn)
         playerMap = _loadPlayerMap(conn)
         oppMap = _loadOppMap(conn)
 
-        playerLogCache, posCache, teamCache, statusDF, playerAvgCache, teamGameTotal, oppPosCache = preloadCaches(conn)
+        playerLogCache, posCache, teamCache, statusDF, oppPosCache, teamGameTotals = preloadCaches(conn) 
+    
     finally:
         conn.close()
+
+    # Load all models and cailbrator
+    modelMeta = _loadSavedModelMeta()
+    minutesMeta = _loadSavedMinutesMeta()
+    bundle = joblib.load(cailbratorPath) if cailbratorPath.exists() else None
+    
+    # If the current models are safe (trained before backtest range) then use them, and if not then retrain with correct date to prevent data leakage
+    useSavedBundle = modelPath.exists() and _bundleIsBacktestSafe(modelMeta, minutesMeta, bundle, backtestStartDate)
+    if useSavedBundle:
+        model = joblib.load(modelPath)
+        minutesModelPath = Path("models/nba_minutes_model.joblib")
+        minutesModel = joblib.load(minutesModelPath) if minutesModelPath.exists() else None
+    else:
+        print(
+            f"Saved model bundle is not leakage-safe for backtest starting {backtestStartDate}. "
+            f"Training a fresh model using data before {backtestStartDate}."
+        )
+        model, bundle = trainModel(
+            save=False,
+            metrics=False,
+            dbPath=dbPath,
+            train_end_date=backtestStartDate,
+        )
+        minutesModel = trainMinutes(
+            save=False,
+            dbPath=dbPath,
+            endDate=backtestStartDate,
+        )
+
+    cal = bundle["calibrator"]
+    residualStd = bundle["residualStd"]
 
     print(f"Loaded {len(props)} props | edge threshold: {edgeThresh:.0%} | bankroll: ${bankroll:.0f}")
 
@@ -205,7 +264,6 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
     noOppMatch = 0
     noActuals = 0
     noFeatures = 0
-
     noLine = 0
 
     for _, prop in props.iterrows():
@@ -220,7 +278,6 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
         playerID = playerInfo["player_id"]
 
         gameContext = oppMap.get((playerID, date))
-
     
         if gameContext is None:
             noOppMatch += 1
@@ -236,9 +293,21 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
             continue
 
         # Build features and predict
-        features = buildFeatures(playerID, date, teamID, oppTeamID, playerLogCache, posCache, teamCache, statusDF,
-                                 playerAvgCache, teamGameTotal, oppPosCache)
-        
+        features = buildFeatures(
+            playerID=playerID,
+            date=date,
+            teamID=teamID,
+            oppTeamID=oppTeamID,
+            cache=playerLogCache,
+            posCache=posCache,
+            teamCache=teamCache,
+            statusDF=statusDF,
+            oppPosCache=oppPosCache,
+            teamGameTotals=teamGameTotals,
+            minutesModel=minutesModel,
+            currentIsHome=gameContext["is_home"],
+            currentRestDays=gameContext["rest_days"],
+        )
 
         if features is None:
             noFeatures += 1
@@ -246,7 +315,7 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
 
         # Filter out lines that are 10+ pts from players last 10 avg and filter out lines that are less than 10
         avgPts = features["avgPts10"].iloc[0]
-        if prop.line < 10 or abs(prop.line - avgPts) > 5:
+        if prop.line < 10 or abs(prop.line - avgPts) > 10:
             noLine += 1
             continue
 
@@ -260,9 +329,6 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
 
         edge = myProb - fairOverProb
         
-        # Drop any edge above 15% as too large and something is wrong (exg unknow injury)
-        edge = min(edge, 0.15)
-
         # Only Bet if edge is greater than treshhold defined in parameters
         if edge <= edgeThresh:
             results.append({
@@ -285,6 +351,7 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
         #stake = _kellyFractional(edge, prop.over_odds, fraction=kellyFrac) * currentBank
         #stake = round(min(stake, currentBank * 0.10), 2) # Hard cap at 10% of current bankroll
 
+        # Hardcode current stake for testing as its not good enough to run kelly as it will just add noise
         stake = 10
 
         won = actualPts > prop.line
@@ -320,4 +387,3 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
 
     _printSummary(resultsDF, bankroll, currentBank, skipped)
     return resultsDF
-

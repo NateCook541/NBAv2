@@ -116,16 +116,16 @@ def scrapeHistorical(seasons, dbPath="NBA.db", outputDir="output"):
         engine.close()
 
 
-def retrainModel(metrics=True):
+def retrainModel(metrics=True, dbPath="NBA.db", trainEndDate=None):
     from models.train import trainModel
     print("\n--------Training Model--------")
-    trainModel(save=True, metrics=metrics)
+    trainModel(save=True, metrics=metrics, dbPath=dbPath, train_end_date=trainEndDate)
     print("--------Training complete--------")
 
-def trainMinutes():
+def trainMinutes(dbPath="NBA.db", trainEndDate=None):
     from models.train import trainMinutes
     print("\n--------Training Minutes Model--------")
-    trainMinutes(save=True)
+    trainMinutes(save=True, dbPath=dbPath, endDate=trainEndDate)
     print("--------Training complete--------")
 
 def evaluateCurrentModel(dbPath="NBA.db"):
@@ -137,7 +137,7 @@ def evaluateCurrentModel(dbPath="NBA.db"):
     model = joblib.load(modelPath)
     print("\n-------- Evaluating Saved Model --------")
 
-    X, y = generateTrainingData()
+    X, y, _ = generateTrainingData(dbPath=dbPath)
 
     splitIdx = int(len(X) * 0.8)
     XTest = X.iloc[splitIdx:]
@@ -148,16 +148,16 @@ def evaluateCurrentModel(dbPath="NBA.db"):
 
 def evaluateCailbrator():
     cailbratorPath = Path("models/nba_cailbrator.joblib")
-    cailbrator = joblib.load(cailbrator)
+    cailbrator = joblib.load(cailbratorPath)
     print("\n-------- Evaluating Saved Cailbrator --------")
 
-    X, y = generateTrainingData()
+    X, y, _ = generateTrainingData()
 
     splitIdx = int(len(X) * 0.8)
     XTest = X.iloc[splitIdx:]
     yTest = y.iloc[splitIdx:]
 
-    printCalMetrics(model, XTest, yTest)
+    printCalMetrics(cailbrator, XTest, yTest)
     print("-------- Evaluation Complete --------")
 
 
@@ -183,6 +183,8 @@ if __name__ == "__main__":
     # Train args
     parser.add_argument("--train", action="store_true",
                         help="Train model")
+    parser.add_argument("--train-end-date", type=str, default=None, metavar="YYYY-MM-DD",
+                        help="Exclude games on/after this date from training and calibration")
     parser.add_argument("--metrics", action="store_true",
                     help="Show training metrics")
 
@@ -218,7 +220,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.train:
-        retrainModel(metrics=args.metrics)
+        retrainModel(metrics=args.metrics, dbPath=args.db, trainEndDate=args.train_end_date)
     if args.evaluate:
         evaluateCurrentModel(dbPath=args.db)
     if args.scrape:
@@ -232,11 +234,10 @@ if __name__ == "__main__":
     if args.cailbrator:
         evalutateCailbrator()
     if args.train_minutes:
-        trainMinutes()
+        trainMinutes(dbPath=args.db, trainEndDate=args.train_end_date)
 
 
     if not args.train and not args.scrape and not args.historical_seasons and not args.evaluate and not args.pull_props and not args.backtest and not args.cailbrator and not args.train_minutes:
         parser.print_help()
 
 # :steam_smile
-

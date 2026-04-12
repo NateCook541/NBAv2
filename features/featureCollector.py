@@ -65,35 +65,41 @@ def _rollingStatsCache(playerID, date, cache):
 
     df = cache[playerID]
 
-    # 20 games before this date
-    past = df[df["game_date"] < date].tail(20)
+    # 20 most recent games before this date, newest first.
+    past = df[df["game_date"] < date].tail(20).sort_values("game_date", ascending=False)
     if past.empty:
         return None
     
     return past.drop(columns=["game_date"]).reset_index(drop=True)
 
-def _injuryContext(statusDF, playerAvgCache, usageRateCache, teamID, date):
-    
-    # Reports are filled out the day before the game is actually played so we check both day before as well as game date
+def _playerAverageToDate(playerID, date, cache, window=20):
+    if playerID not in cache:
+        return 0.0
+
+    past = cache[playerID][cache[playerID]["game_date"] < date].tail(window)
+    if past.empty:
+        return 0.0
+
+    return float(past["points"].mean())
+
+def _injuryContext(statusDF, playerLogCache, teamGameTotals, teamID, date):
+    # Use only the most recent pregame report date to avoid same-day leakage.
     dayBefore = (datetime.strptime(date, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
 
-    # Get how many starters are out
     injured = statusDF[
         (statusDF.team_id == teamID) &
-        (statusDF.scrape_date.isin([date, dayBefore])) &
+        (statusDF.scrape_date == dayBefore) &
         (statusDF.status.isin(["Out", "Doubtful"]))
     ]
     startersOut = len(injured)
 
-    # Get the missing points from injuryed players by getting avg points for all and summing
     missingPPG = sum(
-        playerAvgCache.get(pid, 0)
+        _playerAverageToDate(pid, date, playerLogCache)
         for pid in injured.player_id.values
     )
 
-    # Get the missing usage from injuryed players (Should help handle a high impact player going out)
     missingUsage = sum(
-        usageRateCache.get(pid, 0)
+        _getUsageRate(pid, date, playerLogCache, teamGameTotals)
         for pid in injured.player_id.values
     )
 
@@ -149,11 +155,12 @@ def _getUsageRate(playerID, date, cache, teamGameTotals):
     
     shares = []
     for _, row in recent.iterrows():
-        teamTotal = teamGameTotals.get((row["game_date"], row["is_home"]), 0)
+        teamTotal = teamGameTotals.get((row["game_id"], row["team_id"]), 0)
         if teamTotal > 0:
             shares.append(row["points"] / teamTotal)
     
     return float(sum(shares) / len(shares)) if shares else 0.0 
+
 def _oppVsPosContext(oppPosCache, oppTeamID, playerPos, date):
     key = (oppTeamID, playerPos)
     df = oppPosCache.get(key)
@@ -174,7 +181,7 @@ def _injuryOpportunityByPos(statusDF, oppPosCache, playerPos, teamID, oppTeamID,
     # Get injured players on opponent team
     injured = statusDF[
         (statusDF.team_id == oppTeamID) &
-        (statusDF.scrape_date.isin([date, dayBefore])) &
+        (statusDF.scrape_date == dayBefore) &
         (statusDF.status.isin(["Out", "Doubtful"]))
     ]
 
@@ -200,7 +207,8 @@ def _injuryOpportunityByPos(statusDF, oppPosCache, playerPos, teamID, oppTeamID,
 # Builds the feature vector for training
 def buildFeatures(playerID, date, teamID, oppTeamID, 
                   cache, posCache, teamCache, statusDF, 
-                  playerAvgCache, usageRateCache, oppPosCache, teamGameTotals, minutesModel=None
+                  oppPosCache, teamGameTotals, minutesModel=None,
+                  currentIsHome=None, currentRestDays=None
 ):
     # Gets player rolling stats
     rolling = _rollingStatsCache(playerID, date, cache)
@@ -239,13 +247,20 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
     over20_rate = float((last10["points"] > 20).mean())
 
     # Get injury (status) and oppnenet features
-    injuryFeatures = _injuryContext(statusDF, playerAvgCache, usageRateCache, teamID, date)
+    injuryFeatures = _injuryContext(statusDF, cache, teamGameTotals, teamID, date)
     oppFeatures = _oppContext(teamCache, oppTeamID, date)
     playerStatus = _playerStatusContext(statusDF, playerID, date)
 
-    # Read the home and rest days stats
-    isHome = int(rolling.iloc[0]["is_home"]) if "is_home" in rolling.columns else 0
-    restDays = int(rolling.iloc[0]["rest_days"]) if "rest_days" in rolling.columns else 0
+    # Read the actual target-game context when available. Fallback to latest prior row.
+    if currentIsHome is None:
+        isHome = int(rolling.iloc[0]["is_home"]) if "is_home" in rolling.columns else 0
+    else:
+        isHome = int(currentIsHome)
+
+    if currentRestDays is None:
+        restDays = int(rolling.iloc[0]["rest_days"]) if "rest_days" in rolling.columns else 0
+    else:
+        restDays = int(currentRestDays)
 
     avgMin = baseline["minutes"] if baseline["minutes"] > 0 else 1
 
@@ -325,4 +340,3 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
 
     # Make sure the model recicves order in which it was trained on
     return features[featureOrder]
-
