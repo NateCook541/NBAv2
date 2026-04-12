@@ -4,4 +4,5 @@ __pycache__/
 *.sqlite3
 NBA.db
 .env
+.codex
 
