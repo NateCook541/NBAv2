@@ -328,17 +328,12 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
         # FIXME: Look into removing this later and see effects
         # Filter out lines that are 10+ pts from players last 10 avg and filter out lines that are less than 10
         avgPts = features["avgPts10"].iloc[0]
-        if prop.line < 10 or abs(prop.line - avgPts) > 7:
+        if prop.line < 10 or abs(prop.line - avgPts) > 10:
             noLine += 1
             continue
 
         predicted = float(model.predict(features)[0])
        
-        # Only bet where model has demonstrated signal
-        if predicted >= 15:
-            noLine += 1
-            continue
-
         # Calibrated prob
         myProb = cailbratedProbOver(predicted, prop.line, sigma, bundle, df=df)
 
