@@ -8,7 +8,7 @@ from scipy.stats import t as t_dist
 
 from features.featureCollector import buildFeatures
 from models.train import preloadCaches, trainModel, trainMinutes
-from betting.cailbrator import calibratedProbOver
+from betting.cailbrator import cailbratedProbOver
 
 # FIXME: Look into moving all this into a class?
 
@@ -50,6 +50,18 @@ def _printSummary(df, startingBank, finalBank, skipped):
     print(bets.sort_values("pnl")[
         ["date", "player", "line", "predicted", "actual", "edge", "pnl"]
     ].head(5).to_string(index=False))
+
+    bets = bets.copy()
+    bets["pred_bucket"] = pd.cut(bets["predicted"], bins=[0,15,20,25,30,99], 
+                              labels=["<15","15-20","20-25","25-30","30+"])
+
+    print("\nWin rate by predicted score:")
+    print(bets.groupby("pred_bucket", observed=True).agg(
+        bets=("pnl","count"),
+        win_rate=("pnl", lambda x: (x>0).mean()),
+        avg_edge=("edge","mean"),
+        total_pnl=("pnl","sum")
+    ).to_string())
 
 def _normalizeName(name):
     return "".join(
@@ -197,7 +209,6 @@ def _bundleIsBacktestSafe(modelMeta, minutesMeta, calBundle, backtestStartDate):
 
 # This is the main function that will backtest off the data from the api stored in the db
 # The dates let you set a timeframe but default to none currently due to size of data
-# edge thr
 def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03,
                 bankroll=1000, kellyFrac=0.25, tdf=3):
     
@@ -233,25 +244,26 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
         model = joblib.load(modelPath)
         minutesModelPath = Path("models/nba_minutes_model.joblib")
         minutesModel = joblib.load(minutesModelPath) if minutesModelPath.exists() else None
+
     else:
         print(
             f"Saved model bundle is not leakage-safe for backtest starting {backtestStartDate}. "
             f"Training a fresh model using data before {backtestStartDate}."
         )
-        model, bundle = trainModel(
+        model, bundle = trainModel (
             save=False,
             metrics=False,
             dbPath=dbPath,
             train_end_date=backtestStartDate,
         )
-        minutesModel = trainMinutes(
+        minutesModel = trainMinutes (
             save=False,
             dbPath=dbPath,
             endDate=backtestStartDate,
         )
 
-    cal = bundle["calibrator"]
-    residualStd = bundle["residualStd"]
+    sigma = bundle.get("sigma", bundle["residualStd"])
+    df = bundle.get("df", 5)
 
     print(f"Loaded {len(props)} props | edge threshold: {edgeThresh:.0%} | bankroll: ${bankroll:.0f}")
 
@@ -313,16 +325,22 @@ def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03
             noFeatures += 1
             continue
 
+        # FIXME: Look into removing this later and see effects
         # Filter out lines that are 10+ pts from players last 10 avg and filter out lines that are less than 10
         avgPts = features["avgPts10"].iloc[0]
-        if prop.line < 10 or abs(prop.line - avgPts) > 10:
+        if prop.line < 10 or abs(prop.line - avgPts) > 7:
             noLine += 1
             continue
 
         predicted = float(model.predict(features)[0])
-        
+       
+        # Only bet where model has demonstrated signal
+        if predicted >= 15:
+            noLine += 1
+            continue
+
         # Calibrated prob
-        myProb = calibratedProbOver(predicted, prop.line, residualStd, cal, df=tdf)
+        myProb = cailbratedProbOver(predicted, prop.line, sigma, bundle, df=df)
 
         # Fair prob (no vig)
         fairOverProb, _ = _removeVig(prop.over_odds, prop.under_odds)

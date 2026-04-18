@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import joblib
 import pandas as pd
@@ -9,7 +10,7 @@ from datetime import datetime, timedelta
 
 from models.evaluate import evaluateModel
 from features.featureCollector import buildFeatures, featureOrder
-from betting.cailbrator import fitCalibrator
+from betting.cailbrator import fitCailbrator
 
 
 def _modelMetaPath():
@@ -107,9 +108,20 @@ def preloadCaches(conn):
 
     return playerLogCache, posCache, teamCache, status, oppPosCache, teamGameTotals
 
-def generateTrainingData(dbPath="NBA.db", startDate=None, endDate=None, minutesModel=None):
+def generateTrainingData(dbPath="NBA.db", startDate=None, endDate=None, minutesModel=None, cachePath=None):
+    if (cachePath and os.path.exists(cachePath) and minutesModel is None):
+        print("Loading saved training data")
+        df = pd.read_parquet(cachePath)
+        X = df.drop(columns=["__target__", "__date__"])
+        y = df["__target__"].rename("points")
+        dates = df["__date__"].rename("game_date")
+        if endDate:
+            mask = dates < endDate
+            X, y, dates = X[mask].reset_index(drop=True), y[mask].reset_index(drop=True), dates[mask].reset_index(drop=True)
+        
+        return X, y, dates
+
     conn = sqlite3.connect(dbPath)
-    
     playerLogCache, posCache, teamCache, statusDF, oppPosCache, teamGameTotals = preloadCaches(conn) 
 
     logsQuery = """
@@ -185,14 +197,26 @@ def generateTrainingData(dbPath="NBA.db", startDate=None, endDate=None, minutesM
     dates = pd.Series(validDates, name="game_date")
     return X, y, dates
 
-def trainModel(save=True, metrics=False, dbPath="NBA.db", train_end_date=None):
+def trainModel(save=True, metrics=False, dbPath="NBA.db", train_end_date=None, cachePath=None):
     minutesModel = trainMinutes(save=save, dbPath=dbPath, endDate=train_end_date)
-    X, y, dates = generateTrainingData(dbPath=dbPath, endDate=train_end_date, minutesModel=minutesModel)
+    X, y, dates = generateTrainingData(
+            dbPath=dbPath, 
+            endDate=train_end_date, 
+            minutesModel=minutesModel,
+            cachePath=cachePath 
+    )
 
     mask = X["avgPts10"] > 0
     X, y, dates = X[mask].reset_index(drop=True), y[mask].reset_index(drop=True), dates[mask].reset_index(drop=True)
 
     XTrain, XCal, yTrain, yCal, trainDates, calDates = _splitChronologically(X, y, dates)
+
+    propMask = yCal >= 12  # only players scoring 12+ on average
+    XCal = XCal[propMask].reset_index(drop=True)
+    yCal = yCal[propMask].reset_index(drop=True)
+    calDates = calDates[propMask].reset_index(drop=True)
+    propPlayerMask = (XCal["avgPts10"] >= 12) & (XCal["avgMin10"] >= 15)
+    print(f"[calibrator] Cal set after prop filter: {len(yCal)} rows, mean actual: {yCal.mean():.1f}")
 
     model = XGBRegressor(
         n_estimators=400,
@@ -213,13 +237,15 @@ def trainModel(save=True, metrics=False, dbPath="NBA.db", train_end_date=None):
     else:
         predictions = model.predict(XCal)
 
+    print(f"[DEBUG] Train rows: {len(XTrain)}, Cal rows: {len(XCal)}")
+    print(f"[DEBUG] Cal date range: {calDates.iloc[0]} to {calDates.iloc[-1]}")
+    print(f"[DEBUG] Cal mean actual: {yCal.mean():.2f}, mean predicted: {predictions.mean():.2f}")
+
     residualStd = float(np.std(yCal.values - predictions))
     calibratorPath = Path(__file__).parent / "nba_calibrator.joblib"
-    calibrator = fitCalibrator(
+    calibrator = fitCailbrator(
         predictions,
         yCal,
-        residualStd,
-        df=3,
         savePath=calibratorPath if save else None,
         metadata={
             "train_end_date": train_end_date,
@@ -251,14 +277,7 @@ def trainModel(save=True, metrics=False, dbPath="NBA.db", train_end_date=None):
         }, _modelMetaPath())
         print(f"\nModel saved to {modelPath}")
 
-    return model, {
-        "calibrator": calibrator,
-        "df": 3,
-        "residualStd": residualStd,
-        "train_end_date": train_end_date,
-        "calibration_start_date": calDates.iloc[0],
-        "calibration_end_date": calDates.iloc[-1],
-    }
+    return model, calibrator
 
 
 # Minutes model training
@@ -337,7 +356,7 @@ def trainMinutes(save=True, dbPath="NBA.db", endDate=None):
 
     dates = pd.Series(validDates, name="game_date")
     XTrain, XTest, yTrain, yTest, trainDates, testDates = _splitChronologically(X, y, dates)
-
+    
     model = XGBRegressor(
             n_estimators=300,
             max_depth=4,

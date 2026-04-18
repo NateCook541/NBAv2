@@ -2,6 +2,7 @@ import argparse
 import json
 import subprocess
 import joblib
+import numpy as np
 from pathlib import Path
 
 from data.scrapperEngine import ScrapeEngine
@@ -10,7 +11,7 @@ from data.dbManager import DBManager
 from models.train import preloadCaches, generateTrainingData
 from models.evaluate import evaluateModel
 
-from betting.cailbrator import printCalMetrics
+from betting.cailbrator import printCalMetrics, calibrationCheck, displayCalibration, probOverTDist, cailbratedProbOver, fitCailbrator
 from betting.oddsCollector import pullHistoricalProps
 from betting.backtest import runBacktest
 
@@ -119,7 +120,8 @@ def scrapeHistorical(seasons, dbPath="NBA.db", outputDir="output"):
 def retrainModel(metrics=True, dbPath="NBA.db", trainEndDate=None):
     from models.train import trainModel
     print("\n--------Training Model--------")
-    trainModel(save=True, metrics=metrics, dbPath=dbPath, train_end_date=trainEndDate)
+    trainModel(save=True, metrics=metrics, dbPath=dbPath, train_end_date=trainEndDate, 
+               cachePath="models/feature_cache.parquet")
     print("--------Training complete--------")
 
 def trainMinutes(dbPath="NBA.db", trainEndDate=None):
@@ -146,20 +148,48 @@ def evaluateCurrentModel(dbPath="NBA.db"):
     evaluateModel(model, XTest, yTest)
     print("-------- Evaluation Complete --------")
 
-def evaluateCailbrator():
-    cailbratorPath = Path("models/nba_cailbrator.joblib")
-    cailbrator = joblib.load(cailbratorPath)
+def evaluateCailbrator(dbPath="NBA.db", cachePath="models/feature_cache.parquet"):
+    modelPath = Path("models/nba_model.joblib")
+    
+    if not modelPath.exists():
+        print("No saved model")
+        return
+
+    model = joblib.load(modelPath)
+
     print("\n-------- Evaluating Saved Cailbrator --------")
 
-    X, y, _ = generateTrainingData()
+    X, y, dates = generateTrainingData(dbPath=dbPath, cachePath=cachePath)
 
     splitIdx = int(len(X) * 0.8)
-    XTest = X.iloc[splitIdx:]
-    yTest = y.iloc[splitIdx:]
+    XCal = X.iloc[splitIdx:]
+    yCal = y.iloc[splitIdx:]
 
-    printCalMetrics(cailbrator, XTest, yTest)
+    propPlayerMask = XCal["avgPts10"] >= 12
+    XCal = XCal[propPlayerMask].reset_index(drop=True)
+    yCal = yCal[propPlayerMask].reset_index(drop=True)
+    print(f"[calibrator] Cal set after prop-player filter: {len(yCal)} rows, mean actual: {yCal.mean():.1f}")
+    
+    predictions = model.predict(XCal)
+   
+    calibratorPath = Path("models/nba_calibrator.joblib")
+    bundle = fitCailbrator(
+            predictions, yCal, savePath=calibratorPath,
+            metadata={"refitted_only": True}
+    )
+
+    print(f"Calibrator refitted and saved. sigma={bundle['sigma']:.3f}, df={bundle['df']:.2f}")
     print("-------- Evaluation Complete --------")
 
+
+def buildAndCacheFeatures(dbPath="NBA.db", cachePath="models/feature_cache.parquet"):
+    X, y, dates = generateTrainingData(dbPath=dbPath)
+    
+    cache = X.copy()
+    cache["__target__"] = y.values
+    cache["__date__"] = dates.values
+    cache.to_parquet(cachePath)
+    print(f"Feature cache saved to {cachePath} ({len(cache)} rows)")
 
 # ENTRY POINT
 
@@ -188,13 +218,16 @@ if __name__ == "__main__":
     parser.add_argument("--metrics", action="store_true",
                     help="Show training metrics")
 
+    parser.add_argument("--cache-data", action="store_true",
+                        help="Generate training data and store for faster testing")
+
     # Evalute the current model with out retrain
     parser.add_argument("--evaluate", action="store_true",
                         help="Show metrics for current saved model without having to retrain")
 
     # Train and evaluate cailbrator
     parser.add_argument("--cailbrator", action="store_true",
-                        help="Train and then display the cailbrator")
+                        help="Refit cailbrator on current model")
 
     # Train the minutes model
     parser.add_argument("--train-minutes", action="store_true",
@@ -232,12 +265,14 @@ if __name__ == "__main__":
     if args.backtest:
         runBacktest(dbPath=args.db, edgeThresh=args.edge_thresh, bankroll=args.bankroll)
     if args.cailbrator:
-        evalutateCailbrator()
+        evaluateCailbrator(dbPath=args.db)
     if args.train_minutes:
         trainMinutes(dbPath=args.db, trainEndDate=args.train_end_date)
+    if args.cache_data:
+        buildAndCacheFeatures(dbPath=args.db)
 
-
-    if not args.train and not args.scrape and not args.historical_seasons and not args.evaluate and not args.pull_props and not args.backtest and not args.cailbrator and not args.train_minutes:
+    if not args.train and not args.scrape and not args.historical_seasons and not args.evaluate and not args.pull_props and not args.backtest and not args.cailbrator and not args.train_minutes and not args.cache_data:
         parser.print_help()
 
 # :steam_smile
+
