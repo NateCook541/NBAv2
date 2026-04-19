@@ -95,12 +95,121 @@ def _buildMinsFeatures(playerLogCache, statusDF, posCache, logsDF):
     return X, y, dates
 
 
+# Public bundle class
 
 
+class MinutesBundle:
+    """
+    Wraps the trained XGBoost minutes model with its metadata
+
+    Attributes:
+    model : XGBRegressor
+    meta  : (dict) Training dates, row counts, MAE
+    """
+
+    def __init__(self, model):
+        self.model = model
+        self.meta  = meta
 
 
+    # Prediction
 
 
+    def predict(self, features):
+        return float(self.model.predict(features[MINUTES_FEATURES])[0])
+
+    def predictBatch(self, features):
+        return self.model.predict(features[MINUTES_FEATURES])
 
 
+    # Persistence
+
+
+    def save(self, modelPath=MINUTES_PATH, metaPath=MINUTES_META_PATH):
+        joblib.dump(self.model, modelPath)
+        joblib.dump(self.meta, metaPath)
+        print(f"[MinutesBundle] Saved model - {model_path}")
+
+    @classmethod
+    def load(cls, modelPath=MINUTES_PATH, metaPath=MINUTES_META_PATH):
+        if not Path(modelPath).exists():
+            raise FileNotFoundError(f"No minutes model at {modelPath}")
+
+        model = joblib.load(modelPath)
+        meta = joblib.load(metaPath) if Path(metaPath).exists() else {}
+
+        return cls(model, meta)
+
+    @classmethod
+    def loadIfExists(cls, modelPath=MINUTES_PATH):
+        if not Path(modelPath).exists():
+            return None
+        return cls.load(modelPath)
+    
+
+    # Training
+
+
+    @classmethod
+    def train(cls, playerLogCache, statusDF, posCache,
+              dbPath=DB_PATH, endDate=None, save=True):
+        
+        conn = sqlite3.connect(str(dbPath))
+        query = f"""
+            SELECT pgl.player_id, pgl.minutes AS actual_minutes,
+                   g.game_date, p.team_id,
+                   CASE WHEN g.home_team_id = p.team_id
+                        THEN g.away_team_id ELSE g.home_team_id
+                   END AS opp_team_id
+            FROM Player_game_logs pgl
+            JOIN Games   g ON pgl.game_id   = g.game_id
+            JOIN Players p ON pgl.player_id = p.player_id
+            WHERE pgl.minutes >= {MIN_MINUTES_TRAIN}
+            {"AND g.game_date < '" + end_date + "'" if end_date else ""}
+            ORDER BY g.game_date, pgl.game_id, pgl.player_id
+        """
+        logs = pd.read_sql_query(query, conn)
+        conn.close()
+
+        X, y, dates = _buildMinutesFeatures(
+                playerLogCache, statusDF, posCache, logs
+        )
+        
+        XTrain, XTest, yTrain, yTest, trainDates, testDates = (
+                _splitChronologically(X, y, dates)
+        )
+
+        model = XGBRegressor(**MINUTES_MODEL_PARAMS)
+        model.fit(XTrain, yTrain)
+
+        mae = mean_absolute_error(yTest, model.predict(XTest))
+        print(f"[MinutesBundle] MAE: {mae:.2f}")
+
+        meta = {
+                "train_end_date": endDate,
+                "train_start_date": trainDates.iloc[0],
+                "train_last_date": trainDates.iloc[-1],
+                "validation_start": testDates.iloc[0],
+                "validation_end": testDates.iloc[-1],
+                "trainRows": int(len(XTrain)),
+                "validationRows": int(len(XTest)),
+                "mae": round(mae, 3),
+        }
+
+        bundle = cls(model, meta)
+        if save:
+            bundle.save()
+        return bundle
+
+
+    # Backtest safety check
+
+
+    # Needed to check if safe for the backtest testing
+    def isSafeFor(self, backtestStartDate):
+        end = self.meta.get("train_end_date")
+        if not end:
+            return false
+
+        return end <= backtestStartDate
 
