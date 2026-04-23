@@ -4,11 +4,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 from scipy.stats import t as t_dist
-from scipy.optimize import minimize_scalar, minimize
-from sklearn.calibration import calibration_curve
+from scipy.optimize import minimize
 from sklearn.linear_model import LogisticRegression
 
-# HELPERS
+from config import (
+    CALIBRATOR_PATH,
+    CAL_FIT_LINES, PLATT_FIT_LINES,
+    SIGMA_BOUNDS, DF_BOUNDS
+)
+
+
+# File helpers
+
 
 def _probOverT(predicted, line, residualStd, df):
     return float(1 - t_dist.cdf(line, df=df, loc=predicted, scale=residualStd))
@@ -23,20 +30,20 @@ def _estimateResidualStd(predictions, actuals):
 
 def _fitDfAndSigma(predictions, actuals, lines=None):
     if lines is None:
-        lines = np.arange(10, 40, 2.5)
+        lines = CAL_FIT_LINES
     
     actuals = np.asarray(actuals)
 
     def error(params):
         df, sigma = params
-        if df < 2.1 or sigma < 2:
+        if df < DF_BOUNDS[0] or sigma < SIGMA_BOUNDS[0]:
             return 1e9
         errs = []
         for line in lines:
             predRate = float(np.mean(1 - t_dist.cdf(line, df=df, loc=predictions, scale=sigma)))
             actualRate = float(np.mean(actuals > line))
             errs.append((predRate - actualRate) ** 2)
-        return np.mean(errs)
+        return float(np.mean(errs))
 
     bestLoss = np.inf
     bestParams = (5, 8.0)
@@ -50,30 +57,166 @@ def _fitDfAndSigma(predictions, actuals, lines=None):
                 bestLoss = result.fun
                 bestParams = result.x
 
-    bestDF = float(np.clip(bestParams[0], 2.1, 30))
-    bestSigma = float(np.clip(bestParams[1], 3, 25))
-    print(f"[calibrator] joint fit: df={bestDF:.2f}, sigma={bestSigma:.3f}, loss={bestLoss:.6f}")
+    bestDF = float(np.clip(bestParams[0], *DF_BOUNDS))
+    bestSigma = float(np.clip(bestParams[1], *SIGMA_BOUNDS))
+    print(
+        f"[Calibrator] joint fit: df={bestDF:.2f}\n" 
+        f"[Calibrator] sigma={bestSigma:.3f}, loss={bestLoss:.6f}"
+    )
+
     return bestDF, bestSigma
 
 
-# Not helpers!
+# Calibrator class
 
-def probOverTDist(predicted, line, residualStd, df=5):
-    scale = residualStd
-    return 1 - t_dist.cdf(line, df=df, loc=predicted, scale=scale)
 
-def cailbratedProbOver(predicted, line, residualStd, calibrator, df=5):
-    sigma = calibrator.get("sigma", residualStd)
-    raw = float(probOverTDist(predicted, line, sigma, df=df))
-    platt = calibrator["platt"]
-    cal = float(platt.predict_proba([[raw]])[0, 1])
+class Calibrator:
+    def __init__(self, platt, df, sigma, residualStd, meta):
+        self.platt = platt
+        self.df = df
+        self.sigma = sigma
+        self.residualStd = residualStd
+        self.meta = meta
+    )
+
+
+    # Core probability methods
+
+
+    # Returns calibrated P(acutal > line) given a raw point pred
+    # NOTE: Only method backtest and prediction layers needs to call
+    def probOver(self, predicted, line):
+        raw =  float(1 - t_dist.cdf(
+            line, df=self.df, loc=predicted, scale=self.sigma
+        ))
+        return float(self.platt.predict_proba([[raw]])[0, 1])
+
+    # Uncalibrated prob (Needed for debugging)
+    def rawProbOver(self, predicted, line):
+        reutrn probOverT(predicted, line, self.sigma, self.df)
+
+
+    # Diagnostics
+
     
-    return cal
+    def printExamples(self, predMean=18.0, lines=None):
+        if lines is None:
+            lines = [10, 15, 20, 25, 30, 35, 40]
+        print(f"\n[Calibrator] sigma={self.sigma:.3f}  df={self.df:.2f}")
+        print(f"\n[Calibrator] {'Line':>6}  {'Raw':>8}  {'Calibrated':>12}")
+        
+        for line in lines:
+            raw = self.rawProbOver(predMean, line)
+            cal = self.probOver(predMean, line)
+            print(f"{Line:>6}  {Raw:>8.3f}  {cal:>12.3f}")
+        
+    # Returns a DF of line, predicted prob bucket, acutal hit rate, n
+    # Reading this lets us diagnose over/under confidense on prop range
+    def calibrationCheck(self, predictions, actuals, lines=None):
+        if lines is None:
+            lines = np.arange(5, 46, 2.5)
+        
+        actuals = np.asarray(
+                actuals.values if hasattr(actuals, "values") else actuals,
+                dtype=float,
+        )
+        results = []
 
-def fitCailbrator(predictions, yTest, residualStd=None, df=None, savePath=None, metadata=None):
+        for line in lines:
+            probs = np.array([self.probOver(p, line) for p in predictions])
+            bins = np.linespace(0, 1, 11)
+            for i in range(len(bins) - 1):
+                mask = (probs >= bins[i]) & (probs < bins[i+1])
+                if mask.sum() < 20:
+                    continue
+                results.append({
+                    "line": line,
+                    "predicted prob": float(probs[mask].mean()),
+                    "actual rate": float((actuals[mask] > line).mean()),
+                    "n": int(mask.sum())
+                })
+
+        return pd.DataFrame(results)
+
+    def plotCalibration(self, calDF, savePath= None):
+        plt.figure(figsize=(7, 7))
+        plt.scatter(
+            calDF["predicted prob"], calDF["actual rate"],
+            alpha=0.4, c=calDF["line"], cmap="viridis",
+        )
+        plt.colorbar(label="Line")
+        plt.plot([0, 1], [0, 1], "r--", label="Perfect calibration")
+        plt.xlabel("Predicted probability")
+        plt.ylabel("Actual hit rate")
+        plt.title("Calibration plot (coloured by line)")
+        plt.legend()
+        if savePath:
+            Path(savePath).parent.mkdir(parents=True, exist_ok=True)
+            plt.savefig(savePath)
+            print(f"[Calibrator] Plot saved -> {save_path}")
+        else:
+            plt.show()
+        plt.close()
+
+
+# Persistance
+
+
+    def save(self, path=CALIBRATOR_PATH):
+        bundle = {
+            "platt": self.platt,
+            "df": self.df,
+            "sigma": self.sigma,
+            "residual std": self.residualStd,
+            **self.meta,
+        }
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(bundle, path)
+        print(f"[Calibrator] Saved -> {path}")
+
+
+    @classmethod
+    def load(cls, path=CALIBRATOR_PATH):
+        if not Path(path).exists():
+            raise FileNotFoundError(f"No calibrator at {path}")
+        bundle = joblib.load(path)
+
+        return cls(
+                paltt = bundle["platt"],
+                df = bundle["df"],
+                sigma = bundle["sigma"],
+                residualStd = bundle.get("residual std", bundle.get("sigma")),
+                meta = {
+                    k: v for k, v in bundle.items()
+                    if k not in ("platt", "df", "sigma", "residual std")
+                },
+        )
+
+
+    @classmethod
+    def loadIfExists(cls, path=CALIBRATOR_PATH):
+        if not Path(path).exists():
+            return None
+        return cls.load(path)
+
+    
+    # Fitting
+
+    
+    def fit(cls, predictions, actuals, savePath=None, metadata=None):
+    """
+    Fits a new calibrator from holdout preds and actuals
+    
+    Steps
+    1. Esimate residual std
+    2. Jointly optimizes df and sigma across full line range
+    3. Build (rawProb, hit) pairs across all prop relevant lines
+    4. Fit platt scale
+    5. Optional save
+    """
     predictions = np.asarray(predictions, dtype=float)
     actuals = np.asarray(
-            yTest.values if hasattr(yTest, "values") else yTest,
+            actuals.values if hasattr(actuals, "values") else actuals,
             dtype=float
     )
 
@@ -81,27 +224,23 @@ def fitCailbrator(predictions, yTest, residualStd=None, df=None, savePath=None, 
 
     if residualStd is None:
         residualStd = _estimateResidualStd(predictions, actuals)
-    print(f"[calibrator] residual std = {residualStd:.3f}")
+    print(f"[Calibrator] residual std = {residualStd:.3f}")
 
     # 2. Fit df empirically and find best sigma
 
-    print("\n[DEBUG] Actual hit rates vs naive prediction at mean:")
+    print("\n[Calibrator] Actual hit rates vs naive prediction at mean:")
     meanPred = float(predictions.mean())
     for line in [10, 15, 20, 25, 30]:
         actualRate = float(np.mean(actuals > line))
         print(f"  line={line}  actual_hit_rate={actualRate:.3f}  mean_pred={meanPred:.1f}")
     
     df, optimalSigma = _fitDfAndSigma(predictions, actuals)
-    print(f"[calibrator] best df = {df:.2f}, sigma={optimalSigma:.3f}")
+    print(f"[Calibrator] best df = {df:.2f}, sigma={optimalSigma:.3f}")
 
     # 3. Build (raw prob and hit) pairs across mutiple lines
 
-    # Sample lines uniformly across the realistic prop range
-    lines = np.arange(10, 46, 2.5)
-    rawProbsAll = []
-    hitsAll = []
-
-    for line in lines:
+    rawProbsAll, hitsAll = [], []
+    for line in PLATT_FIT_LINES:
         raw = np.array([_probOverT(p, line, optimalSigma, df)
                         for p in predictions])
         hit = (actuals > line).astype(float)
@@ -119,96 +258,27 @@ def fitCailbrator(predictions, yTest, residualStd=None, df=None, savePath=None, 
     )
     platt.fit(rawProbsAll.reshape(-1,1), hitsAll)
 
-    # 5. Diagonstic print
-    
-    print("\n[calibrator] Platt correction examples:")
-    print(f"  {'Raw':>8} {'Calibrated':>12}")
-    for raw in [0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90]:
-        cal = float(platt.predict_proba([[raw]])[0, 1])
-        print(f"  {raw:>8.2f} {cal:>12.3f}")
-    
-    # 6. Bundle and save
-
-    bundle = {
-            "platt": platt,
-            "df": df,
-            "residualStd": residualStd,
-            "sigma": optimalSigma,
-    }
-    if metadata:
-        bundle.update(metadata)
-
-    if savePath:
-        joblib.dump(bundle, savePath)
-        print(f"[calibrator] Saved to {savePath}")
-    
-    return bundle
-
-
-def calibrationCheck(predictions, y_test, residual_std, calibrator=None, df=5):
-    actuals = np.asarray(
-        y_test.values if hasattr(y_test, "values") else y_test,
-        dtype=float
+    instance = cls(
+            platt = platt,
+            df = df, 
+            sigma = optimalSigma,
+            residualStd = residualStd,
+            meta = metadata or {},
     )
-    lines = np.arange(5, 46, 2.5)
-    results = []
- 
-    for line in lines:
-        if calibrator is not None:
-            probs = np.array([
-                cailbratedProbOver(p, line, residual_std, calibrator, df=df)
-                for p in predictions
-            ])
-        else:
-            probs = np.array([
-                _probOverT(p, line, residual_std, df)
-                for p in predictions
-            ])
- 
-        bins = np.linspace(0, 1, 11)
-        for i in range(len(bins) - 1):
-            mask = (probs >= bins[i]) & (probs < bins[i + 1])
-            if mask.sum() < 20:
-                continue
-            results.append({
-                "line":           line,
-                "predicted_prob": float(probs[mask].mean()),
-                "actual_rate":    float((actuals[mask] > line).mean()),
-                "n":              int(mask.sum()),
-            })
- 
-    return pd.DataFrame(results)
+    instance.printExamples(predMean=meanPred)
 
-# Print out metrics on the calibrator
-def printCalMetrics(model, XTest, yTest):
-    predictions = model.predict(XTest)
-    residuals = yTest.values - predictions
-    residualStd = residuals.std()
-    
-    calibratorPath = Path("models/nba_calibrator.joblib")
-    calibrator = fitCailbrator(predictions, yTest, savePath=calibratorPath)
+    # 5. Optional save
 
-    calDF = calibrationCheck(predictions, yTest, residualStd, calibrator=calibrator, df=3)
-    displayCalibration(calDF)
-
-
-def displayCalibration(calDF, savePath=None):
-    plt.figure(figsize=(7, 7))
-    plt.scatter(calDF["predicted_prob"], calDF["actual_rate"],
-                alpha=0.4, c=calDF["line"], cmap="viridis")
-    plt.colorbar(label="Line")
-    plt.plot([0, 1], [0, 1], "r--", label="Perfect calibration")
-    plt.xlabel("Predicted probability")
-    plt.ylabel("Actual hit rate")
-    plt.title("Calibration Plot (coloured by line)")
-    plt.legend()
- 
     if savePath:
-        Path(savePath).parent.mkdir(parents=True, exist_ok=True)
-        plt.savefig(savePath)
-        print(f"[calibrator] Plot saved to {savePath}")
-    else:
-        plt.show()
- 
-    plt.close()
+        instance.save(savePath)
+
+    return instance
+
+
+# Backtest safety
+
+
+def isSafeFor(self, backtestStartDate):
+        end = self.meta.get("calibration_end_date", "")
+        return bool(end) and end < backtestStartDate
 
