@@ -1,19 +1,9 @@
-import argparse
-import json
-import subprocess
-import joblib
-import numpy as np
-from pathlib import Path
+from orchestrator import Pipeline
 
-from data.scrapperEngine import ScrapeEngine
-from data.dbManager import DBManager
+pipeline = Pipeline()
 
-from models.train import preloadCaches, generateTrainingData
-from models.evaluate import evaluateModel
 
-from betting.cailbrator import printCalMetrics, calibrationCheck, displayCalibration, probOverTDist, cailbratedProbOver, fitCailbrator
-from betting.oddsCollector import pullHistoricalProps
-from betting.backtest import runBacktest
+
 
 TeamMap = {
     "DEN": 1,  "OKC": 2,  "HOU": 3,  "NYK": 4,  "MIA": 5,
