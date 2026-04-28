@@ -21,19 +21,23 @@ from dataclasses import dataclass
 from pathlib import Path
 from datetime import datetime, timedelta
 
+from config import (
+    DB_PATH, FEATURE_CACHE_PATH, MODELS_DIR,
+    MIN_MINUTES_TRAIN,
+)
 
 # Using a dataclass here so callers can unpack caches by name
 
 @dataclass
 class Caches:
-    playerLogCache # player_id -> DataFrame of game logs
-    posCache # player_id -> position string
-    teamCache # team_id -> DataFrame of team stats
-    statusDF # Just get the injury status LOL
-    oppPosCache # team_id, position -> DataFrame
-    teamGameTotals: # game_id, team_id -> total points 
+    playerLogCache: dict # player_id -> DataFrame of game logs
+    posCache: dict # player_id -> position string
+    teamCache: dict # team_id -> DataFrame of team stats
+    statusDF: pd.DataFrame # Just get the injury status LOL
+    oppPosCache: dict # team_id, position -> DataFrame
+    teamGameTotals: dict # game_id, team_id -> total points 
 
-def preloadCaches():
+def preloadCaches(conn):
     print(f"[cache] Loading caches")
 
     # Player game logs
@@ -100,11 +104,11 @@ def preloadCaches():
 
     print("[cache] Cache loading done")
 
-    return Cache(
+    return Caches(
             playerLogCache = playerLogCache, 
             posCache = posCache, 
             teamCache = teamCache, 
-            statusDF = statusDF, 
+            statusDF = status, 
             oppPosCache = oppPosCache, 
             teamGameTotals = teamGameTotals
     )
@@ -151,16 +155,16 @@ class FeatureCache:
 
     # Full feature matrix building
     def _build(self, dbPath, endDate, minutesBundle):
-        from features.featureCollector import buildFeatures, featureOrder
+        from features.builder import buildFeatures, featureOrder
         
         conn = sqlite3.connect(str(dbPath))
         caches = preloadCaches(conn)
 
-        query = """
+        query = f"""
             SELECT
                 pgl.player_id,
                 pgl.game_id,
-                pgl.points      AS actual_points,
+                pgl.points      AS actualPoints,
                 pgl.is_home,
                 pgl.rest_days,
                 g.game_date,
@@ -175,7 +179,7 @@ class FeatureCache:
             JOIN Games   g ON pgl.game_id   = g.game_id
             JOIN Players p ON pgl.player_id = p.player_id
             WHERE pgl.minutes >= {MIN_MINUTES_TRAIN}
-            {"AND g.game_date < '" + end_date + "'" if end_date else ""}
+            {"AND g.game_date < '" + endDate + "'" if endDate else ""}
             ORDER BY g.game_date, pgl.game_id, pgl.player_id
         """
         logs = pd.read_sql_query(query, conn)
@@ -192,17 +196,18 @@ class FeatureCache:
                     playerID = row.player_id,
                     date = row.game_date,
                     teamID = row.team_id,
-                    oppTeamID, row.opp_team_id,
+                    oppTeamID = row.opp_team_id,
                     cache = caches.playerLogCache,
                     posCache = caches.posCache,
                     teamCache = caches.teamCache,
                     statusDF = caches.statusDF,
                     oppPosCache = caches.oppPosCache,
-                    teamGameTotals = cache.teamGameTotals,
-                    minutesModel = minuteBundle,
+                    teamGameTotals = caches.teamGameTotals,
+                    minutesModel = minutesBundle,
                     currentIsHome = row.is_home,
-                    currentRestDay = row.rest_day
+                    currentRestDays = row.rest_days
             )
+
             if features is None:
                 skipped += 1
                 continue
@@ -246,7 +251,7 @@ class FeatureCache:
         )
 
     # Full rebuild and save it to a parquet file
-    def buildAndSave(self, dbPath=dbPath, minutesBundle=None):
+    def buildAndSave(self, dbPath=DB_PATH, minutesBundle=None):
         X, y, dates = self._build(
                 dbPath=dbPath,
                 endDate=None,

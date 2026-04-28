@@ -90,7 +90,7 @@ class PointsBundle:
 # Persistence
 
 
-    def save(self, modelPath=NBA_PATH, metaPath=MODEL_META_PATH):
+    def save(self, modelPath=MODEL_PATH, metaPath=MODEL_META_PATH):
         joblib.dump(self.model, modelPath)
         joblib.dump(self.meta, metaPath)
         print(f"[PointsBundle] Saved model - {modelPath}")
@@ -105,7 +105,7 @@ class PointsBundle:
 
         return cls(model, meta)
 
-    @clasmethod
+    @classmethod
     def loadIfExists(cls):
         if not Path(MODEL_PATH).exists():
             return None

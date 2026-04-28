@@ -1,5 +1,5 @@
 import argparse
-from orchestrator import Pipeline
+from pipeline.orchestrator import Pipeline
 
 def main():
     parser = argparse.ArgumentParser(description="NBA prediction proj")
@@ -18,7 +18,8 @@ def main():
 
     # Calibrator args
     parser.add_argument("--evaluate", action="store_true")
-    parser.add_argument("--cailbrator", action="store_true")
+    parser.add_argument("--calibrator", action="store_true")
+    parser.add_argument("--refit-calibrator", action="store_true")
 
     # Minutes args
     parser.add_argument("--train-minutes", action="store_true")

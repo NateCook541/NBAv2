@@ -77,7 +77,6 @@ class Calibrator:
         self.sigma = sigma
         self.residualStd = residualStd
         self.meta = meta
-    )
 
 
     # Core probability methods
@@ -93,7 +92,7 @@ class Calibrator:
 
     # Uncalibrated prob (Needed for debugging)
     def rawProbOver(self, predicted, line):
-        reutrn probOverT(predicted, line, self.sigma, self.df)
+        return _probOverT(predicted, line, self.sigma, self.df)
 
 
     # Diagnostics
@@ -204,75 +203,76 @@ class Calibrator:
 
     
     def fit(cls, predictions, actuals, savePath=None, metadata=None):
-    """
-    Fits a new calibrator from holdout preds and actuals
+        """
+        Fits a new calibrator from holdout preds and actuals
     
-    Steps
-    1. Esimate residual std
-    2. Jointly optimizes df and sigma across full line range
-    3. Build (rawProb, hit) pairs across all prop relevant lines
-    4. Fit platt scale
-    5. Optional save
-    """
-    predictions = np.asarray(predictions, dtype=float)
-    actuals = np.asarray(
+        Steps
+        1. Esimate residual std
+        2. Jointly optimizes df and sigma across full line range
+        3. Build (rawProb, hit) pairs across all prop relevant lines
+        4. Fit platt scale
+        5. Optional save
+        """
+        predictions = np.asarray(predictions, dtype=float)
+        actuals = np.asarray(
             actuals.values if hasattr(actuals, "values") else actuals,
             dtype=float
-    )
+        )
 
-    # 1. Estimate residual std on holdout
+        # 1. Estimate residual std on holdout
 
-    if residualStd is None:
-        residualStd = _estimateResidualStd(predictions, actuals)
-    print(f"[Calibrator] residual std = {residualStd:.3f}")
+        if residualStd is None:
+            residualStd = _estimateResidualStd(predictions, actuals)
+        print(f"[Calibrator] residual std = {residualStd:.3f}")
 
-    # 2. Fit df empirically and find best sigma
+        # 2. Fit df empirically and find best sigma
 
-    print("\n[Calibrator] Actual hit rates vs naive prediction at mean:")
-    meanPred = float(predictions.mean())
-    for line in [10, 15, 20, 25, 30]:
-        actualRate = float(np.mean(actuals > line))
-        print(f"  line={line}  actual_hit_rate={actualRate:.3f}  mean_pred={meanPred:.1f}")
+        print("\n[Calibrator] Actual hit rates vs naive prediction at mean:")
+        meanPred = float(predictions.mean())
+        for line in [10, 15, 20, 25, 30]:
+            actualRate = float(np.mean(actuals > line))
+            print(f"  line={line}  actual_hit_rate={actualRate:.3f}  mean_pred={meanPred:.1f}")
     
-    df, optimalSigma = _fitDfAndSigma(predictions, actuals)
-    print(f"[Calibrator] best df = {df:.2f}, sigma={optimalSigma:.3f}")
+        df, optimalSigma = _fitDfAndSigma(predictions, actuals)
+        print(f"[Calibrator] best df = {df:.2f}, sigma={optimalSigma:.3f}")
 
-    # 3. Build (raw prob and hit) pairs across mutiple lines
+        # 3. Build (raw prob and hit) pairs across mutiple lines
 
-    rawProbsAll, hitsAll = [], []
-    for line in PLATT_FIT_LINES:
-        raw = np.array([_probOverT(p, line, optimalSigma, df)
-                        for p in predictions])
-        hit = (actuals > line).astype(float)
-        rawProbsAll.append(raw)
-        hitsAll.append(hit)
+        rawProbsAll, hitsAll = [], []
+        for line in PLATT_FIT_LINES:
+            raw = np.array([_probOverT(p, line, optimalSigma, df)
+                for p in predictions
+            ])
+            hit = (actuals > line).astype(float)
+            rawProbsAll.append(raw)
+            hitsAll.append(hit)
 
-    rawProbsAll = np.concatenate(rawProbsAll)
-    hitsAll = np.concatenate(hitsAll)
+        rawProbsAll = np.concatenate(rawProbsAll)
+        hitsAll = np.concatenate(hitsAll)
 
-    # 4. Platt scaling (logistic regression on raw probs)
+        # 4. Platt scaling (logistic regression on raw probs)
 
-    platt = LogisticRegression(
+        platt = LogisticRegression(
             solver="lbfgs",
             max_iter=1000,
-    )
-    platt.fit(rawProbsAll.reshape(-1,1), hitsAll)
+        )
+        platt.fit(rawProbsAll.reshape(-1,1), hitsAll)
 
-    instance = cls(
+        instance = cls(
             platt = platt,
             df = df, 
             sigma = optimalSigma,
             residualStd = residualStd,
             meta = metadata or {},
-    )
-    instance.printExamples(predMean=meanPred)
+        )
+        instance.printExamples(predMean=meanPred)
 
-    # 5. Optional save
+        # 5. Optional save
 
-    if savePath:
-        instance.save(savePath)
+        if savePath:
+            instance.save(savePath)
 
-    return instance
+        return instance
 
 
 # Backtest safety

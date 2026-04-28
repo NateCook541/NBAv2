@@ -1,14 +1,14 @@
 # Main controller for full project
 
 import sqlite3
-from pathlib import path
+from pathlib import Path
 
 from config import (
     DB_PATH, FEATURE_CACHE_PATH,
     MODEL_PATH, CALIBRATOR_PATH, MINUTES_PATH,
     DEFAULT_EDGE_THRESH, DEFAULT_BANKROLL, DEFAULT_KELLY_FRAC,
 )
-from features.cache import FeatureCache, preload_caches
+from features.cache import FeatureCache, preloadCaches
 from models.minutes import MinutesBundle
 from models.points import PointsBundle
 from betting.calibrator import Calibrator
@@ -36,20 +36,20 @@ class Pipeline:
         calibrator = Calibrator.loadIfExists()
         
         allSafe = (
-                points is Not None and points.isSafeFor(backtestStartDate) and
-                minutes is Not None and minutes.isSafeFor(backtestStartDate) and
-                calibrator is Not None and calibrator.isSafeFor(backtestStartDate)
+                points is not None and points.isSafeFor(backtestStartDate) and
+                minutes is not None and minutes.isSafeFor(backtestStartDate) and
+                calibrator is not None and calibrator.isSafeFor(backtestStartDate)
         )
 
-        if allSade:
+        if allSafe:
             print(
-                    f"Saved bundle is leakage safe for {backtestStartDate"
+                    f"Saved bundle is leakage safe for {backtestStartDate}"
                     f"Using saved model"
             )
             return points, minutes, calibrator
 
         print(
-                f"Saved bundle is leakage safe for {backtestStartDate"
+                f"Saved bundle is leakage safe for {backtestStartDate}"
                 f"Using saved model"
         )
         return self.train(endDate=backtestStartDate, save=False) 
@@ -186,7 +186,7 @@ class Pipeline:
 
     def cacheFeatures(self):
         print("\n--- Building and saving feature cache ---")
-        X, y, dates = self.featureCache.buildAndSave(dbPath=self.dbPath)
+        X, y, dates = self.featureCachePath.buildAndSave(dbPath=self.dbPath)
         print(f"Feature cache ready: {len(X)} rows")
         return X, y, dates
     

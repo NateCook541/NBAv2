@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from datetime import datetime, timedelta
-sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_absolute_error
 from xgboost import XGBRegressor
 
 from config import (

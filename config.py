@@ -3,10 +3,14 @@ from pathlib import Path
 # Paths
 DB_PATH = Path("NBA.db")
 MODELS_DIR = Path("models")
-FEATURE_CACHE = MODELS_DIR / "feature_cache.parquet"
+
+FEATURE_CACHE_PATH = MODELS_DIR / "feature_cache.parquet"
 MODEL_PATH = MODELS_DIR / "nba_model.joblib"
 MINUTES_PATH = MODELS_DIR / "nba_minutes_model.joblib"
 CALIBRATOR_PATH = MODELS_DIR / "nba_calibrator.joblib"
+
+MINUTES_META_PATH = MODELS_DIR / "nba_minutes_model_meta.joblib"
+MODEL_META_PATH = MODELS_DIR / "nba_model_meta.joblib"
 
 # Scraping
 
@@ -72,7 +76,7 @@ DF_BOUNDS    = (2.1, 30.0)
 
 DEFAULT_EDGE_THRESH = 0.03
 DEFAULT_BANKROLL = 1000
-DEFAULT_KELLY_FRACT = 0.25
+DEFAULT_KELLY_FRAC = 0.25
 FLAT_STAKE = 10
 
 # Used to filter out really far out line preds as this is likely injury effects that scraper didn't catch
