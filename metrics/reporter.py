@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 
 
-
 class Reporter:
 
     # Set this to false to slience everything
