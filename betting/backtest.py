@@ -1,159 +1,150 @@
 import sqlite3
-import joblib
-import numpy as np
-import pandas as pd
 import unicodedata
+import pandas as pd
+import numpy as np
+from dataclasses import dataclass, field
 from pathlib import Path
-from scipy.stats import t as t_dist
+from typing import Optional
+ 
+from config import (
+    DB_PATH,
+    DEFAULT_EDGE_THRESH, DEFAULT_BANKROLL, FLAT_STAKE,
+    MIN_LINE, MAX_LINE_DIFF, DEFAULT_KELLY_FRAC,
+)
 
-from features.featureCollector import buildFeatures
-from models.train import preloadCaches, trainModel, trainMinutes
-from betting.cailbrator import cailbratedProbOver
+from features.cache import preloadCaches
+from features.builder import buildFeatures
+from metrics.reporter import Reporter
 
-# FIXME: Look into moving all this into a class?
 
-# HELPERS
+# Mutiple small dataclasses
+# Desgin to keep the loops in backtesting more readable
 
-def _printSummary(df, startingBank, finalBank, skipped):
-    bets = df[df["bet"] == True]
 
-    print(f"\n{'='*50}")
-    print("BACKTEST SUMARY") 
-    print(f"\n{'='*50}")
-    print(f"Props evaluated: {len(df)}")
-    print(f"Skipped: {skipped}")
-    print(f"Bets placed: {len(bets)}")
-    
-    if len(bets) == 0:
-        print("No bets placed")
-        return
+@dataclass
+class BetRecord:
+    date: str
+    player: str
+    line: float
+    predicted: float
+    actual: float
+    myProb: float
+    bookProb: float
+    edge: float
+    bet: bool
+    stake: float
+    pnl: float
+    bankroll: float
 
-    wins = (bets["pnl"] > 0).sum()
-    losses = (bets["pnl"] < 0).sum()
-    winRate = wins / len(bets)
-    totalPnl = bets["pnl"].sum()
-    roi = totalPnl / bets["stake"].sum()
 
-    print(f"Win/Loss: {wins}W / {losses}L ({winRate:.1%})")
-    print(f"Total R&L: ${totalPnl:.2f}")
-    print(f"ROI: {roi:.1%}")
-    print(f"Starting bankroll: ${startingBank:.2f}")
-    print(f"Final bankroll: ${finalBank:.2f}") 
-    print(f"Return: {((finalBank - startingBank) / startingBank):.1%}")
+@dataclass
+class SkipCounters:
+    noPlayerMatch: int=0
+    noOppMatch: int=0
+    noActuals: int=0
+    noFeatures: int=0
+    noLine: int=0
 
-    print(f"\nTop 5 bets by edge:")
-    print(bets.sort_values("edge", ascending=False)[
-        ["date", "player", "line", "predicted", "actual", "edge", "pnl"]
-    ].head(5).to_string(index=False))
-    
-    print(f"\nWorst 5 bets by P&L:")
-    print(bets.sort_values("pnl")[
-        ["date", "player", "line", "predicted", "actual", "edge", "pnl"]
-    ].head(5).to_string(index=False))
+    def total(self):
+        return (
+                self.noPlayerMatch + self.noOppMatch +
+                self.noActuals + self.noFeatures + self.noLine
+        )
 
-    bets = bets.copy()
-    bets["pred_bucket"] = pd.cut(bets["predicted"], bins=[0,15,20,25,30,99], 
-                              labels=["<15","15-20","20-25","25-30","30+"])
 
-    print("\nWin rate by predicted score:")
-    print(bets.groupby("pred_bucket", observed=True).agg(
-        bets=("pnl","count"),
-        win_rate=("pnl", lambda x: (x>0).mean()),
-        avg_edge=("edge","mean"),
-        total_pnl=("pnl","sum")
-    ).to_string())
+# Odds helpers (Just functions, no state)
 
-def _normalizeName(name):
+
+def _impliedProb(usOdds):
+    if usOdds < 0:
+        return abs(usOdds) / (abs(usOdds) + 100)
+    return 100 / (usOdds + 100)
+
+
+def _removeVig(overOdds, underOdds):
+    over = _impliedProb(overOdds)
+    under = _impliedProb(underOdds)
+    total = over + under
+    return over / total, under / total
+
+
+def _payoutMutipler(usOdds):
+    if usOdds > 0:
+        return usOdds / 100
+    return 100 / abs(usOdds)
+
+def _kellyFractional(edge, usOdds, fraction=DEFAULT_KELLY_FRAC):
+    b = _payoutMultipler(usOddds)
+    p = edge + impliedProb(usOdds)
+    q = 1 - p
+    kelly = (b * p - q) / b
+    return max(0.0, kelly * fraction)
+
+
+
+# DB Loaders
+
+
+def _normalize(name):
     return "".join(
         c for c in unicodedata.normalize("NFD", name)
         if unicodedata.category(c) != "Mn"
     ).lower().strip()
-
-# Converts the odds a number like this -100 to a percent like 52.6
-def _impliedProb(americanOdds):
-    if americanOdds < 0:
-        return abs(americanOdds) / (abs(americanOdds) + 100)
-    return 100 / (americanOdds + 100)
-
-# Removes the built in vig from the sportsbook
-def _removeVig(overOdds, underOdds):
-    overProb = _impliedProb(overOdds)
-    underProb = _impliedProb(underOdds)
-
-    total = overProb + underProb
-    return overProb / total, underProb / total
-
-# Returns the net profit per 1$ staked
-def _payoutMultiplier(americanOdds):
-    if americanOdds > 0:
-        return americanOdds / 100
-    return 100 / abs(americanOdds)
-
-
-# We are using a quarter kelly stake for the bankroll as reccommended
-# Kelly stake determines the optimal bet size based on the found edge and the current odds
-def _kellyFractional(edge, americanOdds, fraction=0.25):
-    b = _payoutMultiplier(americanOdds)
-    q = 1 - (edge + _impliedProb(americanOdds))
-    p = edge + _impliedProb(americanOdds)
-    kelly = (b * p - q) / b
-    
-    return max(0.0, kelly * fraction)
-
-
-# DATA LOADING
-
+ 
 
 def _loadProps(conn, startDate=None, endDate=None):
     query = """
-        SELECT p.prop_id, p.game_date, p.player_name, p.line,
-               p.over_odds, p.under_odds
-        FROM Props p
-        WHERE p.over_odds IS NOT NULL
-          AND p.under_odds IS NOT NULL
+        SELECT prop_id, game_date, player_name, line, over_odds, under_odds
+        FROM Props
+        WHERE over_odds IS NOT NULL AND under_odds IS NOT NULL
     """
     params = []
     if startDate:
-        query += " AND p.game_date >= ?"
+        query += " AND game_date >= ?"
         params.append(startDate)
     if endDate:
-        query += " AND p.game_date <= ?"
+        query += " AND game_date <= ?"
         params.append(endDate)
-
-
-    query += " ORDER BY p.game_date"
+    query += " ORDER BY game_date"
     return pd.read_sql_query(query, conn, params=params)
 
 
-# Loads the players actual points keyed by normalized_game and game_date
 def _loadActuals(conn):
-    df = pd.read_sql_query("""
-         SELECT p.name, g.game_date, pgl.points
+    df = pd.read_sql_query(
+        """
+        SELECT p.name, g.game_date, pgl.points
         FROM Player_game_logs pgl
         JOIN Games   g ON pgl.game_id   = g.game_id
         JOIN Players p ON pgl.player_id = p.player_id
-    """, conn)
-    df["name_norm"] = df["name"].apply(_normalizeName)
+        """,
+        conn
+    )
+    df["name_norm"] = df["name"].apply(_normalize)
     return df.set_index(["name_norm", "game_date"])["points"].to_dict()
 
 
-# Load player map (player name to player id and team id)
 def _loadPlayerMap(conn):
-    df = pd.read_sql_query("SELECT player_id, name, team_id FROM Players", conn)
-    df["name_norm"] = df["name"].apply(_normalizeName)
-    df = df.sort_values("player_id").drop_duplicates(subset="name_norm", keep="last")
+    df = pd.read_sql_query(
+        "SELECT player_id, name, team_id FROM Players", conn
+    )
+    df["name_norm"] = df["name"].apply(_normalize)
+    df  = (
+            df.sort_values("player_id").drop_duplicates(
+                subset="name_norm", keep="last")
+    )
     return df.set_index("name_norm")[["player_id", "team_id"]].to_dict("index")
 
-
-# Create a opp map keyed by player_id and game_date (this handles players getting traded midseason
 def _loadOppMap(conn):
-    df = pd.read_sql_query("""
+    df = pd.read_sql_query(
+    """
         SELECT pgl.player_id, g.game_date,
-               g.home_team_id, g.away_team_id, pgl.is_home, pgl.rest_days
+               g.home_team_id, g.away_team_id,
+               pgl.is_home, pgl.rest_days
         FROM Player_game_logs pgl
         JOIN Games g ON pgl.game_id = g.game_id
-    """, conn)
-
+    """,
+    conn)
+    
     result = {}
     for _, row in df.iterrows():
         if row.is_home:
@@ -173,235 +164,183 @@ def _loadOppMap(conn):
     return result
 
 
-def _loadSavedModelMeta():
-    metaPath = Path("models/nba_model_meta.joblib")
-    if not metaPath.exists():
-        return None
-    return joblib.load(metaPath)
+# Backtest engine
 
 
-def _loadSavedMinutesMeta():
-    metaPath = Path("models/nba_minutes_model_meta.joblib")
-    if not metaPath.exists():
-        return None
-    return joblib.load(metaPath)
-
-
-def _bundleIsBacktestSafe(modelMeta, minutesMeta, calBundle, backtestStartDate):
-    if modelMeta is None or minutesMeta is None or calBundle is None:
-        return False
-
-    trainEndDate = modelMeta.get("train_end_date")
-    minutesTrainEndDate = minutesMeta.get("train_end_date")
-    calEndDate = calBundle.get("calibration_end_date")
-
-    if not trainEndDate or not minutesTrainEndDate or not calEndDate:
-        return False
-
-    return (
-        trainEndDate <= backtestStartDate and
-        minutesTrainEndDate <= backtestStartDate and
-        calEndDate < backtestStartDate
-    )
-
-
-# MAIN BACKTEST
-
-# This is the main function that will backtest off the data from the api stored in the db
-# The dates let you set a timeframe but default to none currently due to size of data
-def runBacktest(dbPath = "NBA.db", startDate=None, endDate=None, edgeThresh=0.03,
-                bankroll=1000, kellyFrac=0.25, tdf=3):
+class BacktestEngine:
+    """
+    Evalutes a trained model and calibrator against historical NBA props
     
-    # Load model + cailbrator
-    modelPath = Path("models/nba_model.joblib")
-    cailbratorPath = Path("models/nba_calibrator.joblib")
+    Goes through almost all other classes so flow is desgined to be simple
+    """
+    
+    def __init__(self, pointsBundle, minutesBundle, calibrator, dbPath=DB_PATH):
+        self.points = pointsBundle
+        self.minutes = minutesBundle
+        self.calibrator = calibrator
+        self.dbPath = Path(dbPath)
 
-    conn = sqlite3.connect(dbPath)
 
-    try:
+    # Public entry point
+
+
+    def run(self, startDate=None, endDate=None, 
+            edgeThresh=DEFAULT_EDGE_THRESH, bankroll=DEFAULT_BANKROLL):
+        
+        # Load data from db
+
+        conn = sqlite3.connect(str(self.dbPath))
         props = _loadProps(conn, startDate, endDate)
-        if props.empty:
-            raise ValueError("No props found for the requested backtest window")
 
-        backtestStartDate = str(props["game_date"].min())
+        if props.empty:
+            raise ValueError("No props found for the requested timeframe")
+
         actuals = _loadActuals(conn)
         playerMap = _loadPlayerMap(conn)
         oppMap = _loadOppMap(conn)
+        caches = preloadCaches(conn)
 
-        playerLogCache, posCache, teamCache, statusDF, oppPosCache, teamGameTotals = preloadCaches(conn) 
-    
-    finally:
         conn.close()
 
-    # Load all models and cailbrator
-    modelMeta = _loadSavedModelMeta()
-    minutesMeta = _loadSavedMinutesMeta()
-    bundle = joblib.load(cailbratorPath) if cailbratorPath.exists() else None
-    
-    # If the current models are safe (trained before backtest range) then use them, and if not then retrain with correct date to prevent data leakage
-    useSavedBundle = modelPath.exists() and _bundleIsBacktestSafe(modelMeta, minutesMeta, bundle, backtestStartDate)
-    if useSavedBundle:
-        model = joblib.load(modelPath)
-        minutesModelPath = Path("models/nba_minutes_model.joblib")
-        minutesModel = joblib.load(minutesModelPath) if minutesModelPath.exists() else None
-
-    else:
         print(
-            f"Saved model bundle is not leakage-safe for backtest starting {backtestStartDate}. "
-            f"Training a fresh model using data before {backtestStartDate}."
-        )
-        model, bundle = trainModel (
-            save=False,
-            metrics=False,
-            dbPath=dbPath,
-            train_end_date=backtestStartDate,
-        )
-        minutesModel = trainMinutes (
-            save=False,
-            dbPath=dbPath,
-            endDate=backtestStartDate,
+            f"[BacktestEngine] {len(props)} props loaded \n"
+            f"edge thresh={edgeThresh:.0%} | bankroll=${bankroll:.0f}"
         )
 
-    sigma = bundle.get("sigma", bundle["residualStd"])
-    df = bundle.get("df", 5)
+        # Main loop
 
-    print(f"Loaded {len(props)} props | edge threshold: {edgeThresh:.0%} | bankroll: ${bankroll:.0f}")
+        records = []
+        currentBank = bankroll
+        skips = SkipCounters()
 
-    results = []
-    currentBank = bankroll
-    skipped = 0
+        for _, prop in props.iterrows():
+            record, currentBank, skips = self._evaluateProp(
+                prop = prop,
+                actuals = actuals,
+                playerMap = playerMap,
+                oppMap = oppMap,
+                caches = caches,
+                edgeThresh = edgeThresh,
+                currentBank = currentBank,
+                skips = skips
+            )
+            if record is not None:
+                records.append(record)
 
-    # Skipped vars to let us know what is skipping
-    noPlayerMatch = 0
-    noOppMatch = 0
-    noActuals = 0
-    noFeatures = 0
-    noLine = 0
+        resultsDF = pd.DataFrame([vars(r) for r in records])
 
-    for _, prop in props.iterrows():
-        nameNorm = _normalizeName(prop.player_name)
+        # Report
+
+        Reporter.skipBreakdown(skips)
+        Reporter.backtestSummary(resultsDF, bankroll, currentBank)
+
+        return resultsDF
+
+
+    # Single prop evaulation
+
+
+    def _evaluateProp(self, prop, actuals, playerMap, oppMap, caches,
+                      edgeThresh, currentBank, skips):
+        nameNorm = _normalize(prop.player_name)
         date = prop.game_date
 
+        # Player lookup
         if nameNorm not in playerMap:
-            noPlayerMatch += 1
-            continue
-
-        playerInfo = playerMap[nameNorm]
-        playerID = playerInfo["player_id"]
-
-        gameContext = oppMap.get((playerID, date))
+            skips.noPlayerMatch += 1
+            return None, currentBank, skips
     
-        if gameContext is None:
-            noOppMatch += 1
-            continue
-    
-        teamID = gameContext["team_id"]
-        oppTeamID = gameContext["opp_team_id"]
+        playerID = playerMap[nameNorm]["player_id"]
 
-        # Get actual points from logs
+        # Game context
+        ctx = oppMap.get((playerID, date))
+        if ctx is None:
+            skips.noOppMatch += 1
+            return None, currentBank, skips
+
+        # Actuals
         actualPts = actuals.get((nameNorm, date))
         if actualPts is None:
-            noActuals += 1
-            continue
+            skips.noActuals += 1
+            return None, currentBank, skips
 
-        # Build features and predict
+
+        # Feature building
         features = buildFeatures(
-            playerID=playerID,
-            date=date,
-            teamID=teamID,
-            oppTeamID=oppTeamID,
-            cache=playerLogCache,
-            posCache=posCache,
-            teamCache=teamCache,
-            statusDF=statusDF,
-            oppPosCache=oppPosCache,
-            teamGameTotals=teamGameTotals,
-            minutesModel=minutesModel,
-            currentIsHome=gameContext["is_home"],
-            currentRestDays=gameContext["rest_days"],
+            playerID = playerID,
+            date = date,
+            teamID = ctx["team_id"],
+            oppTeamID = ctx["opp_team_id"],
+            cache = caches.playerLogCache,
+            posCache = caches.posCache,
+            teamCache = caches.teamCache,
+            statusDF = caches.statusDF,
+            oppPosCache = caches.oppPosCache,
+            teamGameTotals = caches.teamGameTotals,
+            minutesModel = self.minutes,
+            currentIsHome = ctx["is_home"],
+            currentRestDays = ctx["rest_days"],
         )
-
         if features is None:
-            noFeatures += 1
-            continue
+            skip.noFeatures += 1
+            return None. currentBank, skips
 
-        # FIXME: Look into removing this later and see effects
-        # Filter out lines that are 10+ pts from players last 10 avg and filter out lines that are less than 10
-        avgPts = features["avgPts10"].iloc[0]
-        if prop.line < 10 or abs(prop.line - avgPts) > 7:
-            noLine += 1
-            continue
 
-        predicted = float(model.predict(features)[0])
-       
-        # Only bet where model has demonstrated signal
-        if predicted >= 15:
-            noLine += 1
-            continue
+        # Line sanity filter
+        avgPts = float(features["avgPts10"].iloc[0])
+        if prop.line < MIN_LINE or abs(prop.line - avgPts) > MAX_LINE_DIFF:
+            skips.noLine += 1
+            return None, currentBank, skips
 
-        # Calibrated prob
-        myProb = cailbratedProbOver(predicted, prop.line, sigma, bundle, df=df)
-
-        # Fair prob (no vig)
-        fairOverProb, _ = _removeVig(prop.over_odds, prop.under_odds)
-
-        edge = myProb - fairOverProb
         
-        # Only Bet if edge is greater than treshhold defined in parameters
+        # Prediction
+        predicted = self.points.predict(features)
+
+
+        # Probailites
+        myProb = self.calibrator.probOver(predicted, prop.line)
+        fairOver, _ = _removeVig(prop.over_odds, prop.under_odds)
+        edge = myProb - fairOver
+
+        # No bet record
         if edge <= edgeThresh:
-            results.append({
-                "date": date,
-                "player": prop.player_name,
-                "line": prop.line,
-                "predicted": round(predicted, 1),
-                "actual": actualPts,
-                "my_prob": round(myProb, 3),
-                "book_prob": round(fairOverProb, 3),
-                "edge": round(edge, 3),
-                "bet": False,
-                "stake": 0.0,
-                "pnl": 0.0,
-                "bankroll": round(currentBank, 2),
-            })
-            continue
+            return BetRecord(
+                date = date,
+                player = prop.player_name,
+                line = prop.line,
+                predicted = round(predicted, 1),
+                actual = actualPts,
+                myProb = round(myProb, 3),
+                bookProb = round(fairOver, 3),
+                edge = round(edge, 3),
+                bet = False,
+                stake = 0.0,
+                pnl = 0.0,
+                bankroll = round(currentBank, 2),
+            ), currentBank, skips
 
-        # Size the bet with kelly formula
-        #stake = _kellyFractional(edge, prop.over_odds, fraction=kellyFrac) * currentBank
-        #stake = round(min(stake, currentBank * 0.10), 2) # Hard cap at 10% of current bankroll
-
-        # Hardcode current stake for testing as its not good enough to run kelly as it will just add noise
-        stake = 10
+        # Bet sizing
+        # Kelly is unimplmented for now until preformance improves
+        # with current setup
+        # This is to reduce noise for working on improvments
+        stake = FLAT_STAKE
 
         won = actualPts > prop.line
-        pnl = stake * _payoutMultiplier(prop.over_odds) if won else -stake
+        pnl = stake * _payoutMutipler(prop.over_odds) if won else -stake
         currentBank += pnl
 
-        results.append({
-                "date": date,
-                "player": prop.player_name,
-                "line": prop.line,
-                "predicted": round(predicted, 1),
-                "actual": actualPts,
-                "my_prob": round(myProb, 3),
-                "book_prob": round(fairOverProb, 3),
-                "edge": round(edge, 3),
-                "bet": True,
-                "stake": round(stake, 2),
-                "pnl": round(pnl, 2),
-                "bankroll": round(currentBank, 2),
-            })
+        return BetRecord(
+                date = date,
+                player = prop.player_name,
+                line = prop.line,
+                predicted = round(predicted, 1),
+                actual = actualPts,
+                myProb = round(myProb, 3),
+                bookProb = round(fairOver, 3),
+                edge = round(edge, 3),
+                bet = True,
+                stake = round(stake, 2),
+                pnl = round(pnl, 2),
+                bankroll = round(currentBank, 2),
+            ), currentBank, skips
 
-    resultsDF = pd.DataFrame(results)
-        
-    # Display skip vars
-    print(f"\nSkip breakdown")
-    print(f"No player match {noPlayerMatch}")
-    print(f"No opp match {noOppMatch}")
-    print(f"No actuals {noActuals}")
-    print(f"No features {noFeatures}")
-
-    print(f"\nLines skip breakdown")
-    print(f"Lines skipped {noLine}")
-
-    _printSummary(resultsDF, bankroll, currentBank, skipped)
-    return resultsDF

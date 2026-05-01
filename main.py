@@ -1,46 +1,119 @@
 import argparse
-import json
-import subprocess
-import joblib
-import numpy as np
-from pathlib import Path
+from pipeline.orchestrator import Pipeline
 
-from data.scrapperEngine import ScrapeEngine
-from data.dbManager import DBManager
-
-from models.train import preloadCaches, generateTrainingData
-from models.evaluate import evaluateModel
-
-from betting.cailbrator import printCalMetrics, calibrationCheck, displayCalibration, probOverTDist, cailbratedProbOver, fitCailbrator
-from betting.oddsCollector import pullHistoricalProps
-from betting.backtest import runBacktest
-
-TeamMap = {
-    "DEN": 1,  "OKC": 2,  "HOU": 3,  "NYK": 4,  "MIA": 5,
-    "SAS": 6,  "UTA": 7,  "MIN": 8,  "LAL": 9,  "DET": 10,
-    "POR": 11, "CLE": 12, "CHI": 13, "ORL": 14, "ATL": 15,
-    "PHI": 16, "BOS": 17, "CHO": 18, "TOR": 19, "NOP": 20,
-    "MEM": 21, "PHO": 22, "GSW": 23, "MIL": 24, "DAL": 25,
-    "WAS": 26, "SAC": 27, "LAC": 28, "IND": 29, "BRK": 30,
-}
-
-# LOL
-def _doubleCheckTeamMap(outputDir="output"):
-    path = Path(outputDir) / "teams_map.json"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if not path.exists():
-        with open(path, "w") as f:
-            json.dump(TeamMap, f, indent=2)
-        print(f"Created {path}")
-
-def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None, backfillFrom=None):
-    _doubleCheckTeamMap(outputDir)
-    db = DBManager(dbPath)
-    db.initSchema()
-
-    engine = ScrapeEngine(db=dbPath, headless=True)
+def main():
+    parser = argparse.ArgumentParser(description="NBA prediction proj")
+ 
+    # Scrape args
+    parser.add_argument("--scrape", action="store_true")
+    parser.add_argument("--backfill-from", type=str, default=None)
+    parser.add_argument("--num-games",  type=int, default=None)
+    parser.add_argument("--historical-seasons", type=int, nargs="+", default=None)
     
+    # Train args
+    parser.add_argument("--train", action="store_true")
+    parser.add_argument("--train-end-date", type=str, default=None)
+    parser.add_argument("--metrics", action="store_true")
+    parser.add_argument("--cache-data", action="store_true")
 
+    # Calibrator args
+    parser.add_argument("--evaluate", action="store_true")
+    parser.add_argument("--calibrator", action="store_true")
+    parser.add_argument("--refit-calibrator", action="store_true")
+
+    # Minutes args
+    parser.add_argument("--train-minutes", action="store_true")
+
+    # Props args
+    parser.add_argument("--pull-props", nargs=2, metavar=("START_DATE", "END_DATE"))
+
+    # Backtest args
+    parser.add_argument("--backtest", action="store_true")
+    parser.add_argument("--edge-thresh", type=float, default=0.03)
+    parser.add_argument("--bankroll", type=float, default=1000.0)
+    parser.add_argument("--start-date", type=float, default=None)
+    parser.add_argument("--end-date", type=float, default=None)
+
+    # Shared args
+    parser.add_argument("--db",  default="NBA.db")
+    parser.add_argument("--quiet", action="store_true")
+
+    args = parser.parse_args()
+    pipeline = Pipeline(dbPath=args.db)
+
+    if args.quiet:
+        from metrics.reporter import Reporter
+        Reporter.verbose = False
+
+    if args.train:
+        pipeline.train(endDate=args.train_end_date, 
+                       runMetrics=args.metrics
+    )
+
+    if args.backtest:
+        pipeline.backtest(
+                startDate = args.start_date, 
+                endDate = args.end_date, 
+                edgeThresh = args.edge_thresh, 
+                bankroll = args.bankroll
+        )
+
+    if args.cache_data:
+        pipeline.cacheFeatures()
+
+    if args.refit_calibrator:
+        pipeline.refitCalibrator()
+
+    if args.evaluate:
+        pipeline.evaluteModel()
+
+    if args.calibrator:
+        pipeline.evaluateCalibrator()
+    
+    if args.scrape:
+        from data.scraper import ScrapeEngine
+        from data.db import DBManager
+
+        db = DBManager(args.db)
+        db.initSchema()
+        engine = ScrapeEngine(db=args.db, headless=True)
+
+        try:
+            _runScrape(engine, db, args)
+        finally:
+            engine.close()
+
+    if args.historical_seasons:
+        from data.scraper import ScrapeEngine
+        from data.db import DBManager
+
+        db = DBManager(args.db)
+        db.initSchema()
+        engine = ScrapeEngine(db=args.db, headless=True)
+
+        try:
+            _runHistorical(engine, db, args.historical_seasons)
+        finally:
+            engine.close()
+
+    if args.train_minutes:
+        import sqlite3
+        from feature.cache import preloadCaches
+
+        conn = sqlite3.connect(args.db)
+        caches = preloadCaches(conn)
+        conn.close()
+        MinutesBundle.train(
+            playerLogCache = caches.playerLogCache,
+            statusDF = caches.statusDF,
+            posCache = caches.posCache,
+            dbPath = args.db,
+            endDate = args.train_end_date,
+            save = True
+        )
+
+
+def _runScrape(engine, db, args):
     try:
         print("\n--------Scraping--------")
         teams = engine.scrapeTeams()
@@ -75,7 +148,6 @@ def scrape(dbPath='NBA.db', outputDir="output", numLogGames=None, backfillFrom=N
 
 def scrapeHistorical(seasons, dbPath="NBA.db", outputDir="output"):
     # Setup DB and Scrapper Engine
-    _doubleCheckTeamMap(outputDir)
     db = DBManager(dbPath)
     db.initSchema()
     engine = ScrapeEngine(db=dbPath, headless=True)
@@ -116,163 +188,8 @@ def scrapeHistorical(seasons, dbPath="NBA.db", outputDir="output"):
     finally:
         engine.close()
 
-
-def retrainModel(metrics=True, dbPath="NBA.db", trainEndDate=None):
-    from models.train import trainModel
-    print("\n--------Training Model--------")
-    trainModel(save=True, metrics=metrics, dbPath=dbPath, train_end_date=trainEndDate, 
-               cachePath="models/feature_cache.parquet")
-    print("--------Training complete--------")
-
-def trainMinutes(dbPath="NBA.db", trainEndDate=None):
-    from models.train import trainMinutes
-    print("\n--------Training Minutes Model--------")
-    trainMinutes(save=True, dbPath=dbPath, endDate=trainEndDate)
-    print("--------Training complete--------")
-
-def evaluateCurrentModel(dbPath="NBA.db"):
-    modelPath = Path("models/nba_model.joblib")
-    if not modelPath.exists():
-        print("No saved model found")
-        return
-
-    model = joblib.load(modelPath)
-    print("\n-------- Evaluating Saved Model --------")
-
-    X, y, _ = generateTrainingData(dbPath=dbPath)
-
-    splitIdx = int(len(X) * 0.8)
-    XTest = X.iloc[splitIdx:]
-    yTest = y.iloc[splitIdx:]
-
-    evaluateModel(model, XTest, yTest)
-    print("-------- Evaluation Complete --------")
-
-def evaluateCailbrator(dbPath="NBA.db", cachePath="models/feature_cache.parquet"):
-    modelPath = Path("models/nba_model.joblib")
-    
-    if not modelPath.exists():
-        print("No saved model")
-        return
-
-    model = joblib.load(modelPath)
-
-    print("\n-------- Evaluating Saved Cailbrator --------")
-
-    X, y, dates = generateTrainingData(dbPath=dbPath, cachePath=cachePath)
-
-    splitIdx = int(len(X) * 0.8)
-    XCal = X.iloc[splitIdx:]
-    yCal = y.iloc[splitIdx:]
-
-    propPlayerMask = XCal["avgPts10"] >= 12
-    XCal = XCal[propPlayerMask].reset_index(drop=True)
-    yCal = yCal[propPlayerMask].reset_index(drop=True)
-    print(f"[calibrator] Cal set after prop-player filter: {len(yCal)} rows, mean actual: {yCal.mean():.1f}")
-    
-    predictions = model.predict(XCal)
-   
-    calibratorPath = Path("models/nba_calibrator.joblib")
-    bundle = fitCailbrator(
-            predictions, yCal, savePath=calibratorPath,
-            metadata={"refitted_only": True}
-    )
-
-    print(f"Calibrator refitted and saved. sigma={bundle['sigma']:.3f}, df={bundle['df']:.2f}")
-    print("-------- Evaluation Complete --------")
-
-
-def buildAndCacheFeatures(dbPath="NBA.db", cachePath="models/feature_cache.parquet"):
-    X, y, dates = generateTrainingData(dbPath=dbPath)
-    
-    cache = X.copy()
-    cache["__target__"] = y.values
-    cache["__date__"] = dates.values
-    cache.to_parquet(cachePath)
-    print(f"Feature cache saved to {cachePath} ({len(cache)} rows)")
-
-# ENTRY POINT
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="NBA prediction pipeline")
-    
-    # Scrape args
-    parser.add_argument("--scrape", action="store_true",
-                        help="Scrape data and store in DB")
-    parser.add_argument("--backfill-from", type=str, default=None, metavar="YYYY-MM-DD",
-                        help="Backfill status data from this date instead of auto-detecting. "
-                             "Example: --backfill-from 2023-10-01")
-    parser.add_argument("--num-games",  type=int, default=None,
-                        help="Limit log scraping to N games (debug only)")
-    
-    # Historical scrapping
-    parser.add_argument("--historical-seasons", type=int,
-                        nargs="+", default=None, metavar="SEASON",
-                        help="Scrape historical data for given season exg --historical-seasons 2024 2025")
-
-    # Train args
-    parser.add_argument("--train", action="store_true",
-                        help="Train model")
-    parser.add_argument("--train-end-date", type=str, default=None, metavar="YYYY-MM-DD",
-                        help="Exclude games on/after this date from training and calibration")
-    parser.add_argument("--metrics", action="store_true",
-                    help="Show training metrics")
-
-    parser.add_argument("--cache-data", action="store_true",
-                        help="Generate training data and store for faster testing")
-
-    # Evalute the current model with out retrain
-    parser.add_argument("--evaluate", action="store_true",
-                        help="Show metrics for current saved model without having to retrain")
-
-    # Train and evaluate cailbrator
-    parser.add_argument("--cailbrator", action="store_true",
-                        help="Refit cailbrator on current model")
-
-    # Train the minutes model
-    parser.add_argument("--train-minutes", action="store_true",
-                        help="Train minutes model")
-
-    # Props args
-    parser.add_argument("--pull-props", nargs=2,
-                        metavar=("START_DATE", "END_DATE"),
-                        help="Pull historical props exg --pull-props 2025-02-01 2025-02-28")
-
-    # Backtest args
-    parser.add_argument("--backtest", action="store_true",
-                        help="Run backtest against stored props")
-    parser.add_argument("--edge-thresh", type=float, default=0.03,
-                        help="Minium edge to place a bet (default: 0.03)")
-    parser.add_argument("--bankroll", type=float, default=1000.0,
-                        help="Starting bankroll in dollars (default: 1000)")
-
-    # Shared args
-    parser.add_argument("--db",  default="NBA.db",  help="SQLite DB path")
-    parser.add_argument("--out", default="output",  help="JSON output dir")
-    
-    args = parser.parse_args()
-
-    if args.train:
-        retrainModel(metrics=args.metrics, dbPath=args.db, trainEndDate=args.train_end_date)
-    if args.evaluate:
-        evaluateCurrentModel(dbPath=args.db)
-    if args.scrape:
-        scrape(dbPath=args.db, outputDir=args.out, numLogGames=args.num_games, backfillFrom=args.backfill_from)
-    if args.historical_seasons:
-        scrapeHistorical(args.historical_seasons, dbPath=args.db, outputDir=args.out)
-    if args.pull_props:
-        pullHistoricalProps(args.pull_props[0], args.pull_props[1], dbPath=args.db)
-    if args.backtest:
-        runBacktest(dbPath=args.db, edgeThresh=args.edge_thresh, bankroll=args.bankroll)
-    if args.cailbrator:
-        evaluateCailbrator(dbPath=args.db)
-    if args.train_minutes:
-        trainMinutes(dbPath=args.db, trainEndDate=args.train_end_date)
-    if args.cache_data:
-        buildAndCacheFeatures(dbPath=args.db)
-
-    if not args.train and not args.scrape and not args.historical_seasons and not args.evaluate and not args.pull_props and not args.backtest and not args.cailbrator and not args.train_minutes and not args.cache_data:
-        parser.print_help()
+    main()
 
 # :steam_smile
 
