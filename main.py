@@ -31,8 +31,8 @@ def main():
     parser.add_argument("--backtest", action="store_true")
     parser.add_argument("--edge-thresh", type=float, default=0.03)
     parser.add_argument("--bankroll", type=float, default=1000.0)
-    parser.add_argument("--start-date", type=float, default=1000.0)
-    parser.add_argument("--end-date", type=float, default=1000.0)
+    parser.add_argument("--start-date", type=float, default=None)
+    parser.add_argument("--end-date", type=float, default=None)
 
     # Shared args
     parser.add_argument("--db",  default="NBA.db")
@@ -52,7 +52,7 @@ def main():
 
     if args.backtest:
         pipeline.backtest(
-                startDate = args.start_Date, 
+                startDate = args.start_date, 
                 endDate = args.end_date, 
                 edgeThresh = args.edge_thresh, 
                 bankroll = args.bankroll

@@ -107,7 +107,7 @@ class Calibrator:
         for line in lines:
             raw = self.rawProbOver(predMean, line)
             cal = self.probOver(predMean, line)
-            print(f"{Line:>6}  {Raw:>8.3f}  {cal:>12.3f}")
+            print(f"{line:>6}  {raw:>8.3f}  {cal:>12.3f}")
         
     # Returns a DF of line, predicted prob bucket, acutal hit rate, n
     # Reading this lets us diagnose over/under confidense on prop range
@@ -181,7 +181,7 @@ class Calibrator:
         bundle = joblib.load(path)
 
         return cls(
-                paltt = bundle["platt"],
+                platt = bundle["platt"],
                 df = bundle["df"],
                 sigma = bundle["sigma"],
                 residualStd = bundle.get("residual std", bundle.get("sigma")),
@@ -201,7 +201,8 @@ class Calibrator:
     
     # Fitting
 
-    
+   
+    @classmethod
     def fit(cls, predictions, actuals, savePath=None, metadata=None):
         """
         Fits a new calibrator from holdout preds and actuals
@@ -221,18 +222,17 @@ class Calibrator:
 
         # 1. Estimate residual std on holdout
 
-        if residualStd is None:
-            residualStd = _estimateResidualStd(predictions, actuals)
+        residualStd = _estimateResidualStd(predictions, actuals)
         print(f"[Calibrator] residual std = {residualStd:.3f}")
 
         # 2. Fit df empirically and find best sigma
 
-        print("\n[Calibrator] Actual hit rates vs naive prediction at mean:")
         meanPred = float(predictions.mean())
+        print(f"\n[Calibrator] Hit rates (mean pred = {meanPred:.1f}):")
+        print(f"  {'Line':>6}  {'Actual hit rate':>16}")
         for line in [10, 15, 20, 25, 30]:
-            actualRate = float(np.mean(actuals > line))
-            print(f"  line={line}  actual_hit_rate={actualRate:.3f}  mean_pred={meanPred:.1f}")
-    
+            print(f"  {line:>6}  {float(np.mean(actuals > line)):>16.3f}")
+ 
         df, optimalSigma = _fitDfAndSigma(predictions, actuals)
         print(f"[Calibrator] best df = {df:.2f}, sigma={optimalSigma:.3f}")
 

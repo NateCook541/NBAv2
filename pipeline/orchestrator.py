@@ -13,7 +13,6 @@ from models.minutes import MinutesBundle
 from models.points import PointsBundle
 from betting.calibrator import Calibrator
 
-
 class Pipeline:
     """
     Orchestrates the full prediction pipeline
@@ -44,13 +43,13 @@ class Pipeline:
         if allSafe:
             print(
                     f"Saved bundle is leakage safe for {backtestStartDate}"
-                    f"Using saved model"
+                    f"\nUsing saved model"
             )
             return points, minutes, calibrator
 
         print(
-                f"Saved bundle is leakage safe for {backtestStartDate}"
-                f"Using saved model"
+                f"Saved bundle is not leakage safe for {backtestStartDate}"
+                f"\nNot using saved model"
         )
         return self.train(endDate=backtestStartDate, save=False) 
 
@@ -61,7 +60,7 @@ class Pipeline:
         conn.close()
 
         if res and res[0]:
-            return res[0]
+            return str(res[0])
         raise ValueError("No props found in database")
 
 
@@ -85,7 +84,7 @@ class Pipeline:
 
         print("\n--- Step 1. Minutes model ---")
         conn = sqlite3.connect(str(self.dbPath))
-        catchs = preloadCaches(conn)
+        caches = preloadCaches(conn)
         conn.close()
 
         minutes = MinutesBundle.train(
@@ -101,15 +100,15 @@ class Pipeline:
         # Pass minutes bundle here so it rebuilds as it would be stale
         # If need quick tests could edit
         print("\n--- Step 2. Feature matrix ---")
-        X, y, dates = self.featureCache.loadOrBuild(
+        X, y, dates = self.featureCachePath.loadOrBuild(
                 endDate = endDate,
                 dbPath = self.dbPath,
                 minutesBundle = minutes
         )
 
         # 3. Points model
-        print("\n--- Step 2. Points model ---")
-        points = pointsBundle.train(
+        print("\n--- Step 3. Points model ---")
+        points = PointsBundle.train(
                 X = X,
                 y = y,
                 dates = dates,
@@ -117,8 +116,8 @@ class Pipeline:
                 runMetrics = runMetrics
         )
 
-        # Step 3 calibrator
-        print("\n--- Step 3. Calibrator ---")
+        # 4. Calibrator
+        print("\n--- Step 4. Calibrator ---")
         calibrator = Calibrator.fit(
                 predictions = points.calPredictions,
                 actuals = points.calActuals,
@@ -199,7 +198,7 @@ class Pipeline:
         print("\n--- Refit calibrator ---")
 
         pointsModel = PointsBundle.load()
-        X, y, dates = self.featureCache.loadOrBuild(dbPath=self.dbPath)
+        X, y, dates = self.featureCachePath.loadOrBuild(dbPath=self.dbPath)
 
         from models.points import _splitChronologically, _applyPropPlayerFilter
         from config import HOLDOUT_RATIO
@@ -245,7 +244,7 @@ class Pipeline:
         print("\n--- Evaluating saved calibrator ---")
         points = PointsBundle.load()
 
-        X, y, _ = self.featureCache.loadOrBuild(dbPath=self.dbPath)
+        X, y, _ = self.featureCachePath.loadOrBuild(dbPath=self.dbPath)
 
         split = int(len(X) * 0.8)
         evaluateModel(points.model, X.iloc[split:], y.iloc[split:])
@@ -262,7 +261,7 @@ class Pipeline:
         pointsModel = PointsBundle.load()
         calibrator = Calibrator.load()
 
-        X, y, dates = self.featureCache.loadOrBuild(dbPath=self.dbPath)
+        X, y, dates = self.featureCachePath.loadOrBuild(dbPath=self.dbPath)
 
         mask = X["avgPts10"] > 0
         X, y, dates = (
@@ -271,17 +270,17 @@ class Pipeline:
                 dates[mask].reset_index(drop=True),
         )
 
-        _, XCal, _, yCal, calDates = _splitChronologically(
+        _, XCal, _, yCal, _, calDates = _splitChronologically(
                 X, y, dates, holdoutRatio=HOLDOUT_RATIO
         )
-        XCal, yCal, _ = _applyPropPlayerFilter(Xcal, yCal, calDates)
+        XCal, yCal, _ = _applyPropPlayerFilter(XCal, yCal, calDates)
         
-        predictions = points.predictBatch(XCal)
+        predictions = pointsModel.predictBatch(XCal)
 
         print(f"Mean predicted: {predictions.mean():.2f}")
         print(f"Mean actual: {float(yCal.mean()):.2f}")
         print(f"Pred std: {predictions.std():.2f}")
         print(f"Actual std: {float(yCal.std()):.2f}")
 
-        calibrator.printExamples(pred_mean=float(predictions.mean()))
+        calibrator.printExamples(predMean=float(predictions.mean()))
 

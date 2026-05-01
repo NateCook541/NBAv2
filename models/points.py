@@ -14,7 +14,7 @@ from config import (
 # Helpers
 
 # Provides a test / train split that prevents data leakage
-def _split_chronologically(X, y, dates, holdoutRatio=HOLDOUT_RATIO):
+def _splitChronologically(X, y, dates, holdoutRatio=HOLDOUT_RATIO):
     if len(X) < 10:
         raise ValueError("Not enough rows for a chronological split")
 
@@ -52,8 +52,8 @@ class PointsBundle:
     calDates        : pd series
     """
 
-    def __init__(self, model, meta, calPredictions,
-                 calActuals, calDates):
+    def __init__(self, model, meta, calPredictions=None,
+                 calActuals=None, calDates=None):
         self.model = model
         self.meta = meta
         self.calPredictions = calPredictions
@@ -133,14 +133,13 @@ class PointsBundle:
         mask = X["avgPts10"] > 0
         X = X[mask].reset_index(drop=True)
         y = y[mask].reset_index(drop=True)
-        dates = date[mask].reset_index(drop=True)
+        dates = dates[mask].reset_index(drop=True)
 
         # 2. Chrono split
         
-        XTrain, XCal, yTrain, trainDates, calDate = (
-                _applyPropPlayerFilter(XCal, yCal, calDates)
+        XTrain, XCal, yTrain, yCal, trainDates, calDates = (
+                _splitChronologically(X, y, dates)
         )
-
         # 3. Filter cal split to prop-relevant players only
 
         XCalFiltered, yCalFiltered, calDatesFiltered = (
@@ -148,8 +147,8 @@ class PointsBundle:
         )
         print(
             f"[PointsBundle] Cal set after prop filter: "
-            f"{len(y_cal_filtered)} rows"
-            f"mean actual: {y_cal_filtered.mean():.1f}"
+            f"{len(yCalFiltered)} rows"
+            f"mean actual: {yCalFiltered.mean():.1f}"
         )
 
         # 4. Fit the model
@@ -167,11 +166,11 @@ class PointsBundle:
             predictions = model.predict(XCalFiltered)
 
         print(
-            f"[PointsBundle] Train rows: {len(X_train)}"
-            f"Cal rows (filtered): {len(X_cal_filtered)}"
+            f"[PointsBundle] Train rows: {len(XTrain)}"
+            f"Cal rows (filtered): {len(XCalFiltered)}"
         )
         print(
-            f"[PointsBundle] Cal mean actual: {y_cal_filtered.mean():.2f}"
+            f"[PointsBundle] Cal mean actual: {yCalFiltered.mean():.2f}"
             f"mean predicted: {predictions.mean():.2f}"
         )
 
@@ -181,7 +180,7 @@ class PointsBundle:
                 "calibration_start_date": calDatesFiltered.iloc[0],
                 "calibration_end_date": calDatesFiltered.iloc[-1],
                 "train_rows": int(len(XTrain)),
-                "calibration_row": int(len(XCalFilter)),
+                "calibration_row": int(len(XCalFiltered)),
         }
 
         bundle = cls(
@@ -206,7 +205,7 @@ class PointsBundle:
         end = self.meta.get("train_end_date")
         if not end:
             last = self.meta.get("train_last_date", "")
-            return last < backtestStartDate
+            return str(last) < str(backtestStartDate)
 
         return end <= backtestStartDate
 

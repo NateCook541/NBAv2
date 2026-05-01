@@ -25,7 +25,7 @@ MINUTES_FEATURES = [
 POS_MAP = {"PG": 1, "SG": 2, "SF": 3, "PF": 4, "C": 5}
 
 # Provides a test / train split that prevents data leakage
-def _split_chronologically(X, y, dates, holdoutRatio=HOLDOUT_RATIO):
+def _splitChronologically(X, y, dates, holdoutRatio=HOLDOUT_RATIO):
     if len(X) < 10:
         raise ValueError("Not enough rows for a chronological split")
 
@@ -74,7 +74,7 @@ def _buildMinsFeatures(playerLogCache, statusDF, posCache, logsDF):
                 else 0
         )
 
-        posStr = posCache.get(row.playerID, None)
+        posStr = posCache.get(row.player_id, None)
         posVal = POS_MAP.get(posStr, 3)
 
         rows.append({
@@ -86,7 +86,7 @@ def _buildMinsFeatures(playerLogCache, statusDF, posCache, logsDF):
             "isQuestionable": isQuestionable,
             "pos": posVal,
         })
-        targets.append(row.actualMinutes)
+        targets.append(row.actual_minutes)
         validDates.append(row.game_date)
 
     X = pd.DataFrame(rows, columns=MINUTES_FEATURES)
@@ -107,7 +107,7 @@ class MinutesBundle:
     meta  : (dict) Training dates, row counts, MAE
     """
 
-    def __init__(self, model):
+    def __init__(self, model, meta):
         self.model = model
         self.meta  = meta
 
@@ -128,7 +128,7 @@ class MinutesBundle:
     def save(self, modelPath=MINUTES_PATH, metaPath=MINUTES_META_PATH):
         joblib.dump(self.model, modelPath)
         joblib.dump(self.meta, metaPath)
-        print(f"[MinutesBundle] Saved model - {model_path}")
+        print(f"[MinutesBundle] Saved model - {modelPath}")
 
     @classmethod
     def load(cls, modelPath=MINUTES_PATH, metaPath=MINUTES_META_PATH):
@@ -165,13 +165,13 @@ class MinutesBundle:
             JOIN Games   g ON pgl.game_id   = g.game_id
             JOIN Players p ON pgl.player_id = p.player_id
             WHERE pgl.minutes >= {MIN_MINUTES_TRAIN}
-            {"AND g.game_date < '" + end_date + "'" if end_date else ""}
+            {"AND g.game_date < '" + endDate + "'" if endDate else ""}
             ORDER BY g.game_date, pgl.game_id, pgl.player_id
         """
         logs = pd.read_sql_query(query, conn)
         conn.close()
 
-        X, y, dates = _buildMinutesFeatures(
+        X, y, dates = _buildMinsFeatures(
                 playerLogCache, statusDF, posCache, logs
         )
         
@@ -209,7 +209,7 @@ class MinutesBundle:
     def isSafeFor(self, backtestStartDate):
         end = self.meta.get("train_end_date")
         if not end:
-            return false
+            return False
 
         return end <= backtestStartDate
 

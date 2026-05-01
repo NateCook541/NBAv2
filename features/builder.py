@@ -296,7 +296,7 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
     }])
 
     if minutesModel is not None:
-        predictedMins = float(minutesModel.predict(minFeatures)[0])
+        predictedMins = minutesModel.predict(minFeatures)
     else:
         predictedMins = float(baseline["minutes"])
 

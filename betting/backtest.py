@@ -9,11 +9,10 @@ from typing import Optional
 from config import (
     DB_PATH,
     DEFAULT_EDGE_THRESH, DEFAULT_BANKROLL, FLAT_STAKE,
-    MIN_LINE, MAX_LINE_DIFF, MAX_PRED_FILTER,
-    DEFAULT_KELLY_FRAC,
+    MIN_LINE, MAX_LINE_DIFF, DEFAULT_KELLY_FRAC,
 )
 
-from features.cache import preload_caches
+from features.cache import preloadCaches
 from features.builder import buildFeatures
 from metrics.reporter import Reporter
 
@@ -28,7 +27,7 @@ class BetRecord:
     player: str
     line: float
     predicted: float
-    acutal: float
+    actual: float
     myProb: float
     bookProb: float
     edge: float
@@ -41,7 +40,7 @@ class BetRecord:
 @dataclass
 class SkipCounters:
     noPlayerMatch: int=0
-    noOppMath: int=0
+    noOppMatch: int=0
     noActuals: int=0
     noFeatures: int=0
     noLine: int=0
@@ -74,7 +73,7 @@ def _payoutMutipler(usOdds):
         return usOdds / 100
     return 100 / abs(usOdds)
 
-def _kellyFractional(edge, usOdds, fraction=DEFUALT_KELLY_FRAC):
+def _kellyFractional(edge, usOdds, fraction=DEFAULT_KELLY_FRAC):
     b = _payoutMultipler(usOddds)
     p = edge + impliedProb(usOdds)
     q = 1 - p
@@ -135,7 +134,7 @@ def _loadPlayerMap(conn):
     )
     return df.set_index("name_norm")[["player_id", "team_id"]].to_dict("index")
 
-def _loadOppMap
+def _loadOppMap(conn):
     df = pd.read_sql_query(
     """
         SELECT pgl.player_id, g.game_date,
@@ -176,7 +175,7 @@ class BacktestEngine:
     """
     
     def __init__(self, pointsBundle, minutesBundle, calibrator, dbPath=DB_PATH):
-        self.points = pointBundle
+        self.points = pointsBundle
         self.minutes = minutesBundle
         self.calibrator = calibrator
         self.dbPath = Path(dbPath)
@@ -186,7 +185,7 @@ class BacktestEngine:
 
 
     def run(self, startDate=None, endDate=None, 
-            edgeThresh=DEFUALT_EDGE_THRESH, bankroll=DEFAULT_BANKROLL):
+            edgeThresh=DEFAULT_EDGE_THRESH, bankroll=DEFAULT_BANKROLL):
         
         # Load data from db
 
@@ -215,7 +214,7 @@ class BacktestEngine:
         skips = SkipCounters()
 
         for _, prop in props.iterrows():
-            record, currentBank, skips = self._evaluate_prop(
+            record, currentBank, skips = self._evaluateProp(
                 prop = prop,
                 actuals = actuals,
                 playerMap = playerMap,
@@ -243,7 +242,7 @@ class BacktestEngine:
 
     def _evaluateProp(self, prop, actuals, playerMap, oppMap, caches,
                       edgeThresh, currentBank, skips):
-        nameNorm = _normalize(prop.playerName)
+        nameNorm = _normalize(prop.player_name)
         date = prop.game_date
 
         # Player lookup
@@ -254,8 +253,8 @@ class BacktestEngine:
         playerID = playerMap[nameNorm]["player_id"]
 
         # Game context
-        context = oppMap.get((player_id, date))
-        if context is None:
+        ctx = oppMap.get((playerID, date))
+        if ctx is None:
             skips.noOppMatch += 1
             return None, currentBank, skips
 
@@ -299,27 +298,26 @@ class BacktestEngine:
 
 
         # Probailites
-        myProb = self.calibrator.probOver(predicted, propLine)
-        fairOver, _ = _removeVig(prob.overOdds, prop.underOdds)
+        myProb = self.calibrator.probOver(predicted, prop.line)
+        fairOver, _ = _removeVig(prop.over_odds, prop.under_odds)
         edge = myProb - fairOver
 
         # No bet record
         if edge <= edgeThresh:
             return BetRecord(
-                date = date
-                player= prop.player_name,
+                date = date,
+                player = prop.player_name,
                 line = prop.line,
                 predicted = round(predicted, 1),
                 actual = actualPts,
-                my_prob = round(myProb, 3),
-                book_prob = round(fairOver, 3),
+                myProb = round(myProb, 3),
+                bookProb = round(fairOver, 3),
                 edge = round(edge, 3),
                 bet = False,
                 stake = 0.0,
                 pnl = 0.0,
                 bankroll = round(currentBank, 2),
             ), currentBank, skips
-
 
         # Bet sizing
         # Kelly is unimplmented for now until preformance improves
@@ -328,17 +326,17 @@ class BacktestEngine:
         stake = FLAT_STAKE
 
         won = actualPts > prop.line
-        pnl = stake * _payloutMultipler(prop.overOdds) if won else -stake
+        pnl = stake * _payoutMutipler(prop.over_odds) if won else -stake
         currentBank += pnl
-        
+
         return BetRecord(
-                date = date
-                player= prop.player_name,
+                date = date,
+                player = prop.player_name,
                 line = prop.line,
                 predicted = round(predicted, 1),
                 actual = actualPts,
-                my_prob = round(myProb, 3),
-                book_prob = round(fairOver, 3),
+                myProb = round(myProb, 3),
+                bookProb = round(fairOver, 3),
                 edge = round(edge, 3),
                 bet = True,
                 stake = round(stake, 2),

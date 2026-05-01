@@ -96,11 +96,11 @@ class Reporter:
             cls._out("No bets placed.")
             return
  
-        wins     = (bets["pnl"] > 0).sum()
-        losses   = (bets["pnl"] < 0).sum()
+        wins = (bets["pnl"] > 0).sum()
+        losses = (bets["pnl"] < 0).sum()
         winRate = wins / len(bets)
-        totalPnl= bets["pnl"].sum()
-        roi      = totalPnl / bets["stake"].sum()
+        totalPnl = bets["pnl"].sum()
+        roi = totalPnl / bets["stake"].sum()
  
         cls._out(f"Win / Loss : {wins}W / {losses}L ({winRate:.1%})")
         cls._out(f"Total P&L : ${totalPnl:.2f}")
@@ -112,7 +112,7 @@ class Reporter:
             f"{((finalBank - startingBank) / startingBank):.1%}"
         )
  
-        # -- Win rate by predicted score bucket -----------------------
+        # Win rate by predicted score bucket
         bets["predBucket"] = pd.cut(
             bets["predicted"],
             bins=[0, 12, 15, 18, 22, 99],
