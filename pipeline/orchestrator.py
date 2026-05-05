@@ -30,10 +30,11 @@ class Pipeline:
 
 
     def _loadOrTrainBundle(self, backtestStartDate):
-        points = PointsBundle.loadIfExists()
+        from models.tieredPoints import TieredPointsBundle
+        points = TieredPointsBundle.loadIfExists()
         minutes = MinutesBundle.loadIfExists()
         calibrator = Calibrator.loadIfExists()
-        
+               
         allSafe = (
                 points is not None and points.isSafeFor(backtestStartDate) and
                 minutes is not None and minutes.isSafeFor(backtestStartDate) and
@@ -108,12 +109,16 @@ class Pipeline:
 
         # 3. Points model
         print("\n--- Step 3. Points model ---")
-        points = PointsBundle.train(
-                X = X,
-                y = y,
-                dates = dates,
-                save = save,
-                runMetrics = runMetrics
+        
+        # Using a tiered model system to train seperate models
+        # based on their avg pts per 10 to adjust for diffirent
+        # calibers of players in backtest preds
+        from models.tieredPoints import TieredPointsBundle
+        points = TieredPointsBundle.train(
+                X,
+                y,
+                dates,
+                save=save
         )
 
         # 4. Calibrator

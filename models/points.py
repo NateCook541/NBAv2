@@ -26,8 +26,8 @@ def _splitChronologically(X, y, dates, holdoutRatio=HOLDOUT_RATIO):
             dates.iloc[:split], dates.iloc[split:],
     )
 
-def _applyPropPlayerFilter(X, y, dates):
-    mask = (X["avgPts10"] >= MIN_AVGPTS_CAL) & (X["avgMin10"] >= MIN_AVGMIN_CAL)
+def _applyPropPlayerFilter(X, y, dates, minAvgPtsCal):
+    mask = (X["avgPts10"] >= minAvgPtsCal) & (X["avgMin10"] >= minAvgPtsCal)
     return (
             X[mask].reset_index(drop=True),
             y[mask].reset_index(drop=True),
@@ -116,7 +116,7 @@ class PointsBundle:
 
 
     @classmethod
-    def train(cls, X, y, dates, save, runMetrics):
+    def train(cls, X, y, dates, save, runMetrics=False, minAvgPtsCal=15):
         """
         Trains from a pre-built feature matrix (X, y, dates)
 
@@ -130,7 +130,7 @@ class PointsBundle:
         
         # 1. Remove rows with no scoring history
         
-        mask = X["avgPts10"] > 0
+        mask = X["avgPts10"] > 0 
         X = X[mask].reset_index(drop=True)
         y = y[mask].reset_index(drop=True)
         dates = dates[mask].reset_index(drop=True)
@@ -143,7 +143,7 @@ class PointsBundle:
         # 3. Filter cal split to prop-relevant players only
 
         XCalFiltered, yCalFiltered, calDatesFiltered = (
-            _applyPropPlayerFilter(XCal, yCal, calDates)
+            _applyPropPlayerFilter(XCal, yCal, calDates, minAvgPtsCal)
         )
         print(
             f"[PointsBundle] Cal set after prop filter: "

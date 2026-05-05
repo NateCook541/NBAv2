@@ -143,6 +143,23 @@ class Reporter:
             .head(5).to_string(index=False)
         )
 
+        # Temp
+        bets_12_15 = bets[(bets["predicted"] >= 12) & (bets["predicted"] < 15)]
+        bets_15_18 = bets[(bets["predicted"] >= 15) & (bets["predicted"] < 18)]
+
+        print(f"\n12-15 edge vs win rate correlation:")
+        print(bets_12_15[["edge", "pnl"]].corr())
+        print(f"\n15-18 edge vs win rate correlation:")
+        print(bets_15_18[["edge", "pnl"]].corr())
+
+        # Which players appear most in profitable 12-15 bets?
+        winners = bets_12_15[bets_12_15["pnl"] > 0]
+        print(winners["player"].value_counts().head(10))
+
+        # What's the avg line for wins vs losses in 12-15?
+        print(f"Winning line avg: {winners['line'].mean():.1f}")
+        print(f"Losing line avg:  {bets_12_15[bets_12_15['pnl'] < 0]['line'].mean():.1f}")
+
 
     # Edge distribution
 

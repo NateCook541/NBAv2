@@ -44,7 +44,14 @@ def preloadCaches(conn):
     allLogs = pd.read_sql_query("""
         SELECT pgl.player_id, pgl.game_id, g.game_date, pgl.points, pgl.minutes, 
                pgl.fg_pct, pgl.is_home, pgl.rest_days,
-               CASE WHEN pgl.is_home = 1 THEN g.home_team_id ELSE g.away_team_id END AS team_id
+               CASE WHEN pgl.is_home = 1 
+                    THEN g.home_team_id 
+                    ELSE g.away_team_id 
+               END AS team_id
+               CASE WHEN pgl.is_home = 1
+                    THEN g.away_team_id
+                    ELSE g.home_team_id
+               END AS opp_team_id
         FROM Player_game_logs pgl
         JOIN Games g ON pgl.game_id = g.game_id
         ORDER BY pgl.player_id, g.game_date
