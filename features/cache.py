@@ -42,12 +42,13 @@ def preloadCaches(conn):
 
     # Player game logs
     allLogs = pd.read_sql_query("""
-        SELECT pgl.player_id, pgl.game_id, g.game_date, pgl.points, pgl.minutes, 
-               pgl.fg_pct, pgl.is_home, pgl.rest_days,
-               CASE WHEN pgl.is_home = 1 
-                    THEN g.home_team_id 
-                    ELSE g.away_team_id 
-               END AS team_id
+               SELECT pgl.player_id, pgl.game_id, g.game_date,
+               pgl.points, pgl.minutes, pgl.fg_pct,
+               pgl.is_home, pgl.rest_days,
+               CASE WHEN pgl.is_home = 1
+                    THEN g.home_team_id
+                    ELSE g.away_team_id
+               END AS team_id,
                CASE WHEN pgl.is_home = 1
                     THEN g.away_team_id
                     ELSE g.home_team_id
@@ -55,6 +56,7 @@ def preloadCaches(conn):
         FROM Player_game_logs pgl
         JOIN Games g ON pgl.game_id = g.game_id
         ORDER BY pgl.player_id, g.game_date
+ 
     """, conn)
     playerLogCache = {
         pid: grp.reset_index(drop=True)
@@ -239,23 +241,21 @@ class FeatureCache:
 
     def exists(self):
         return self.cachePath.exists()
-
+    
     def loadOrBuild(
         self,
         endDate=None,
         dbPath=DB_PATH,
         minutesBundle=None):
 
-        # If a mins bunlde is supplied then cache is skipped and features rebuilt as that would be using stale data
-
-        if minutesBundle is None and self.exists():
-            return self._load(endDate=endDate)
+        #if minutesBundle is None and self.exists():
+        return self._load(endDate=endDate)
         
-        return self._build(
-                dbPath=dbPath,
-                endDate=endDate,
-                minutesBundle=minutesBundle
-        )
+        #return self._build(
+         #       dbPath=dbPath,
+          #      endDate=endDate,
+           #     minutesBundle=minutesBundle
+        #)
 
     # Full rebuild and save it to a parquet file
     def buildAndSave(self, dbPath=DB_PATH, minutesBundle=None):

@@ -87,24 +87,32 @@ class Pipeline:
         conn = sqlite3.connect(str(self.dbPath))
         caches = preloadCaches(conn)
         conn.close()
-
-        minutes = MinutesBundle.train(
+        
+        savedMinutes = MinutesBundle.loadIfExists()
+        minutesChanged = (
+                savedMinutes is None or
+                not savedMinutes.isSafeFor(endDate or "9999-99-99")
+        )
+        if minutesChanged:
+            print(f"[Pipeline] Training fresh minutes bundle")
+            minutes = MinutesBundle.train(
                 playerLogCache = caches.playerLogCache,
                 statusDF = caches.statusDF,
                 posCache = caches.posCache,
                 dbPath = self.dbPath,
                 endDate = endDate,
                 save = save
-        )
+            )
+        else:
+            print(f"[Pipeline] Saved minutes model is current, resuing")
+            minutes = savedMinutes
 
         # 2. Feature matrix
-        # Pass minutes bundle here so it rebuilds as it would be stale
-        # If need quick tests could edit
         print("\n--- Step 2. Feature matrix ---")
         X, y, dates = self.featureCachePath.loadOrBuild(
                 endDate = endDate,
                 dbPath = self.dbPath,
-                minutesBundle = minutes
+                minutesBundle = minutes if minutesChanged else None
         )
 
         # 3. Points model
@@ -200,13 +208,14 @@ class Pipeline:
     
     # Refit the calibrator on the saved model for testing calibration changes
     def refitCalibrator(self, save=True):
-        print("\n--- Refit calibrator ---")
-
-        pointsModel = PointsBundle.load()
-        X, y, dates = self.featureCachePath.loadOrBuild(dbPath=self.dbPath)
-
+        from models.tieredPoints import TieredPointsBundle
         from models.points import _splitChronologically, _applyPropPlayerFilter
         from config import HOLDOUT_RATIO
+
+        print("\n--- Refit calibrator ---")
+
+        pointsModel = TieredPointsBundle.load()
+        X, y, dates = self.featureCachePath.loadOrBuild(dbPath=self.dbPath)
 
         mask = X["avgPts10"] > 0
         X, y, dates = (
@@ -245,14 +254,30 @@ class Pipeline:
 
     def evaluateModel(self):
         from models.evaluate import evaluateModel
+        from models.tieredPoints import TieredPointsBundle
 
         print("\n--- Evaluating saved calibrator ---")
-        points = PointsBundle.load()
+        points = TieredPointsBundle.load()
 
         X, y, _ = self.featureCachePath.loadOrBuild(dbPath=self.dbPath)
 
         split = int(len(X) * 0.8)
-        evaluateModel(points.model, X.iloc[split:], y.iloc[split:])
+        XTest = X.iloc[split:]
+        yTest = y.iloc[split:]
+
+        lowMask  = XTest["avgPts10"] < 15
+        midMask  = (XTest["avgPts10"] >= 15) & (XTest["avgPts10"] < 22)
+        highMask = XTest["avgPts10"] >= 22
+
+        print("\n-- Low tier (<15 avgPts10) ---")
+        if lowMask.sum() > 0:
+            evaluateModel(points.low.model, XTest[lowMask], yTest[lowMask])
+        print("\n-- Mid tier (15-22 avgPts10) ---")
+        if midMask.sum() > 0:
+            evaluateModel(points.mid.model, XTest[midMask], yTest[midMask])
+        print("\n-- High tier (22+ avgPts10) ---")
+        if highMask.sum() > 0:
+            evaluateModel(points.high.model, XTest[highMask], yTest[highMask])
 
 
 # Evaluate calibrator
@@ -263,7 +288,7 @@ class Pipeline:
         from config import HOLDOUT_RATIO
 
         print("\n--- Evaluating calibrator ---")
-        pointsModel = PointsBundle.load()
+        pointsModel = TieredPointsBundle.load()
         calibrator = Calibrator.load()
 
         X, y, dates = self.featureCachePath.loadOrBuild(dbPath=self.dbPath)

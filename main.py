@@ -65,7 +65,7 @@ def main():
         pipeline.refitCalibrator()
 
     if args.evaluate:
-        pipeline.evaluteModel()
+        pipeline.evaluateModel()
 
     if args.calibrator:
         pipeline.evaluateCalibrator()

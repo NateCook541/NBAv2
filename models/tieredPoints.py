@@ -16,6 +16,23 @@ class TieredPointsBundle:
             return self.mid.predict(features)
         else:
             return self.mid.predict(features)
+    
+    def predictBatch(self, X):
+        results = np.zeros(len(X))
+
+        lowMask = X["avgPts10"] < 15
+        midMask = (X["avgPts10"]  >= 15) & (X["avgPts10"] < 22)
+        highMask = X["avgPts10"] >= 22
+
+        if lowMask.sum() > 0:
+            results[lowMask] = self.low.model.predict(X[lowMask])
+        if midMask.sum() > 0:
+            results[midMask] = self.mid.model.predict(X[midMask])
+        if highMask.sum() > 0:
+            results[highMask] = self.high.model.predict(X[highMask])
+        
+        return results
+
 
     @classmethod
     def train(cls, X, y, dates, save=True):

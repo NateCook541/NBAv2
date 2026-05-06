@@ -39,7 +39,7 @@ featureOrder = [
     "pos", "pos_injury_opportunity",
 
     # Situational flags
-    "steak_score", "last_game_outlier"
+    "streak_score", "last_game_outlier",
 
     # Minutes prediction
     "mins_prediction",
@@ -396,10 +396,10 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
         statusDF, oppPosCache, posStr, oppTeamID, date
     )
 
-    # Player vs opp stats
-    vsOppResult = _ptsVsOpponent(playerID, oppTeamID, date, cache)
-    ptsVsOppAvg = vs_opp_result[0]
-    ptsVsOppN = vs_opp_result[1]
+    # Player vs opp stats`
+    vsOppResult = _ptsVsOpponenet(playerID, oppTeamID, date, cache)
+    ptsVsOppAvg = vsOppResult[0]
+    ptsVsOppN = vsOppResult[1]
     ptsVsOppTrend = (ptsVsOppAvg - last10avg) if ptsVsOppN >= 2 else 0.0
 
     # Situational flags
@@ -412,7 +412,6 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
     oppDefRtgVsPace = (
         float(oppFeatures["def_rtg"]) * float(oppFeatures["pace"]) / 100.0
     )
-
 
 
     # Full feature vertex
