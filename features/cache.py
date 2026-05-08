@@ -247,15 +247,27 @@ class FeatureCache:
         endDate=None,
         dbPath=DB_PATH,
         minutesBundle=None):
+        if minutesBundle is None and self.exists():
+            X, y, dates = self._load(endDate=endDate)
+            try:
+                from features.builder import featureOrder
+                missing = [c for c in featureOrder if c not in X.columns]
+            except Exception:
+                missing = []
+            if not missing:
+                return X, y, dates
+            print(f"[FeatureCache] Missing columns in cached features ({len(missing)}). Rebuilding features.")
 
-        #if minutesBundle is None and self.exists():
-        return self._load(endDate=endDate)
-        
-        #return self._build(
-         #       dbPath=dbPath,
-          #      endDate=endDate,
-           #     minutesBundle=minutesBundle
-        #)
+        X, y, dates = self._build(
+                dbPath=dbPath,
+                endDate=endDate,
+                minutesBundle=minutesBundle
+        )
+        # Persist rebuilt features so follow-up commands in the same run
+        # (for example --evaluate after --train) can reuse them instantly.
+        if endDate is None:
+            self._save(X, y, dates)
+        return X, y, dates
 
     # Full rebuild and save it to a parquet file
     def buildAndSave(self, dbPath=DB_PATH, minutesBundle=None):
@@ -273,4 +285,3 @@ class FeatureCache:
         if self.cachePath.exists():
             self.cachePath.unlink()
             print(f"[FeatureCache] Cache deleted at {self.cachePath}")
-

@@ -23,7 +23,7 @@ featureOrder = [
 
     # Injury stats
     "missing_ppg_injury", "starters_out_count", "injury_opportunity", "player_status_flag", "player_is_questionable",
-    "missing_usage",
+    "missing_usage", "injury_min_std_interaction", "injury_q_interaction", "injury_avgmin_interaction",
 
     # Opp stats
     "opp_def_rtg", "opp_pace", "opp_pts_allowed_to_pos", "opp_pts_allowed_pos_l10", "opp_def_rtg_trend",
@@ -441,6 +441,9 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
         "player_status_flag":    playerStatus["player_status_flag"],
         "player_is_questionable":playerStatus["player_is_questionable"],
         "missing_usage":         injuryFeatures["missing_usage"],
+        "injury_min_std_interaction": float(injuryFeatures["missing_ppg"] * (baseline["points"] / avgMin) * minStd10),
+        "injury_q_interaction": float(injuryFeatures["missing_ppg"] * (baseline["points"] / avgMin) * playerStatus["player_is_questionable"]),
+        "injury_avgmin_interaction": float(injuryFeatures["missing_ppg"] * (baseline["points"] / avgMin) * baseline["minutes"]),
         "opp_def_rtg":           oppFeatures["def_rtg"],
         "opp_pace":              oppFeatures["pace"],
         "opp_pts_allowed_to_pos":oppPtsAllowedToPos,

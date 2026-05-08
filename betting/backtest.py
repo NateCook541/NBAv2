@@ -68,14 +68,14 @@ def _removeVig(overOdds, underOdds):
     return over / total, under / total
 
 
-def _payoutMutipler(usOdds):
+def _payoutMultiplier(usOdds):
     if usOdds > 0:
         return usOdds / 100
     return 100 / abs(usOdds)
 
 def _kellyFractional(edge, usOdds, fraction=DEFAULT_KELLY_FRAC):
-    b = _payoutMultipler(usOddds)
-    p = edge + impliedProb(usOdds)
+    b = _payoutMultiplier(usOdds)
+    p = edge + _impliedProb(usOdds)
     q = 1 - p
     kelly = (b * p - q) / b
     return max(0.0, kelly * fraction)
@@ -282,8 +282,8 @@ class BacktestEngine:
             currentRestDays = ctx["rest_days"],
         )
         if features is None:
-            skip.noFeatures += 1
-            return None. currentBank, skips
+            skips.noFeatures += 1
+            return None, currentBank, skips
 
 
         # Line sanity filter
@@ -326,7 +326,7 @@ class BacktestEngine:
         stake = FLAT_STAKE
 
         won = actualPts > prop.line
-        pnl = stake * _payoutMutipler(prop.over_odds) if won else -stake
+        pnl = stake * _payoutMultiplier(prop.over_odds) if won else -stake
         currentBank += pnl
 
         return BetRecord(
@@ -343,4 +343,3 @@ class BacktestEngine:
                 pnl = round(pnl, 2),
                 bankroll = round(currentBank, 2),
             ), currentBank, skips
-

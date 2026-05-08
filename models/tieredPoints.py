@@ -15,7 +15,7 @@ class TieredPointsBundle:
         elif avg < 22:
             return self.mid.predict(features)
         else:
-            return self.mid.predict(features)
+            return self.high.predict(features)
     
     def predictBatch(self, X):
         results = np.zeros(len(X))
@@ -127,4 +127,3 @@ class TieredPointsBundle:
             last = self.meta.get("train_last_date", "")
             return last < backtestStartDate
         return end <= backtestStartDate
-

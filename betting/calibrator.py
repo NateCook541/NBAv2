@@ -123,7 +123,7 @@ class Calibrator:
 
         for line in lines:
             probs = np.array([self.probOver(p, line) for p in predictions])
-            bins = np.linespace(0, 1, 11)
+            bins = np.linspace(0, 1, 11)
             for i in range(len(bins) - 1):
                 mask = (probs >= bins[i]) & (probs < bins[i+1])
                 if mask.sum() < 20:
@@ -152,7 +152,7 @@ class Calibrator:
         if savePath:
             Path(savePath).parent.mkdir(parents=True, exist_ok=True)
             plt.savefig(savePath)
-            print(f"[Calibrator] Plot saved -> {save_path}")
+            print(f"[Calibrator] Plot saved -> {savePath}")
         else:
             plt.show()
         plt.close()
@@ -275,10 +275,7 @@ class Calibrator:
         return instance
 
 
-# Backtest safety
-
-
-def isSafeFor(self, backtestStartDate):
+    # Backtest safety
+    def isSafeFor(self, backtestStartDate):
         end = self.meta.get("calibration_end_date", "")
         return bool(end) and end < backtestStartDate
-

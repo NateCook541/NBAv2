@@ -27,7 +27,7 @@ class Reporter:
                          calMeanActuals, calMeanPred):
         cls._out(
             f"\n[PointsBundle] Train rows: {trainRows} | "
-            f"Cal rows (filtered): {cal_rows}"
+            f"Cal rows (filtered): {calRows}"
         )
         cls._out(
             f"[PointsBundle] Cal mean actual: {calMeanActuals:.2f} | "
@@ -172,4 +172,3 @@ class Reporter:
 
         cls._out("\nEdge distribution of bets placed:")
         cls._out(bets["edge"].describe().to_string())
-

@@ -8,6 +8,8 @@ from config import (
     MODEL_PATH, MODEL_META_PATH,
     POINTS_MODEL_PARAMS, HOLDOUT_RATIO,
     MIN_AVGPTS_CAL, MIN_AVGMIN_CAL,
+    POINTS_TARGET_MODE, PREDICTION_CLIP_K,
+    USE_RECENCY_WEIGHTS, RECENCY_WEIGHT_MIN, RECENCY_WEIGHT_MAX,
 )
 
 
@@ -27,12 +29,48 @@ def _splitChronologically(X, y, dates, holdoutRatio=HOLDOUT_RATIO):
     )
 
 def _applyPropPlayerFilter(X, y, dates, minAvgPtsCal):
-    mask = (X["avgPts10"] >= minAvgPtsCal) & (X["avgMin10"] >= minAvgPtsCal)
+    mask = (X["avgPts10"] >= minAvgPtsCal) & (X["avgMin10"] >= MIN_AVGMIN_CAL)
     return (
             X[mask].reset_index(drop=True),
             y[mask].reset_index(drop=True),
             dates[mask].reset_index(drop=True)
     )
+
+
+def _applyPredictionClip(predictions, X, clipK):
+    pred = np.asarray(predictions, dtype=float)
+    if clipK is None or clipK <= 0:
+        return np.where(np.isfinite(pred), pred, 0.0)
+    if "avgPts10" not in X.columns or "ptsStd10" not in X.columns:
+        return np.where(np.isfinite(pred), pred, 0.0)
+
+    center = X["avgPts10"].to_numpy(dtype=float)
+    spread = np.maximum(2.0, X["ptsStd10"].to_numpy(dtype=float))
+    center = np.where(np.isfinite(center), center, pred)
+    spread = np.where(np.isfinite(spread), spread, 2.0)
+    lower = np.maximum(0.0, center - (clipK * spread))
+    upper = center + (clipK * spread)
+    clipped = np.clip(pred, lower, upper)
+    return np.where(np.isfinite(clipped), clipped, 0.0)
+
+
+def _applyBiasCorrection(predictions, X, biasMeta):
+    if not biasMeta:
+        return np.asarray(predictions, dtype=float)
+
+    corrected = np.asarray(predictions, dtype=float) + float(biasMeta.get("global_bias", 0.0))
+    bucketBias = biasMeta.get("bucket_bias", {})
+    if not bucketBias or "avgPts10" not in X.columns:
+        return corrected
+
+    avg = X["avgPts10"].to_numpy(dtype=float)
+    lowMask = avg < 12
+    midMask = (avg >= 12) & (avg < 20)
+    highMask = avg >= 20
+    corrected[lowMask] += float(bucketBias.get("lt12", 0.0))
+    corrected[midMask] += float(bucketBias.get("12to20", 0.0))
+    corrected[highMask] += float(bucketBias.get("gte20", 0.0))
+    return corrected
 
 
 # Public bundle class
@@ -64,22 +102,29 @@ class PointsBundle:
     # Prediction
 
     def predict(self, features):
-        return float(self.model.predict(features)[0])
+        pred = self.predictBatch(features)
+        return float(pred[0])
     
 
     def predictBatch(self, features):
-        return self.model.predict(features)
+        raw = self.model.predict(features)
+        mode = self.meta.get("target_mode", "absolute")
+        if mode == "residual":
+            baseline = features["avgPts10"].to_numpy(dtype=float)
+            baseline = np.where(np.isfinite(baseline), baseline, 0.0)
+            raw = raw + baseline
+        raw = _applyBiasCorrection(raw, features, self.meta.get("bias_correction", {}))
+        clipK = float(self.meta.get("prediction_clip_k", 0.0))
+        return _applyPredictionClip(raw, features, clipK)
 
     def featureImportance(self):
-        # Cal actuals doubles as a feature column reference after training
-        cols = (
-                self.cal_actuals.index.tolist()
-                if isinstance(self.calActuals, pd.DataFrame)
-                else list(range(len(self.model.feature_importances_)))
-        )
+        # Prefer trained feature names when available.
+        cols = getattr(self.model, "feature_names_in_", None)
+        if cols is None:
+            cols = list(range(len(self.model.feature_importances_)))
         return (
                 pd.DataFrame({
-                    "features": cols,
+                    "feature": cols,
                     "importance": self.model.feature_importances_,
                 })
                 .sort_values("importance", ascending=False)
@@ -116,7 +161,7 @@ class PointsBundle:
 
 
     @classmethod
-    def train(cls, X, y, dates, save, runMetrics=False, minAvgPtsCal=15):
+    def train(cls, X, y, dates, save=True, runMetrics=False, minAvgPtsCal=15):
         """
         Trains from a pre-built feature matrix (X, y, dates)
 
@@ -145,6 +190,8 @@ class PointsBundle:
         XCalFiltered, yCalFiltered, calDatesFiltered = (
             _applyPropPlayerFilter(XCal, yCal, calDates, minAvgPtsCal)
         )
+        if XCalFiltered.empty:
+            raise ValueError("Calibration split is empty after filtering; lower thresholds or use more data.")
         print(
             f"[PointsBundle] Cal set after prop filter: "
             f"{len(yCalFiltered)} rows"
@@ -154,16 +201,53 @@ class PointsBundle:
         # 4. Fit the model
 
         model = XGBRegressor(**POINTS_MODEL_PARAMS)
-        model.fit(XTrain, yTrain)
+        targetMode = str(POINTS_TARGET_MODE).lower().strip()
+        if targetMode not in ("residual", "absolute"):
+            raise ValueError(f"Unsupported POINTS_TARGET_MODE: {POINTS_TARGET_MODE}")
+
+        if targetMode == "residual":
+            yTrainTarget = yTrain - XTrain["avgPts10"]
+        else:
+            yTrainTarget = yTrain
+
+        if USE_RECENCY_WEIGHTS and len(XTrain) > 1:
+            sampleWeights = np.linspace(RECENCY_WEIGHT_MIN, RECENCY_WEIGHT_MAX, len(XTrain))
+            model.fit(XTrain, yTrainTarget, sample_weight=sampleWeights)
+        else:
+            model.fit(XTrain, yTrainTarget)
 
 
         # 5. Evaluate and gather prediction on filtered cal set
 
+        if targetMode == "residual":
+            rawCalPred = model.predict(XCalFiltered) + XCalFiltered["avgPts10"].to_numpy(dtype=float)
+        else:
+            rawCalPred = model.predict(XCalFiltered)
+
+        globalBias = float((yCalFiltered.to_numpy(dtype=float) - rawCalPred).mean())
+        avgCal = XCalFiltered["avgPts10"].to_numpy(dtype=float)
+        residualCal = yCalFiltered.to_numpy(dtype=float) - rawCalPred
+        bucketBias = {
+            "lt12": float(residualCal[avgCal < 12].mean()) if np.any(avgCal < 12) else 0.0,
+            "12to20": float(residualCal[(avgCal >= 12) & (avgCal < 20)].mean()) if np.any((avgCal >= 12) & (avgCal < 20)) else 0.0,
+            "gte20": float(residualCal[avgCal >= 20].mean()) if np.any(avgCal >= 20) else 0.0,
+        }
+        biasMeta = {"global_bias": globalBias, "bucket_bias": bucketBias}
+
         if runMetrics:
             from models.evaluate import evaluateModel
-            predictions = evaluateModel(model, XCalFiltered, yCalFiltered)
+            predictions = evaluateModel(
+                model,
+                XCalFiltered,
+                yCalFiltered,
+                targetMode=targetMode,
+                clipK=PREDICTION_CLIP_K,
+                biasMeta=biasMeta,
+            )
         else:
-            predictions = model.predict(XCalFiltered)
+            predictions = rawCalPred
+            predictions = _applyBiasCorrection(predictions, XCalFiltered, biasMeta)
+            predictions = _applyPredictionClip(predictions, XCalFiltered, PREDICTION_CLIP_K)
 
         print(
             f"[PointsBundle] Train rows: {len(XTrain)}"
@@ -180,7 +264,11 @@ class PointsBundle:
                 "calibration_start_date": calDatesFiltered.iloc[0],
                 "calibration_end_date": calDatesFiltered.iloc[-1],
                 "train_rows": int(len(XTrain)),
-                "calibration_row": int(len(XCalFiltered)),
+                "calibration_rows": int(len(XCalFiltered)),
+                "target_mode": targetMode,
+                "prediction_clip_k": float(PREDICTION_CLIP_K),
+                "bias_correction": biasMeta,
+                "recency_weights": bool(USE_RECENCY_WEIGHTS),
         }
 
         bundle = cls(
@@ -208,4 +296,3 @@ class PointsBundle:
             return str(last) < str(backtestStartDate)
 
         return end <= backtestStartDate
-
