@@ -1,3747 +1,4006 @@
 [
   {
-    "player_id": 58,
-    "name": "Bruce Brown",
+    "player_id": 52,
+    "name": "Christian Braun",
     "team_id": 1,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 191,
-    "name": "Tim Hardaway Jr.",
+    "player_id": 70,
+    "name": "Kentavious Caldwell-Pope",
     "team_id": 1,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 583,
-    "name": "Jamal Murray",
+    "player_id": 172,
+    "name": "Collin Gillespie",
     "team_id": 1,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 265,
-    "name": "Spencer Jones",
+    "player_id": 172,
+    "name": "Aaron Gordon",
     "team_id": 1,
-    "position": "SF",
-    "is_active": true
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 2256,
+    "name": "Justin Holiday",
+    "team_id": 1,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 222,
+    "name": "Jay Huff",
+    "team_id": 1,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 883,
+    "name": "Reggie Jackson",
+    "team_id": 1,
+    "position": "PG",
+    "is_active": false
   },
   {
     "player_id": 258,
     "name": "Nikola Joki\u0107",
     "team_id": 1,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 518,
-    "name": "Jonas Valan\u010di\u016bnas",
+    "player_id": 270,
+    "name": "DeAndre Jordan",
     "team_id": 1,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 540,
-    "name": "Peyton Watson",
+    "player_id": 1001,
+    "name": "Braxton Key",
     "team_id": 1,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 487,
-    "name": "Julian Strawther",
+    "player_id": 583,
+    "name": "Jamal Murray",
     "team_id": 1,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 252,
-    "name": "Cameron Johnson",
-    "team_id": 1,
-    "position": "SF",
-    "is_active": true
+    "position": "PG",
+    "is_active": false
   },
   {
     "player_id": 372,
     "name": "Zeke Nnaji",
     "team_id": 1,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 392,
     "name": "Jalen Pickett",
     "team_id": 1,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 52,
-    "name": "Christian Braun",
+    "player_id": 392,
+    "name": "Michael Porter Jr.",
     "team_id": 1,
-    "position": "SG",
-    "is_active": true
+    "position": "SF",
+    "is_active": false
   },
   {
-    "player_id": 177,
-    "name": "Aaron Gordon",
+    "player_id": 487,
+    "name": "Julian Strawther",
     "team_id": 1,
-    "position": "PF",
-    "is_active": true
+    "position": "SF",
+    "is_active": false
   },
   {
-    "player_id": 177,
-    "name": "DaRon Holmes",
-    "team_id": 1,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 267,
-    "name": "Tyus Jones",
-    "team_id": 1,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 260,
-    "name": "Curtis Jones",
-    "team_id": 1,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 469,
-    "name": "KJ Simpson",
-    "team_id": 1,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 436,
-    "name": "David Roddy",
+    "player_id": 515,
+    "name": "Hunter Tyson",
     "team_id": 1,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 530,
-    "name": "Cason Wallace",
-    "team_id": 2,
-    "position": "SG",
-    "is_active": true
+    "player_id": 540,
+    "name": "Peyton Watson",
+    "team_id": 1,
+    "position": "SF",
+    "is_active": false
   },
   {
-    "player_id": 250,
-    "name": "Isaiah Joe",
-    "team_id": 2,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 217,
-    "name": "Chet Holmgren",
+    "player_id": 2269,
+    "name": "D\u0101vis Bert\u0101ns",
     "team_id": 2,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 170,
-    "name": "Shai Gilgeous-Alexander",
+    "player_id": 41,
+    "name": "Bismack Biyombo",
     "team_id": 2,
-    "position": "PG",
-    "is_active": true
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 125,
+    "name": "Ousmane Dieng",
+    "team_id": 2,
+    "position": "PF",
+    "is_active": false
   },
   {
     "player_id": 129,
     "name": "Luguentz Dort",
     "team_id": 2,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 556,
-    "name": "Jaylin Williams",
+    "player_id": 597,
+    "name": "Adam Flagler",
+    "team_id": 2,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 168,
+    "name": "Josh Giddey",
+    "team_id": 2,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 170,
+    "name": "Shai Gilgeous-Alexander",
+    "team_id": 2,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2276,
+    "name": "Gordon Hayward",
+    "team_id": 2,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 217,
+    "name": "Chet Holmgren",
+    "team_id": 2,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 250,
+    "name": "Isaiah Joe",
+    "team_id": 2,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2279,
+    "name": "Keyontae Johnson",
+    "team_id": 2,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 316,
+    "name": "Tre Mann",
+    "team_id": 2,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 923,
+    "name": "Vasilije Mici\u0107",
+    "team_id": 2,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2282,
+    "name": "Mike Muscala",
+    "team_id": 2,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 2283,
+    "name": "Aleksej Pokusevski",
     "team_id": 2,
     "position": "PF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 451,
+    "name": "Olivier Sarr",
+    "team_id": 2,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 530,
+    "name": "Cason Wallace",
+    "team_id": 2,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 537,
+    "name": "Lindy Waters III",
+    "team_id": 2,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 548,
     "name": "Aaron Wiggins",
     "team_id": 2,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 351,
-    "name": "Ajay Mitchell",
+    "player_id": 555,
+    "name": "Jalen Williams",
     "team_id": 2,
-    "position": "SG",
-    "is_active": true
+    "position": "PF",
+    "is_active": false
   },
   {
-    "player_id": 79,
-    "name": "Alex Caruso",
+    "player_id": 556,
+    "name": "Jaylin Williams",
     "team_id": 2,
-    "position": "SG",
-    "is_active": true
+    "position": "C",
+    "is_active": false
   },
   {
     "player_id": 557,
     "name": "Kenrich Williams",
     "team_id": 2,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 200,
-    "name": "Isaiah Hartenstein",
-    "team_id": 2,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 74,
-    "name": "Branden Carlson",
-    "team_id": 2,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 31,
-    "name": "Brooks Barnhizer",
-    "team_id": 2,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 555,
-    "name": "Jalen Williams",
-    "team_id": 2,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 331,
-    "name": "Jared McCain",
-    "team_id": 2,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 506,
-    "name": "Nikola Topi\u0107",
-    "team_id": 2,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 446,
-    "name": "Payton Sandfort",
-    "team_id": 2,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 482,
-    "name": "Thomas Sorber",
-    "team_id": 2,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 465,
-    "name": "Reed Sheppard",
-    "team_id": 3,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 497,
-    "name": "Amen Thompson",
-    "team_id": 3,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 134,
-    "name": "Kevin Durant",
+    "player_id": 56,
+    "name": "Dillon Brooks",
     "team_id": 3,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 479,
-    "name": "Jabari Smith Jr.",
+    "player_id": 2292,
+    "name": "Reggie Bullock",
     "team_id": 3,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 375,
-    "name": "Josh Okogie",
-    "team_id": 3,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 72,
-    "name": "Clint Capela",
-    "team_id": 3,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 621,
-    "name": "Alperen \u015eeng\u00fcn",
-    "team_id": 3,
-    "position": "C",
-    "is_active": true
+    "position": "SF",
+    "is_active": false
   },
   {
     "player_id": 136,
     "name": "Tari Eason",
     "team_id": 3,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 213,
-    "name": "Aaron Holiday",
+    "player_id": 182,
+    "name": "Jalen Green",
     "team_id": 3,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 490,
-    "name": "Jae'Sean Tate",
-    "team_id": 3,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 150,
-    "name": "Dorian Finney-Smith",
-    "team_id": 3,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 2,
-    "name": "Steven Adams",
-    "team_id": 3,
-    "position": "C",
-    "is_active": true
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 184,
     "name": "Jeff Green",
     "team_id": 3,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 117,
-    "name": "JD Davison",
+    "player_id": 2296,
+    "name": "Nate Hinton",
+    "team_id": 3,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 213,
+    "name": "Aaron Holiday",
     "team_id": 3,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 107,
-    "name": "Isaiah Crawford",
+    "player_id": 293,
+    "name": "Jock Landale",
+    "team_id": 3,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 2299,
+    "name": "Boban Marjanovi\u0107",
+    "team_id": 3,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 2300,
+    "name": "Jermaine Samuels",
     "team_id": 3,
     "position": "SF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 621,
+    "name": "Alperen \u015eeng\u00fcn",
+    "team_id": 3,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 479,
+    "name": "Jabari Smith Jr.",
+    "team_id": 3,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 490,
+    "name": "Jae'Sean Tate",
+    "team_id": 3,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 497,
+    "name": "Amen Thompson",
+    "team_id": 3,
+    "position": "SF",
+    "is_active": false
   },
   {
     "player_id": 520,
     "name": "Fred VanVleet",
     "team_id": 3,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 370,
-    "name": "Tristen Newton",
+    "player_id": 547,
+    "name": "Cam Whitmore",
+    "team_id": 3,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 559,
+    "name": "Nate Williams",
     "team_id": 3,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 54,
-    "name": "Mikal Bridges",
+    "player_id": 1,
+    "name": "Precious Achiuwa",
+    "team_id": 4,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 16,
+    "name": "OG Anunoby",
     "team_id": 4,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 509,
-    "name": "Karl-Anthony Towns",
+    "player_id": 2310,
+    "name": "Ryan Arcidiacono",
     "team_id": 4,
-    "position": "C",
-    "is_active": true
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2310,
+    "name": "RJ Barrett",
+    "team_id": 4,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2312,
+    "name": "Bojan Bogdanovi\u0107",
+    "team_id": 4,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 2313,
+    "name": "Charlie Brown Jr.",
+    "team_id": 4,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 62,
     "name": "Jalen Brunson",
     "team_id": 4,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 91,
-    "name": "Jordan Clarkson",
+    "player_id": 653,
+    "name": "Alec Burks",
     "team_id": 4,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 122,
-    "name": "Mohamed Diawara",
-    "team_id": 4,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 16,
-    "name": "OG Anunoby",
+    "player_id": 2316,
+    "name": "Mamadi Diakite",
     "team_id": 4,
     "position": "PF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 127,
+    "name": "Donte DiVincenzo",
+    "team_id": 4,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 916,
+    "name": "Malachi Flynn",
+    "team_id": 4,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2319,
+    "name": "Evan Fournier",
+    "team_id": 4,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2319,
+    "name": "Taj Gibson",
+    "team_id": 4,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 186,
+    "name": "Quentin Grimes",
+    "team_id": 4,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 199,
     "name": "Josh Hart",
     "team_id": 4,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 285,
-    "name": "Tyler Kolek",
+    "player_id": 200,
+    "name": "Isaiah Hartenstein",
+    "team_id": 4,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 920,
+    "name": "DaQuan Jeffries",
+    "team_id": 4,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 330,
+    "name": "Miles McBride",
     "team_id": 4,
     "position": "PG",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 748,
+    "name": "Shake Milton",
+    "team_id": 4,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 417,
+    "name": "Immanuel Quickley",
+    "team_id": 4,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 418,
+    "name": "Julius Randle",
+    "team_id": 4,
+    "position": "PF",
+    "is_active": false
   },
   {
     "player_id": 433,
     "name": "Mitchell Robinson",
     "team_id": 4,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 223,
-    "name": "Ariel Hukporti",
+    "player_id": 470,
+    "name": "Jericho Sims",
     "team_id": 4,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 459,
-    "name": "Landry Shamet",
-    "team_id": 4,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 330,
-    "name": "Miles McBride",
-    "team_id": 4,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 113,
-    "name": "Pac\u00f4me Dadiet",
-    "team_id": 4,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 10,
-    "name": "Jose Alvarado",
-    "team_id": 4,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 335,
-    "name": "Kevin McCullar Jr.",
-    "team_id": 4,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 481,
-    "name": "Jeremy Sochan",
-    "team_id": 4,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 742,
-    "name": "Trey Jemison",
+    "player_id": 2331,
+    "name": "Dmytro Skapintsev",
     "team_id": 4,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 261,
-    "name": "Dillon Jones",
+    "player_id": 507,
+    "name": "Jacob Toppin",
     "team_id": 4,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 534,
-    "name": "Kel'el Ware",
-    "team_id": 5,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 245,
-    "name": "Jaime Jaquez Jr.",
-    "team_id": 5,
+    "player_id": 2333,
+    "name": "Dylan Windler",
+    "team_id": 4,
     "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 474,
-    "name": "Dru Smith",
-    "team_id": 5,
-    "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 3,
     "name": "Bam Adebayo",
     "team_id": 5,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 154,
-    "name": "Simone Fontecchio",
+    "player_id": 64,
+    "name": "Thomas Bryant",
     "team_id": 5,
-    "position": "SF",
-    "is_active": true
+    "position": "C",
+    "is_active": false
   },
   {
-    "player_id": 296,
-    "name": "Pelle Larsson",
-    "team_id": 5,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 352,
-    "name": "Davion Mitchell",
-    "team_id": 5,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 549,
-    "name": "Andrew Wiggins",
-    "team_id": 5,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 409,
-    "name": "Norman Powell",
-    "team_id": 5,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 241,
-    "name": "Kasparas Jaku\u010dionis",
-    "team_id": 5,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 271,
-    "name": "Nikola Jovi\u0107",
+    "player_id": 654,
+    "name": "Jimmy Butler",
     "team_id": 5,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 161,
-    "name": "Myron Gardner",
+    "player_id": 69,
+    "name": "Jamal Cain",
     "team_id": 5,
-    "position": "SF",
-    "is_active": true
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 2338,
+    "name": "R.J. Hampton",
+    "team_id": 5,
+    "position": "PG",
+    "is_active": false
   },
   {
     "player_id": 209,
     "name": "Tyler Herro",
     "team_id": 5,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 256,
-    "name": "Keshad Johnson",
+    "player_id": 211,
+    "name": "Haywood Highsmith",
+    "team_id": 5,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 245,
+    "name": "Jaime Jaquez Jr.",
     "team_id": 5,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 569,
-    "name": "Jahmir Young",
+    "player_id": 271,
+    "name": "Nikola Jovi\u0107",
+    "team_id": 5,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 310,
+    "name": "Kevin Love",
+    "team_id": 5,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 312,
+    "name": "Kyle Lowry",
     "team_id": 5,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 174,
-    "name": "Vladislav Goldin",
+    "player_id": 321,
+    "name": "Caleb Martin",
     "team_id": 5,
-    "position": "C",
-    "is_active": true
+    "position": "SF",
+    "is_active": false
   },
   {
-    "player_id": 275,
-    "name": "Trevor Keels",
+    "player_id": 704,
+    "name": "Patty Mills",
+    "team_id": 5,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 664,
+    "name": "Josh Richardson",
     "team_id": 5,
     "position": "SG",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 432,
+    "name": "Duncan Robinson",
+    "team_id": 5,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 434,
+    "name": "Orlando Robinson",
+    "team_id": 5,
+    "position": "C",
+    "is_active": false
   },
   {
     "player_id": 438,
     "name": "Terry Rozier",
     "team_id": 5,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 255,
-    "name": "Keldon Johnson",
-    "team_id": 6,
+    "player_id": 474,
+    "name": "Dru Smith",
+    "team_id": 5,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 774,
+    "name": "Cole Swider",
+    "team_id": 5,
     "position": "SF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 550,
+    "name": "Alondes Williams",
+    "team_id": 5,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 649,
+    "name": "Delon Wright",
+    "team_id": 5,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 28,
+    "name": "Dominick Barlow",
+    "team_id": 6,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 33,
+    "name": "Charles Bassey",
+    "team_id": 6,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 49,
+    "name": "Jamaree Bouyea",
+    "team_id": 6,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 51,
+    "name": "Malaki Branham",
+    "team_id": 6,
+    "position": "PG",
+    "is_active": false
   },
   {
     "player_id": 82,
     "name": "Julian Champagnie",
     "team_id": 6,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 29,
-    "name": "Harrison Barnes",
+    "player_id": 88,
+    "name": "Sidy Cissoko",
     "team_id": 6,
-    "position": "PF",
-    "is_active": true
+    "position": "SF",
+    "is_active": false
   },
   {
-    "player_id": 155,
-    "name": "De'Aaron Fox",
-    "team_id": 6,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 63,
-    "name": "Carter Bryant",
-    "team_id": 6,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 80,
-    "name": "Stephon Castle",
-    "team_id": 6,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 195,
-    "name": "Dylan Harper",
-    "team_id": 6,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 288,
-    "name": "Luke Kornet",
+    "player_id": 100,
+    "name": "Zach Collins",
     "team_id": 6,
     "position": "C",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 679,
+    "name": "David Duke Jr.",
+    "team_id": 6,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2363,
+    "name": "Devonte' Graham",
+    "team_id": 6,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2364,
+    "name": "RaiQuan Gray",
+    "team_id": 6,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 255,
+    "name": "Keldon Johnson",
+    "team_id": 6,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 266,
+    "name": "Tre Jones",
+    "team_id": 6,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 314,
+    "name": "Sandro Mamukelashvili",
+    "team_id": 6,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 337,
+    "name": "Doug McDermott",
+    "team_id": 6,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 2369,
+    "name": "Cedi Osman",
+    "team_id": 6,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 481,
+    "name": "Jeremy Sochan",
+    "team_id": 6,
+    "position": "PF",
+    "is_active": false
   },
   {
     "player_id": 521,
     "name": "Devin Vassell",
     "team_id": 6,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 542,
     "name": "Victor Wembanyama",
     "team_id": 6,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 379,
-    "name": "Kelly Olynyk",
-    "team_id": 6,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 339,
-    "name": "Jordan McLaughlin",
-    "team_id": 6,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 537,
-    "name": "Lindy Waters III",
+    "player_id": 543,
+    "name": "Blake Wesley",
     "team_id": 6,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 41,
-    "name": "Bismack Biyombo",
-    "team_id": 6,
-    "position": "C",
-    "is_active": true
+    "player_id": 4,
+    "name": "Ochai Agbaji",
+    "team_id": 7,
+    "position": "SG",
+    "is_active": false
   },
   {
-    "player_id": 268,
-    "name": "David Jones Garc\u00eda",
-    "team_id": 6,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 231,
-    "name": "Harrison Ingram",
-    "team_id": 6,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 395,
-    "name": "Mason Plumlee",
-    "team_id": 6,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 345,
-    "name": "Emanuel Miller",
-    "team_id": 6,
+    "player_id": 2375,
+    "name": "Darius Bazley",
+    "team_id": 7,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 149,
-    "name": "Kyle Filipowski",
-    "team_id": 7,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 457,
-    "name": "Brice Sensabaugh",
-    "team_id": 7,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 20,
-    "name": "Ace Bailey",
-    "team_id": 7,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 553,
-    "name": "Cody Williams",
+    "player_id": 91,
+    "name": "Jordan Clarkson",
     "team_id": 7,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 98,
-    "name": "Isaiah Collier",
+    "player_id": 99,
+    "name": "John Collins",
+    "team_id": 7,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 132,
+    "name": "Kris Dunn",
     "team_id": 7,
     "position": "PG",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 154,
+    "name": "Simone Fontecchio",
+    "team_id": 7,
+    "position": "SF",
+    "is_active": false
   },
   {
     "player_id": 164,
     "name": "Keyonte George",
     "team_id": 7,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 705,
-    "name": "Svi Mykhailiuk",
-    "team_id": 7,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 318,
-    "name": "Lauri Markkanen",
+    "player_id": 164,
+    "name": "Taylor Hendricks",
     "team_id": 7,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 373,
-    "name": "Jusuf Nurki\u0107",
-    "team_id": 7,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 310,
-    "name": "Kevin Love",
-    "team_id": 7,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 194,
-    "name": "Elijah Harkless",
-    "team_id": 7,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 513,
-    "name": "Oscar Tshiebwe",
-    "team_id": 7,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 287,
-    "name": "John Konchar",
-    "team_id": 7,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 329,
-    "name": "Bez Mbeng",
-    "team_id": 7,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 212,
-    "name": "Blake Hinson",
-    "team_id": 7,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 84,
-    "name": "Kennedy Chandler",
+    "player_id": 824,
+    "name": "Talen Horton-Tucker",
     "team_id": 7,
     "position": "PG",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 272,
+    "name": "Johnny Juzang",
+    "team_id": 7,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 279,
     "name": "Walker Kessler",
     "team_id": 7,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 239,
-    "name": "Jaren Jackson Jr.",
+    "player_id": 2385,
+    "name": "Kira Lewis Jr.",
+    "team_id": 7,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2386,
+    "name": "Kenneth Lofton Jr.",
+    "team_id": 7,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 318,
+    "name": "Lauri Markkanen",
+    "team_id": 7,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 379,
+    "name": "Kelly Olynyk",
     "team_id": 7,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 418,
-    "name": "Julius Randle",
-    "team_id": 8,
+    "player_id": 405,
+    "name": "Micah Potter",
+    "team_id": 7,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 127,
-    "name": "Donte DiVincenzo",
-    "team_id": 8,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 425,
-    "name": "Naz Reid",
-    "team_id": 8,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 173,
-    "name": "Rudy Gobert",
-    "team_id": 8,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 336,
-    "name": "Jaden McDaniels",
-    "team_id": 8,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 226,
-    "name": "Bones Hyland",
-    "team_id": 8,
+    "player_id": 2390,
+    "name": "Jason Preston",
+    "team_id": 7,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 89,
-    "name": "Jaylen Clark",
-    "team_id": 8,
-    "position": "SG",
-    "is_active": true
+    "player_id": 2391,
+    "name": "Luka \u0160amani\u0107",
+    "team_id": 7,
+    "position": "PF",
+    "is_active": false
   },
   {
-    "player_id": 139,
-    "name": "Anthony Edwards",
+    "player_id": 457,
+    "name": "Brice Sensabaugh",
+    "team_id": 7,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 458,
+    "name": "Collin Sexton",
+    "team_id": 7,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 572,
+    "name": "Omer Yurtseven",
+    "team_id": 7,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 7,
+    "name": "Nickeil Alexander-Walker",
     "team_id": 8,
     "position": "SG",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 11,
+    "name": "Kyle Anderson",
+    "team_id": 8,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 2397,
+    "name": "Troy Brown Jr.",
+    "team_id": 8,
+    "position": "SF",
+    "is_active": false
   },
   {
     "player_id": 101,
     "name": "Mike Conley",
     "team_id": 8,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 460,
-    "name": "Terrence Shannon Jr.",
+    "player_id": 139,
+    "name": "Anthony Edwards",
     "team_id": 8,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 38,
-    "name": "Joan Beringer",
+    "player_id": 163,
+    "name": "Luka Garza",
     "team_id": 8,
-    "position": "PF",
-    "is_active": true
+    "position": "C",
+    "is_active": false
   },
   {
-    "player_id": 229,
-    "name": "Joe Ingles",
+    "player_id": 173,
+    "name": "Rudy Gobert",
+    "team_id": 8,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 2402,
+    "name": "Justin Jackson",
     "team_id": 8,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 130,
-    "name": "Ayo Dosunmu",
+    "player_id": 336,
+    "name": "Jaden McDaniels",
+    "team_id": 8,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 339,
+    "name": "Jordan McLaughlin",
+    "team_id": 8,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 347,
+    "name": "Leonard Miller",
+    "team_id": 8,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 349,
+    "name": "Josh Minott",
+    "team_id": 8,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 358,
+    "name": "Wendell Moore Jr.",
     "team_id": 8,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 11,
-    "name": "Kyle Anderson",
+    "player_id": 361,
+    "name": "Monte Morris",
+    "team_id": 8,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 728,
+    "name": "Daishen Nix",
+    "team_id": 8,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 425,
+    "name": "Naz Reid",
+    "team_id": 8,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 509,
+    "name": "Karl-Anthony Towns",
+    "team_id": 8,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 2412,
+    "name": "T.J. Warren",
     "team_id": 8,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 391,
-    "name": "Julian Phillips",
-    "team_id": 8,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 573,
-    "name": "Rocco Zikarsky",
-    "team_id": 8,
+    "player_id": 81,
+    "name": "Colin Castleton",
+    "team_id": 9,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 414,
-    "name": "Zyon Pullin",
-    "team_id": 8,
+    "player_id": 86,
+    "name": "Max Christie",
+    "team_id": 9,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 156,
-    "name": "Enrique Freeman",
-    "team_id": 8,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 295,
-    "name": "Jake LaRavia",
-    "team_id": 9,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 18,
-    "name": "Deandre Ayton",
+    "player_id": 116,
+    "name": "Anthony Davis",
     "team_id": 9,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 203,
-    "name": "Jaxson Hayes",
-    "team_id": 9,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 128,
-    "name": "Luka Don\u010di\u0107",
+    "player_id": 1033,
+    "name": "Spencer Dinwiddie",
     "team_id": 9,
     "position": "PG",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 2417,
+    "name": "Alex Fudge",
+    "team_id": 9,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 2418,
+    "name": "Harry Giles",
+    "team_id": 9,
+    "position": "C",
+    "is_active": false
   },
   {
     "player_id": 188,
     "name": "Rui Hachimura",
     "team_id": 9,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 519,
-    "name": "Jarred Vanderbilt",
+    "player_id": 203,
+    "name": "Jaxson Hayes",
     "team_id": 9,
-    "position": "PF",
-    "is_active": true
+    "position": "C",
+    "is_active": false
   },
   {
-    "player_id": 473,
-    "name": "Marcus Smart",
+    "player_id": 2421,
+    "name": "D'Moi Hodge",
     "team_id": 9,
     "position": "SG",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 739,
+    "name": "Jalen Hood-Schifino",
+    "team_id": 9,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 243,
     "name": "LeBron James",
     "team_id": 9,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 747,
+    "name": "Maxwell Lewis",
+    "team_id": 9,
     "position": "SF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 2425,
+    "name": "Skylar Mays",
+    "team_id": 9,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 410,
+    "name": "Taurean Prince",
+    "team_id": 9,
+    "position": "PF",
+    "is_active": false
   },
   {
     "player_id": 421,
     "name": "Austin Reaves",
     "team_id": 9,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 283,
-    "name": "Dalton Knecht",
+    "player_id": 752,
+    "name": "Cam Reddish",
     "team_id": 9,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 281,
-    "name": "Maxi Kleber",
+    "player_id": 440,
+    "name": "D'Angelo Russell",
     "team_id": 9,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 242,
-    "name": "Bronny James",
-    "team_id": 9,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 277,
-    "name": "Luke Kennard",
-    "team_id": 9,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 480,
-    "name": "Nick Smith Jr.",
-    "team_id": 9,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 503,
-    "name": "Drew Timme",
-    "team_id": 9,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 495,
-    "name": "Adou Thiero",
-    "team_id": 9,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 65,
-    "name": "Kobe Bufkin",
-    "team_id": 9,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 317,
-    "name": "Chris Ma\u00f1on",
-    "team_id": 9,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 183,
-    "name": "Javonte Green",
-    "team_id": 10,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 432,
-    "name": "Duncan Robinson",
-    "team_id": 10,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 764,
-    "name": "Ron Holland",
-    "team_id": 10,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 498,
-    "name": "Ausar Thompson",
-    "team_id": 10,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 248,
-    "name": "Daniss Jenkins",
-    "team_id": 10,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 135,
-    "name": "Jalen Duren",
+    "player_id": 519,
+    "name": "Jarred Vanderbilt",
+    "team_id": 9,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 522,
+    "name": "Gabe Vincent",
+    "team_id": 9,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2432,
+    "name": "Christian Wood",
+    "team_id": 9,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 19,
+    "name": "Marvin Bagley III",
     "team_id": 10,
     "position": "C",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 44,
+    "name": "Buddy Boeheim",
+    "team_id": 10,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 2435,
+    "name": "Malcolm Cazalon",
+    "team_id": 10,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 109,
     "name": "Cade Cunningham",
     "team_id": 10,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 422,
-    "name": "Paul Reed",
+    "player_id": 135,
+    "name": "Jalen Duren",
     "team_id": 10,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 198,
-    "name": "Tobias Harris",
+    "player_id": 147,
+    "name": "Tosan Evbuomwan",
     "team_id": 10,
-    "position": "PF",
-    "is_active": true
+    "position": "SF",
+    "is_active": false
   },
   {
-    "player_id": 301,
-    "name": "Caris LeVert",
+    "player_id": 2439,
+    "name": "Danilo Gallinari",
+    "team_id": 10,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 2440,
+    "name": "Joe Harris",
     "team_id": 10,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 486,
-    "name": "Isaiah Stewart",
+    "player_id": 204,
+    "name": "Killian Hayes",
+    "team_id": 10,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 234,
+    "name": "Jaden Ivey",
+    "team_id": 10,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 1002,
+    "name": "Kevin Knox",
+    "team_id": 10,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 305,
+    "name": "Isaiah Livers",
+    "team_id": 10,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 2445,
+    "name": "Chimezie Metu",
     "team_id": 10,
     "position": "C",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 970,
+    "name": "Jaylen Nowell",
+    "team_id": 10,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 928,
+    "name": "Jared Rhoden",
+    "team_id": 10,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 452,
     "name": "Marcus Sasser",
     "team_id": 10,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 294,
-    "name": "Chaz Lanier",
-    "team_id": 10,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 221,
-    "name": "Kevin Huerter",
-    "team_id": 10,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 477,
-    "name": "Tolu Smith",
+    "player_id": 486,
+    "name": "Isaiah Stewart",
     "team_id": 10,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 282,
-    "name": "Bobi Klintman",
+    "player_id": 498,
+    "name": "Ausar Thompson",
     "team_id": 10,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 358,
-    "name": "Wendell Moore Jr.",
+    "player_id": 517,
+    "name": "Stanley Umude",
     "team_id": 10,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 263,
-    "name": "Isaac Jones",
+    "player_id": 566,
+    "name": "James Wiseman",
     "team_id": 10,
-    "position": "PF",
-    "is_active": true
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 18,
+    "name": "Deandre Ayton",
+    "team_id": 11,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 2454,
+    "name": "Ibou Badji",
+    "team_id": 11,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 27,
+    "name": "Dalano Banton",
+    "team_id": 11,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 1049,
+    "name": "Malcolm Brogdon",
+    "team_id": 11,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 1032,
+    "name": "Moses Brown",
+    "team_id": 11,
+    "position": "C",
+    "is_active": false
   },
   {
     "player_id": 71,
     "name": "Toumani Camara",
     "team_id": 11,
     "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 95,
-    "name": "Donovan Clingan",
-    "team_id": 11,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 88,
-    "name": "Sidy Cissoko",
-    "team_id": 11,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 17,
-    "name": "Deni Avdija",
-    "team_id": 11,
-    "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 179,
     "name": "Jerami Grant",
     "team_id": 11,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 795,
-    "name": "Robert Williams",
-    "team_id": 11,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 788,
-    "name": "Kris Murray",
-    "team_id": 11,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 214,
-    "name": "Jrue Holiday",
+    "player_id": 2460,
+    "name": "Ashton Hagans",
     "team_id": 11,
     "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 462,
-    "name": "Shaedon Sharpe",
-    "team_id": 11,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 309,
-    "name": "Caleb Love",
-    "team_id": 11,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 227,
-    "name": "Yang Hansen",
-    "team_id": 11,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 543,
-    "name": "Blake Wesley",
-    "team_id": 11,
-    "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 206,
     "name": "Scoot Henderson",
     "team_id": 11,
     "position": "PG",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 786,
+    "name": "Justin Minaya",
+    "team_id": 11,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 787,
+    "name": "Taze Moore",
+    "team_id": 11,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 788,
+    "name": "Kris Murray",
+    "team_id": 11,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 420,
+    "name": "Duop Reath",
+    "team_id": 11,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 439,
+    "name": "Rayan Rupert",
+    "team_id": 11,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 462,
+    "name": "Shaedon Sharpe",
+    "team_id": 11,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 468,
+    "name": "Anfernee Simons",
+    "team_id": 11,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 501,
     "name": "Matisse Thybulle",
     "team_id": 11,
-    "position": "SG",
-    "is_active": true
+    "position": "SF",
+    "is_active": false
   },
   {
-    "player_id": 289,
-    "name": "V\u00edt Krej\u010d\u00ed",
-    "team_id": 11,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 278,
-    "name": "Jayson Kent",
+    "player_id": 2470,
+    "name": "Ish Wainright",
     "team_id": 11,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 571,
-    "name": "Chris Youngblood",
+    "player_id": 528,
+    "name": "Jabari Walker",
     "team_id": 11,
-    "position": "SG",
-    "is_active": true
+    "position": "PF",
+    "is_active": false
   },
   {
-    "player_id": 303,
-    "name": "Damian Lillard",
+    "player_id": 795,
+    "name": "Robert Williams",
     "team_id": 11,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 353,
-    "name": "Donovan Mitchell",
-    "team_id": 12,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 516,
-    "name": "Jaylon Tyson",
-    "team_id": 12,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 354,
-    "name": "Evan Mobley",
-    "team_id": 12,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 504,
-    "name": "Nae'Qwan Tomlin",
-    "team_id": 12,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 399,
-    "name": "Craig Porter Jr.",
-    "team_id": 12,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 64,
-    "name": "Thomas Bryant",
-    "team_id": 12,
     "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 525,
-    "name": "Dean Wade",
-    "team_id": 12,
-    "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 9,
     "name": "Jarrett Allen",
     "team_id": 12,
     "position": "C",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 797,
+    "name": "Emoni Bates",
+    "team_id": 12,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 162,
+    "name": "Darius Garland",
+    "team_id": 12,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 249,
+    "name": "Ty Jerome",
+    "team_id": 12,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2477,
+    "name": "Damian Jones",
+    "team_id": 12,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 301,
+    "name": "Caris LeVert",
+    "team_id": 12,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 342,
     "name": "Sam Merrill",
     "team_id": 12,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 412,
-    "name": "Tyrese Proctor",
-    "team_id": 12,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 364,
-    "name": "Larry Nance Jr.",
-    "team_id": 12,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 454,
-    "name": "Dennis Schr\u00f6der",
-    "team_id": 12,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 141,
-    "name": "Keon Ellis",
+    "player_id": 353,
+    "name": "Donovan Mitchell",
     "team_id": 12,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 192,
-    "name": "James Harden",
+    "player_id": 354,
+    "name": "Evan Mobley",
+    "team_id": 12,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 888,
+    "name": "Isaiah Mobley",
+    "team_id": 12,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 2483,
+    "name": "Marcus Morris",
+    "team_id": 12,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 363,
+    "name": "Pete Nance",
+    "team_id": 12,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 806,
+    "name": "Georges Niang",
+    "team_id": 12,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 377,
+    "name": "Isaac Okoro",
+    "team_id": 12,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 399,
+    "name": "Craig Porter Jr.",
     "team_id": 12,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 488,
     "name": "Max Strus",
     "team_id": 12,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 143,
-    "name": "Tristan Enaruna",
-    "team_id": 12,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 348,
-    "name": "Riley Minix",
-    "team_id": 12,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 451,
-    "name": "Olivier Sarr",
+    "player_id": 811,
+    "name": "Tristan Thompson",
     "team_id": 12,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 68,
-    "name": "Matas Buzelis",
+    "player_id": 525,
+    "name": "Dean Wade",
+    "team_id": 12,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 2491,
+    "name": "Onuralp Bitim",
+    "team_id": 13,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 77,
+    "name": "Jevon Carter",
+    "team_id": 13,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 79,
+    "name": "Alex Caruso",
+    "team_id": 13,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 820,
+    "name": "Torrey Craig",
+    "team_id": 13,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 120,
+    "name": "DeMar DeRozan",
+    "team_id": 13,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 130,
+    "name": "Ayo Dosunmu",
+    "team_id": 13,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2497,
+    "name": "Henri Drell",
+    "team_id": 13,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 131,
+    "name": "Andre Drummond",
+    "team_id": 13,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 2499,
+    "name": "Andrew Funk",
+    "team_id": 13,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 183,
+    "name": "Javonte Green",
+    "team_id": 13,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 297,
+    "name": "Zach LaVine",
+    "team_id": 13,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 391,
+    "name": "Julian Phillips",
+    "team_id": 13,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 830,
+    "name": "Adama Sanogo",
     "team_id": 13,
     "position": "PF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 1080,
+    "name": "Terry Taylor",
+    "team_id": 13,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 494,
+    "name": "Dalen Terry",
+    "team_id": 13,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 523,
+    "name": "Nikola Vu\u010devi\u0107",
+    "team_id": 13,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 545,
+    "name": "Coby White",
+    "team_id": 13,
+    "position": "PG",
+    "is_active": false
   },
   {
     "player_id": 560,
     "name": "Patrick Williams",
     "team_id": 13,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 377,
-    "name": "Isaac Okoro",
-    "team_id": 13,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 266,
-    "name": "Tre Jones",
-    "team_id": 13,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 168,
-    "name": "Josh Giddey",
-    "team_id": 13,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 475,
-    "name": "Jalen Smith",
-    "team_id": 13,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 378,
-    "name": "Lachlan Olbrich",
-    "team_id": 13,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 126,
-    "name": "Rob Dillingham",
-    "team_id": 13,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 568,
-    "name": "Guerschon Yabusele",
-    "team_id": 13,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 347,
-    "name": "Leonard Miller",
-    "team_id": 13,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 458,
-    "name": "Collin Sexton",
-    "team_id": 13,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 427,
-    "name": "Nick Richards",
-    "team_id": 13,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 274,
-    "name": "Yuki Kawamura",
-    "team_id": 13,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 100,
-    "name": "Zach Collins",
-    "team_id": 13,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 468,
-    "name": "Anfernee Simons",
-    "team_id": 13,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 332,
-    "name": "Mac McClung",
-    "team_id": 13,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 144,
-    "name": "Noa Essengue",
-    "team_id": 13,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 26,
-    "name": "Desmond Bane",
+    "player_id": 15,
+    "name": "Cole Anthony",
     "team_id": 14,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 78,
-    "name": "Wendell Carter Jr.",
-    "team_id": 14,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 112,
-    "name": "Tristan Da Silva",
-    "team_id": 14,
-    "position": "SF",
-    "is_active": true
+    "position": "PG",
+    "is_active": false
   },
   {
     "player_id": 25,
     "name": "Paolo Banchero",
     "team_id": 14,
     "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 42,
-    "name": "Anthony Black",
-    "team_id": 14,
-    "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 40,
     "name": "Goga Bitadze",
     "team_id": 14,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 388,
-    "name": "Noah Penda",
+    "player_id": 42,
+    "name": "Anthony Black",
+    "team_id": 14,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 78,
+    "name": "Wendell Carter Jr.",
+    "team_id": 14,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 157,
+    "name": "Markelle Fultz",
+    "team_id": 14,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 197,
+    "name": "Gary Harris",
+    "team_id": 14,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2516,
+    "name": "Kevon Harris",
+    "team_id": 14,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 219,
+    "name": "Caleb Houstan",
     "team_id": 14,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 220,
     "name": "Jett Howard",
     "team_id": 14,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 489,
-    "name": "Jalen Suggs",
+    "player_id": 229,
+    "name": "Joe Ingles",
     "team_id": 14,
-    "position": "PG",
-    "is_active": true
+    "position": "SF",
+    "is_active": false
   },
   {
     "player_id": 233,
     "name": "Jonathan Isaac",
     "team_id": 14,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 428,
-    "name": "Jase Richardson",
-    "team_id": 14,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 69,
-    "name": "Jamal Cain",
+    "player_id": 807,
+    "name": "Chuma Okeke",
     "team_id": 14,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 527,
-    "name": "Moritz Wagner",
+    "player_id": 850,
+    "name": "Trevelin Queen",
     "team_id": 14,
-    "position": "C",
-    "is_active": true
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2523,
+    "name": "Admiral Schofield",
+    "team_id": 14,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 489,
+    "name": "Jalen Suggs",
+    "team_id": 14,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 526,
     "name": "Franz Wagner",
     "team_id": 14,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 77,
-    "name": "Jevon Carter",
-    "team_id": 14,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 81,
-    "name": "Colin Castleton",
+    "player_id": 527,
+    "name": "Moritz Wagner",
     "team_id": 14,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 359,
-    "name": "Alex Morales",
-    "team_id": 14,
-    "position": "PG",
-    "is_active": true
+    "player_id": 39,
+    "name": "Saddiq Bey",
+    "team_id": 15,
+    "position": "SF",
+    "is_active": false
   },
   {
-    "player_id": 7,
-    "name": "Nickeil Alexander-Walker",
+    "player_id": 45,
+    "name": "Bogdan Bogdanovi\u0107",
     "team_id": 15,
     "position": "SG",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 65,
+    "name": "Kobe Bufkin",
+    "team_id": 15,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 72,
+    "name": "Clint Capela",
+    "team_id": 15,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 946,
+    "name": "Bruno Fernando",
+    "team_id": 15,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 2532,
+    "name": "Trent Forrest",
+    "team_id": 15,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2533,
+    "name": "AJ Griffin",
+    "team_id": 15,
+    "position": "SF",
+    "is_active": false
   },
   {
     "player_id": 187,
     "name": "Mouhamed Gueye",
     "team_id": 15,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 114,
-    "name": "Dyson Daniels",
+    "player_id": 224,
+    "name": "De'Andre Hunter",
     "team_id": 15,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 376,
-    "name": "Onyeka Okongwu",
-    "team_id": 15,
-    "position": "C",
-    "is_active": true
+    "position": "SF",
+    "is_active": false
   },
   {
     "player_id": 254,
     "name": "Jalen Johnson",
     "team_id": 15,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 431,
-    "name": "Zaccharie Risacher",
+    "player_id": 289,
+    "name": "V\u00edt Krej\u010d\u00ed",
+    "team_id": 15,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2538,
+    "name": "Seth Lundy",
     "team_id": 15,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 531,
-    "name": "Keaton Wallace",
+    "player_id": 325,
+    "name": "Garrison Mathews",
     "team_id": 15,
-    "position": "PG",
-    "is_active": true
+    "position": "SG",
+    "is_active": false
   },
   {
-    "player_id": 369,
-    "name": "Asa Newell",
+    "player_id": 2540,
+    "name": "Wesley Matthews",
     "team_id": 15,
-    "position": "PF",
-    "is_active": true
+    "position": "SG",
+    "is_active": false
   },
   {
-    "player_id": 333,
-    "name": "CJ McCollum",
+    "player_id": 969,
+    "name": "Dejounte Murray",
     "team_id": 15,
-    "position": "PG",
-    "is_active": true
+    "position": "SG",
+    "is_active": false
   },
   {
-    "player_id": 280,
-    "name": "Corey Kispert",
-    "team_id": 15,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 293,
-    "name": "Jock Landale",
+    "player_id": 376,
+    "name": "Onyeka Okongwu",
     "team_id": 15,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 522,
-    "name": "Gabe Vincent",
+    "player_id": 570,
+    "name": "Trae Young",
     "team_id": 15,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 290,
-    "name": "Jonathan Kuminga",
-    "team_id": 15,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 286,
-    "name": "Christian Koloko",
-    "team_id": 15,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 210,
-    "name": "Buddy Hield",
-    "team_id": 15,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 119,
-    "name": "RayJ Dennis",
-    "team_id": 15,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 169,
-    "name": "Keshon Gilbert",
-    "team_id": 15,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 138,
-    "name": "VJ Edgecombe",
-    "team_id": 16,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 186,
-    "name": "Quentin Grimes",
-    "team_id": 16,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 46,
-    "name": "Adem Bona",
+    "player_id": 24,
+    "name": "Mo Bamba",
     "team_id": 16,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 28,
-    "name": "Dominick Barlow",
+    "player_id": 35,
+    "name": "Nicolas Batum",
     "team_id": 16,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 328,
-    "name": "Tyrese Maxey",
+    "player_id": 2546,
+    "name": "Patrick Beverley",
     "team_id": 16,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 528,
-    "name": "Jabari Walker",
+    "player_id": 875,
+    "name": "Ricky Council IV",
     "team_id": 16,
-    "position": "PF",
-    "is_active": true
+    "position": "SG",
+    "is_active": false
   },
   {
-    "player_id": 140,
-    "name": "Justin Edwards",
+    "player_id": 2548,
+    "name": "Robert Covington",
     "team_id": 16,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 131,
-    "name": "Andre Drummond",
+    "player_id": 876,
+    "name": "Jeff Dowtin Jr.",
     "team_id": 16,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 538,
-    "name": "Trendon Watford",
-    "team_id": 16,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 382,
-    "name": "Kelly Oubre Jr.",
-    "team_id": 16,
-    "position": "SF",
-    "is_active": true
+    "position": "PG",
+    "is_active": false
   },
   {
     "player_id": 142,
     "name": "Joel Embiid",
     "team_id": 16,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 166,
-    "name": "Paul George",
+    "player_id": 2551,
+    "name": "Danny Green",
+    "team_id": 16,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 198,
+    "name": "Tobias Harris",
     "team_id": 16,
     "position": "PF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 210,
+    "name": "Buddy Hield",
+    "team_id": 16,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2554,
+    "name": "Danuel House Jr.",
+    "team_id": 16,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 2555,
+    "name": "Furkan Korkmaz",
+    "team_id": 16,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 703,
+    "name": "KJ Martin",
+    "team_id": 16,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 328,
+    "name": "Tyrese Maxey",
+    "team_id": 16,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 341,
+    "name": "De'Anthony Melton",
+    "team_id": 16,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 382,
+    "name": "Kelly Oubre Jr.",
+    "team_id": 16,
+    "position": "SF",
+    "is_active": false
   },
   {
     "player_id": 384,
     "name": "Cameron Payne",
     "team_id": 16,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 37,
-    "name": "MarJon Beauchamp",
-    "team_id": 16,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 494,
-    "name": "Dalen Terry",
-    "team_id": 16,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 312,
-    "name": "Kyle Lowry",
-    "team_id": 16,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 57,
-    "name": "Johni Broome",
+    "player_id": 2561,
+    "name": "Filip Petru\u0161ev",
     "team_id": 16,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 323,
-    "name": "Tyrese Martin",
+    "player_id": 422,
+    "name": "Paul Reed",
+    "team_id": 16,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 2563,
+    "name": "Javonte Smart",
+    "team_id": 16,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2564,
+    "name": "Terquavion Smith",
+    "team_id": 16,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 709,
+    "name": "Jaden Springer",
     "team_id": 16,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 411,
-    "name": "Payton Pritchard",
-    "team_id": 17,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 201,
-    "name": "Sam Hauser",
-    "team_id": 17,
+    "player_id": 647,
+    "name": "P.J. Tucker",
+    "team_id": 16,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 546,
-    "name": "Derrick White",
-    "team_id": 17,
-    "position": "SG",
-    "is_active": true
+    "player_id": 2567,
+    "name": "D.J. Wilson",
+    "team_id": 16,
+    "position": "PF",
+    "is_active": false
   },
   {
-    "player_id": 416,
-    "name": "Neemias Queta",
-    "team_id": 17,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 453,
-    "name": "Baylor Scheierman",
-    "team_id": 17,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 175,
-    "name": "Hugo Gonz\u00e1lez",
+    "player_id": 872,
+    "name": "Oshae Brissett",
     "team_id": 17,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 60,
     "name": "Jaylen Brown",
     "team_id": 17,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 163,
-    "name": "Luka Garza",
+    "player_id": 117,
+    "name": "JD Davison",
     "team_id": 17,
-    "position": "C",
-    "is_active": true
+    "position": "SG",
+    "is_active": false
   },
   {
-    "player_id": 532,
-    "name": "Jordan Walsh",
-    "team_id": 17,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 196,
-    "name": "Ron Harper Jr.",
+    "player_id": 201,
+    "name": "Sam Hauser",
     "team_id": 17,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 551,
-    "name": "Amari Williams",
+    "player_id": 214,
+    "name": "Jrue Holiday",
+    "team_id": 17,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 218,
+    "name": "Al Horford",
+    "team_id": 17,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 288,
+    "name": "Luke Kornet",
+    "team_id": 17,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 705,
+    "name": "Svi Mykhailiuk",
+    "team_id": 17,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 390,
+    "name": "Drew Peterson",
     "team_id": 17,
     "position": "PF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 403,
+    "name": "Kristaps Porzi\u0146\u0123is",
+    "team_id": 17,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 411,
+    "name": "Payton Pritchard",
+    "team_id": 17,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 416,
+    "name": "Neemias Queta",
+    "team_id": 17,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 992,
+    "name": "Lamar Stevens",
+    "team_id": 17,
+    "position": "PF",
+    "is_active": false
   },
   {
     "player_id": 491,
     "name": "Jayson Tatum",
     "team_id": 17,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 523,
-    "name": "Nikola Vu\u010devi\u0107",
+    "player_id": 908,
+    "name": "Xavier Tillman Sr.",
     "team_id": 17,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 466,
-    "name": "Max Shulga",
-    "team_id": 17,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 505,
-    "name": "John Tonje",
-    "team_id": 17,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 244,
-    "name": "Sion James",
-    "team_id": 18,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 284,
-    "name": "Kon Knueppel",
-    "team_id": 18,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 55,
-    "name": "Miles Bridges",
-    "team_id": 18,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 121,
-    "name": "Moussa Diabat\u00e9",
+    "player_id": 532,
+    "name": "Jordan Walsh",
+    "team_id": 17,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 546,
+    "name": "Derrick White",
+    "team_id": 17,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2585,
+    "name": "Amari Bailey",
     "team_id": 18,
-    "position": "C",
-    "is_active": true
+    "position": "PG",
+    "is_active": false
   },
   {
     "player_id": 22,
     "name": "LaMelo Ball",
     "team_id": 18,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 273,
-    "name": "Ryan Kalkbrenner",
+    "player_id": 43,
+    "name": "Leaky Black",
+    "team_id": 18,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 2588,
+    "name": "Marques Bolden",
     "team_id": 18,
     "position": "C",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 2589,
+    "name": "James Bouknight",
+    "team_id": 18,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 55,
+    "name": "Miles Bridges",
+    "team_id": 18,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 110,
+    "name": "Seth Curry",
+    "team_id": 18,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2592,
+    "name": "Th\u00e9o Maledon",
+    "team_id": 18,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 322,
+    "name": "Cody Martin",
+    "team_id": 18,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 338,
+    "name": "Bryce McGowens",
+    "team_id": 18,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2595,
+    "name": "Nathan Mensah",
+    "team_id": 18,
+    "position": "C",
+    "is_active": false
   },
   {
     "player_id": 344,
     "name": "Brandon Miller",
     "team_id": 18,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 185,
-    "name": "Josh Green",
-    "team_id": 18,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 316,
-    "name": "Tre Mann",
+    "player_id": 2597,
+    "name": "Frank Ntilikina",
     "team_id": 18,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 102,
-    "name": "Pat Connaughton",
+    "player_id": 427,
+    "name": "Nick Richards",
+    "team_id": 18,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 2599,
+    "name": "Ish Smith",
+    "team_id": 18,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 480,
+    "name": "Nick Smith Jr.",
     "team_id": 18,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 443,
-    "name": "Tidjane Sala\u00fcn",
+    "player_id": 812,
+    "name": "JT Thor",
     "team_id": 18,
     "position": "PF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 535,
+    "name": "P.J. Washington",
+    "team_id": 18,
+    "position": "PF",
+    "is_active": false
   },
   {
     "player_id": 554,
     "name": "Grant Williams",
     "team_id": 18,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 340,
-    "name": "Liam McNeeley",
-    "team_id": 18,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 545,
-    "name": "Coby White",
-    "team_id": 18,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 908,
-    "name": "Xavier Tillman Sr.",
+    "player_id": 558,
+    "name": "Mark Williams",
     "team_id": 18,
     "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 190,
-    "name": "PJ Hall",
-    "team_id": 18,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 424,
-    "name": "Antonio Reeves",
-    "team_id": 18,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 147,
-    "name": "Tosan Evbuomwan",
-    "team_id": 18,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 463,
-    "name": "Jamal Shead",
-    "team_id": 19,
-    "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 30,
     "name": "Scottie Barnes",
     "team_id": 19,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 48,
+    "name": "Chris Boucher",
+    "team_id": 19,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 314,
-    "name": "Sandro Mamukelashvili",
+    "player_id": 58,
+    "name": "Bruce Brown",
     "team_id": 19,
-    "position": "C",
-    "is_active": true
+    "position": "PG",
+    "is_active": false
   },
   {
-    "player_id": 230,
-    "name": "Brandon Ingram",
+    "player_id": 943,
+    "name": "D.J. Carton",
     "team_id": 19,
-    "position": "SF",
-    "is_active": true
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 123,
     "name": "Gradey Dick",
     "team_id": 19,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 533,
-    "name": "Ja'Kobe Walter",
-    "team_id": 19,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 417,
-    "name": "Immanuel Quickley",
+    "player_id": 2610,
+    "name": "Javon Freeman-Liberty",
     "team_id": 19,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 34,
-    "name": "Jamison Battle",
-    "team_id": 19,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 32,
-    "name": "RJ Barrett",
-    "team_id": 19,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 32,
-    "name": "Collin Murray-Boyles",
+    "player_id": 2611,
+    "name": "Mouhamadou Gueye",
     "team_id": 19,
     "position": "PF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 196,
+    "name": "Ron Harper Jr.",
+    "team_id": 19,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 1060,
+    "name": "Jalen McDaniels",
+    "team_id": 19,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 2614,
+    "name": "Markquis Nowell",
+    "team_id": 19,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2615,
+    "name": "Jordan Nwora",
+    "team_id": 19,
+    "position": "SF",
+    "is_active": false
   },
   {
     "player_id": 397,
     "name": "Jakob Poeltl",
     "team_id": 19,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 355,
-    "name": "Jonathan Mogbo",
+    "player_id": 2617,
+    "name": "Jontay Porter",
     "team_id": 19,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 320,
-    "name": "Alijah Martin",
+    "player_id": 2618,
+    "name": "Otto Porter Jr.",
+    "team_id": 19,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 2619,
+    "name": "Jahmi'us Ramsey",
     "team_id": 19,
     "position": "SG",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 454,
+    "name": "Dennis Schr\u00f6der",
+    "team_id": 19,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 467,
+    "name": "Pascal Siakam",
+    "team_id": 19,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 2622,
+    "name": "Kobi Simmons",
+    "team_id": 19,
+    "position": "PG",
+    "is_active": false
   },
   {
     "player_id": 493,
     "name": "Garrett Temple",
     "team_id": 19,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 298,
-    "name": "A.J. Lawson",
+    "player_id": 512,
+    "name": "Gary Trent Jr.",
     "team_id": 19,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 240,
-    "name": "Trayce Jackson-Davis",
+    "player_id": 2625,
+    "name": "Malik Williams",
     "team_id": 19,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 208,
-    "name": "Chucky Hepburn",
+    "player_id": 2626,
+    "name": "Thaddeus Young",
     "team_id": 19,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 148,
-    "name": "Jeremiah Fears",
-    "team_id": 20,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 415,
-    "name": "Derik Queen",
-    "team_id": 20,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 39,
-    "name": "Saddiq Bey",
-    "team_id": 20,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 362,
-    "name": "Trey Murphy III",
-    "team_id": 20,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 350,
-    "name": "Yves Missi",
-    "team_id": 20,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 564,
-    "name": "Zion Williamson",
-    "team_id": 20,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 327,
-    "name": "Karlo Matkovi\u0107",
+    "player_id": 10,
+    "name": "Jose Alvarado",
     "team_id": 20,
-    "position": "PF",
-    "is_active": true
+    "position": "PG",
+    "is_active": false
   },
   {
-    "player_id": 386,
-    "name": "Micah Peavy",
+    "player_id": 2628,
+    "name": "Izaiah Brockington",
     "team_id": 20,
-    "position": "SG",
-    "is_active": true
+    "position": "PG",
+    "is_active": false
   },
   {
-    "player_id": 262,
-    "name": "Herbert Jones",
+    "player_id": 2629,
+    "name": "Jalen Crutcher",
+    "team_id": 20,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 114,
+    "name": "Dyson Daniels",
+    "team_id": 20,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2631,
+    "name": "Kaiser Gates",
     "team_id": 20,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 202,
     "name": "Jordan Hawkins",
     "team_id": 20,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 338,
-    "name": "Bryce McGowens",
+    "player_id": 230,
+    "name": "Brandon Ingram",
     "team_id": 20,
-    "position": "SG",
-    "is_active": true
+    "position": "SF",
+    "is_active": false
   },
   {
-    "player_id": 398,
-    "name": "Jordan Poole",
+    "player_id": 262,
+    "name": "Herbert Jones",
+    "team_id": 20,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 302,
+    "name": "E.J. Liddell",
+    "team_id": 20,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 319,
+    "name": "Naji Marshall",
+    "team_id": 20,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 333,
+    "name": "CJ McCollum",
     "team_id": 20,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 307,
-    "name": "Kevon Looney",
+    "player_id": 362,
+    "name": "Trey Murphy III",
+    "team_id": 20,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 364,
+    "name": "Larry Nance Jr.",
     "team_id": 20,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 969,
-    "name": "Dejounte Murray",
+    "player_id": 435,
+    "name": "Jeremiah Robinson-Earl",
     "team_id": 20,
-    "position": "PG",
-    "is_active": true
+    "position": "PF",
+    "is_active": false
   },
   {
-    "player_id": 270,
-    "name": "DeAndre Jordan",
+    "player_id": 642,
+    "name": "Matt Ryan",
+    "team_id": 20,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 2642,
+    "name": "Dereon Seabron",
+    "team_id": 20,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 518,
+    "name": "Jonas Valan\u010di\u016bnas",
     "team_id": 20,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 6,
-    "name": "Trey Alexander",
+    "player_id": 564,
+    "name": "Zion Williamson",
     "team_id": 20,
-    "position": "SG",
-    "is_active": true
+    "position": "PF",
+    "is_active": false
   },
   {
-    "player_id": 124,
-    "name": "Hunter Dickinson",
+    "player_id": 2645,
+    "name": "Cody Zeller",
     "team_id": 20,
     "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 374,
-    "name": "Josh Oduro",
-    "team_id": 20,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 483,
-    "name": "Cam Spencer",
-    "team_id": 21,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 541,
-    "name": "Jaylen Wells",
-    "team_id": 21,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 106,
-    "name": "Cedric Coward",
-    "team_id": 21,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 981,
-    "name": "GG Jackson II",
-    "team_id": 21,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 413,
-    "name": "Olivier-Maxence Prosper",
-    "team_id": 21,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 70,
-    "name": "Kentavious Caldwell-Pope",
-    "team_id": 21,
-    "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 5,
     "name": "Santi Aldama",
     "team_id": 21,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 472,
-    "name": "Javon Small",
-    "team_id": 21,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 324,
-    "name": "Jahmai Mashack",
-    "team_id": 21,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 207,
-    "name": "Taylor Hendricks",
-    "team_id": 21,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 207,
-    "name": "Walter Clayton",
-    "team_id": 21,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 360,
-    "name": "Ja Morant",
-    "team_id": 21,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 249,
-    "name": "Ty Jerome",
-    "team_id": 21,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 439,
-    "name": "Rayan Rupert",
-    "team_id": 21,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 137,
-    "name": "Zach Edey",
-    "team_id": 21,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 393,
-    "name": "Scotty Pippen Jr.",
-    "team_id": 21,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 167,
-    "name": "Taj Gibson",
-    "team_id": 21,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 167,
-    "name": "Adama-Alpha Bal",
-    "team_id": 21,
-    "position": "G",
-    "is_active": true
-  },
-  {
-    "player_id": 167,
-    "name": "Lucas Williamson",
-    "team_id": 21,
-    "position": "G",
-    "is_active": true
-  },
-  {
-    "player_id": 1122,
-    "name": "Dariq Whitehead",
+    "player_id": 2647,
+    "name": "Timmy Allen",
     "team_id": 21,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 1122,
-    "name": "Toby Okani",
+    "player_id": 26,
+    "name": "Desmond Bane",
     "team_id": 21,
-    "position": "F",
-    "is_active": true
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 90,
     "name": "Brandon Clarke",
     "team_id": 21,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 228,
-    "name": "Oso Ighodaro",
-    "team_id": 22,
+    "player_id": 2650,
+    "name": "Wenyen Gabriel",
+    "team_id": 21,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 172,
-    "name": "Collin Gillespie",
-    "team_id": 22,
+    "player_id": 2651,
+    "name": "Jacob Gilyard",
+    "team_id": 21,
     "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 381,
-    "name": "Royce O'Neale",
-    "team_id": 22,
-    "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 176,
     "name": "Jordan Goodwin",
-    "team_id": 22,
+    "team_id": 21,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 133,
-    "name": "Ryan Dunn",
-    "team_id": 22,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 47,
-    "name": "Devin Booker",
-    "team_id": 22,
+    "player_id": 2653,
+    "name": "Shaquille Harrison",
+    "team_id": 21,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 558,
-    "name": "Mark Williams",
-    "team_id": 22,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 56,
-    "name": "Dillon Brooks",
-    "team_id": 22,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 152,
-    "name": "Rasheer Fleming",
-    "team_id": 22,
+    "player_id": 2654,
+    "name": "Matthew Hurt",
+    "team_id": 21,
     "position": "PF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 981,
+    "name": "GG Jackson II",
+    "team_id": 21,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 239,
+    "name": "Jaren Jackson Jr.",
+    "team_id": 21,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 246,
+    "name": "DeJon Jarreau",
+    "team_id": 21,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 742,
+    "name": "Trey Jemison",
+    "team_id": 21,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 277,
+    "name": "Luke Kennard",
+    "team_id": 21,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 287,
+    "name": "John Konchar",
+    "team_id": 21,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 295,
+    "name": "Jake LaRavia",
+    "team_id": 21,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 360,
+    "name": "Ja Morant",
+    "team_id": 21,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2663,
+    "name": "M\u00e3ozinha Pereira",
+    "team_id": 21,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 393,
+    "name": "Scotty Pippen Jr.",
+    "team_id": 21,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 436,
+    "name": "David Roddy",
+    "team_id": 21,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 2666,
+    "name": "Derrick Rose",
+    "team_id": 21,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2667,
+    "name": "Zavier Simpson",
+    "team_id": 21,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 473,
+    "name": "Marcus Smart",
+    "team_id": 21,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2669,
+    "name": "Yuta Watanabe",
+    "team_id": 21,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 2670,
+    "name": "Jack White",
+    "team_id": 21,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 563,
+    "name": "Vince Williams Jr.",
+    "team_id": 21,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 561,
+    "name": "Ziaire Williams",
+    "team_id": 21,
+    "position": "SF",
+    "is_active": false
   },
   {
     "player_id": 8,
     "name": "Grayson Allen",
     "team_id": 22,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 49,
-    "name": "Jamaree Bouyea",
-    "team_id": 22,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 313,
-    "name": "Khaman Maluach",
+    "player_id": 2674,
+    "name": "Udoka Azubuike",
     "team_id": 22,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 305,
-    "name": "Isaiah Livers",
-    "team_id": 22,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 182,
-    "name": "Jalen Green",
-    "team_id": 22,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 97,
-    "name": "Amir Coffey",
-    "team_id": 22,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 53,
-    "name": "Koby Brea",
-    "team_id": 22,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 211,
-    "name": "Haywood Highsmith",
+    "player_id": 2675,
+    "name": "Keita Bates-Diop",
     "team_id": 22,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 225,
-    "name": "CJ Huntley",
+    "player_id": 36,
+    "name": "Bradley Beal",
     "team_id": 22,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 396,
-    "name": "Brandin Podziemski",
-    "team_id": 23,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 385,
-    "name": "Gary Payton II",
-    "team_id": 23,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 404,
-    "name": "Quinten Post",
-    "team_id": 23,
+    "player_id": 2105,
+    "name": "Bol Bol",
+    "team_id": 22,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 426,
-    "name": "Will Richard",
-    "team_id": 23,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 447,
-    "name": "Gui Santos",
-    "team_id": 23,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 181,
-    "name": "Draymond Green",
-    "team_id": 23,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 484,
-    "name": "Pat Spencer",
-    "team_id": 23,
+    "player_id": 47,
+    "name": "Devin Booker",
+    "team_id": 22,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 357,
-    "name": "Moses Moody",
-    "team_id": 23,
-    "position": "SG",
-    "is_active": true
+    "player_id": 134,
+    "name": "Kevin Durant",
+    "team_id": 22,
+    "position": "PF",
+    "is_active": false
   },
   {
-    "player_id": 341,
-    "name": "De'Anthony Melton",
-    "team_id": 23,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 218,
-    "name": "Al Horford",
-    "team_id": 23,
+    "player_id": 146,
+    "name": "Drew Eubanks",
+    "team_id": 22,
     "position": "C",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 178,
+    "name": "Eric Gordon",
+    "team_id": 22,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2682,
+    "name": "Saben Lee",
+    "team_id": 22,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2683,
+    "name": "Nassir Little",
+    "team_id": 22,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 373,
+    "name": "Jusuf Nurki\u0107",
+    "team_id": 22,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 381,
+    "name": "Royce O'Neale",
+    "team_id": 22,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 375,
+    "name": "Josh Okogie",
+    "team_id": 22,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2687,
+    "name": "Isaiah Thomas",
+    "team_id": 22,
+    "position": "PG",
+    "is_active": false
   },
   {
     "player_id": 111,
     "name": "Stephen Curry",
     "team_id": 23,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 654,
-    "name": "Jimmy Butler",
+    "player_id": 2689,
+    "name": "Usman Garuba",
+    "team_id": 23,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 181,
+    "name": "Draymond Green",
+    "team_id": 23,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 240,
+    "name": "Trayce Jackson-Davis",
+    "team_id": 23,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 848,
+    "name": "Cory Joseph",
+    "team_id": 23,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 290,
+    "name": "Jonathan Kuminga",
+    "team_id": 23,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 307,
+    "name": "Kevon Looney",
+    "team_id": 23,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 357,
+    "name": "Moses Moody",
+    "team_id": 23,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 383,
+    "name": "Chris Paul",
+    "team_id": 23,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 385,
+    "name": "Gary Payton II",
+    "team_id": 23,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 396,
+    "name": "Brandin Podziemski",
+    "team_id": 23,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 891,
+    "name": "Lester Qui\u00f1ones",
+    "team_id": 23,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2700,
+    "name": "Jerome Robinson",
+    "team_id": 23,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 447,
+    "name": "Gui Santos",
+    "team_id": 23,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 587,
+    "name": "Dario \u0160ari\u0107",
+    "team_id": 23,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 484,
+    "name": "Pat Spencer",
+    "team_id": 23,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 500,
+    "name": "Klay Thompson",
     "team_id": 23,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 300,
-    "name": "Malevy Leons",
+    "player_id": 549,
+    "name": "Andrew Wiggins",
     "team_id": 23,
     "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 108,
-    "name": "LJ Cryer",
-    "team_id": 23,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 403,
-    "name": "Kristaps Porzi\u0146\u0123is",
-    "team_id": 23,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 559,
-    "name": "Nate Williams",
-    "team_id": 23,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 110,
-    "name": "Seth Curry",
-    "team_id": 23,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 1016,
-    "name": "A.J. Green",
-    "team_id": 24,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 437,
-    "name": "Ryan Rollins",
-    "team_id": 24,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 514,
-    "name": "Myles Turner",
-    "team_id": 24,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 291,
-    "name": "Kyle Kuzma",
-    "team_id": 24,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 402,
-    "name": "Bobby Portis",
-    "team_id": 24,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 512,
-    "name": "Gary Trent Jr.",
-    "team_id": 24,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 470,
-    "name": "Jericho Sims",
-    "team_id": 24,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 197,
-    "name": "Gary Harris",
-    "team_id": 24,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 363,
-    "name": "Pete Nance",
-    "team_id": 24,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 238,
-    "name": "Andre Jackson Jr.",
-    "team_id": 24,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 400,
-    "name": "Kevin Porter Jr.",
-    "team_id": 24,
-    "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 13,
     "name": "Giannis Antetokounmpo",
     "team_id": 24,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 14,
     "name": "Thanasis Antetokounmpo",
     "team_id": 24,
-    "position": "SF",
-    "is_active": true
+    "position": "PF",
+    "is_active": false
   },
   {
-    "player_id": 125,
-    "name": "Ousmane Dieng",
-    "team_id": 24,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 410,
-    "name": "Taurean Prince",
-    "team_id": 24,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 441,
-    "name": "Cormac Ryan",
+    "player_id": 757,
+    "name": "Malik Beasley",
     "team_id": 24,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 12,
-    "name": "Alex Antetokounmpo",
+    "player_id": 37,
+    "name": "MarJon Beauchamp",
     "team_id": 24,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 319,
-    "name": "Naji Marshall",
-    "team_id": 25,
+    "player_id": 102,
+    "name": "Pat Connaughton",
+    "team_id": 24,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 86,
-    "name": "Max Christie",
-    "team_id": 25,
+    "player_id": 1067,
+    "name": "Jae Crowder",
+    "team_id": 24,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 1016,
+    "name": "A.J. Green",
+    "team_id": 24,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 500,
-    "name": "Klay Thompson",
-    "team_id": 25,
-    "position": "SF",
-    "is_active": true
+    "player_id": 238,
+    "name": "Andre Jackson Jr.",
+    "team_id": 24,
+    "position": "SG",
+    "is_active": false
   },
   {
-    "player_id": 151,
-    "name": "Cooper Flagg",
-    "team_id": 25,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 552,
-    "name": "Brandon Williams",
-    "team_id": 25,
+    "player_id": 303,
+    "name": "Damian Lillard",
+    "team_id": 24,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 408,
-    "name": "Dwight Powell",
-    "team_id": 25,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 321,
-    "name": "Caleb Martin",
-    "team_id": 25,
+    "player_id": 306,
+    "name": "Chris Livingston",
+    "team_id": 24,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 535,
-    "name": "P.J. Washington",
+    "player_id": 308,
+    "name": "Brook Lopez",
+    "team_id": 24,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 2717,
+    "name": "Robin Lopez",
+    "team_id": 24,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 343,
+    "name": "Khris Middleton",
+    "team_id": 24,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 402,
+    "name": "Bobby Portis",
+    "team_id": 24,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 437,
+    "name": "Ryan Rollins",
+    "team_id": 24,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 536,
+    "name": "TyTy Washington Jr.",
+    "team_id": 24,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2722,
+    "name": "Lindell Wigginton",
+    "team_id": 24,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2723,
+    "name": "Greg Brown III",
     "team_id": 25,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 367,
-    "name": "Ryan Nembhard",
+    "player_id": 2724,
+    "name": "Dexter Dennis",
+    "team_id": 25,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 128,
+    "name": "Luka Don\u010di\u0107",
     "team_id": 25,
     "position": "PG",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 1035,
+    "name": "Dant\u00e9 Exum",
+    "team_id": 25,
+    "position": "PG",
+    "is_active": false
   },
   {
     "player_id": 159,
     "name": "Daniel Gafford",
     "team_id": 25,
-    "position": "C",
-    "is_active": true
+    "position": "PF",
+    "is_active": false
   },
   {
-    "player_id": 87,
-    "name": "Moussa Cisse",
+    "player_id": 185,
+    "name": "Josh Green",
     "team_id": 25,
-    "position": "C",
-    "is_active": true
+    "position": "SG",
+    "is_active": false
   },
   {
-    "player_id": 343,
-    "name": "Khris Middleton",
+    "player_id": 191,
+    "name": "Tim Hardaway Jr.",
     "team_id": 25,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 19,
-    "name": "Marvin Bagley III",
-    "team_id": 25,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 251,
-    "name": "AJ Johnson",
+    "player_id": 193,
+    "name": "Jaden Hardy",
     "team_id": 25,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 406,
-    "name": "John Poulakidas",
-    "team_id": 25,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 478,
-    "name": "Tyler Smith",
-    "team_id": 25,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 304,
-    "name": "Dereck Lively II",
+    "player_id": 1056,
+    "name": "Richaun Holmes",
     "team_id": 25,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 232,
     "name": "Kyrie Irving",
     "team_id": 25,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 75,
-    "name": "Bub Carrington",
-    "team_id": 26,
+    "player_id": 269,
+    "name": "Derrick Jones Jr.",
+    "team_id": 25,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 281,
+    "name": "Maxi Kleber",
+    "team_id": 25,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 298,
+    "name": "A.J. Lawson",
+    "team_id": 25,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 304,
+    "name": "Dereck Lively II",
+    "team_id": 25,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 749,
+    "name": "Markieff Morris",
+    "team_id": 25,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 408,
+    "name": "Dwight Powell",
+    "team_id": 25,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 413,
+    "name": "Olivier-Maxence Prosper",
+    "team_id": 25,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 552,
+    "name": "Brandon Williams",
+    "team_id": 25,
     "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 430,
-    "name": "Will Riley",
+    "player_id": 17,
+    "name": "Deni Avdija",
     "team_id": 26,
     "position": "SF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 21,
+    "name": "Patrick Baldwin Jr.",
+    "team_id": 26,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 2743,
+    "name": "Jules Bernard",
+    "team_id": 26,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 873,
+    "name": "Jared Butler",
+    "team_id": 26,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 83,
     "name": "Justin Champagnie",
     "team_id": 26,
     "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 257,
-    "name": "Tre Johnson",
-    "team_id": 26,
-    "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 105,
     "name": "Bilal Coulibaly",
     "team_id": 26,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 1053,
+    "name": "Johnny Davis",
+    "team_id": 26,
     "position": "SG",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 2748,
+    "name": "Hamidou Diallo",
+    "team_id": 26,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 171,
     "name": "Anthony Gill",
     "team_id": 26,
     "position": "PF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 267,
+    "name": "Tyus Jones",
+    "team_id": 26,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 280,
+    "name": "Corey Kispert",
+    "team_id": 26,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 291,
+    "name": "Kyle Kuzma",
+    "team_id": 26,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 2753,
+    "name": "Eugene Omoruyi",
+    "team_id": 26,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 398,
+    "name": "Jordan Poole",
+    "team_id": 26,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 459,
+    "name": "Landry Shamet",
+    "team_id": 26,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 524,
     "name": "Tristan Vukcevic",
     "team_id": 26,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 450,
-    "name": "Alex Sarr",
-    "team_id": 26,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 165,
-    "name": "Kyshawn George",
-    "team_id": 26,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 539,
-    "name": "Jamir Watkins",
-    "team_id": 26,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 104,
-    "name": "Sharife Cooper",
-    "team_id": 26,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 193,
-    "name": "Jaden Hardy",
-    "team_id": 26,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 547,
-    "name": "Cam Whitmore",
-    "team_id": 26,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 43,
-    "name": "Leaky Black",
-    "team_id": 26,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 423,
-    "name": "Julian Reese",
-    "team_id": 26,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 570,
-    "name": "Trae Young",
-    "team_id": 26,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 440,
-    "name": "D'Angelo Russell",
-    "team_id": 26,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 116,
-    "name": "Anthony Davis",
-    "team_id": 26,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 120,
-    "name": "DeMar DeRozan",
+    "player_id": 29,
+    "name": "Harrison Barnes",
     "team_id": 27,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 94,
-    "name": "Nique Clifford",
-    "team_id": 27,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 419,
-    "name": "Maxime Raynaud",
-    "team_id": 27,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 1,
-    "name": "Precious Achiuwa",
-    "team_id": 27,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 544,
-    "name": "Russell Westbrook",
+    "player_id": 822,
+    "name": "Chris Duarte",
     "team_id": 27,
     "position": "SF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 1034,
+    "name": "Kessler Edwards",
+    "team_id": 27,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 141,
+    "name": "Keon Ellis",
+    "team_id": 27,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 2761,
+    "name": "Jordan Ford",
+    "team_id": 27,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 155,
+    "name": "De'Aaron Fox",
+    "team_id": 27,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 221,
+    "name": "Kevin Huerter",
+    "team_id": 27,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 259,
+    "name": "Colby Jones",
+    "team_id": 27,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 1073,
+    "name": "Mason Jones",
+    "team_id": 27,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 746,
+    "name": "Alex Len",
+    "team_id": 27,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 1075,
+    "name": "Trey Lyles",
+    "team_id": 27,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 2768,
+    "name": "JaVale McGee",
+    "team_id": 27,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 352,
+    "name": "Davion Mitchell",
+    "team_id": 27,
+    "position": "PG",
+    "is_active": false
   },
   {
     "player_id": 356,
     "name": "Malik Monk",
     "team_id": 27,
     "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 146,
-    "name": "Drew Eubanks",
-    "team_id": 27,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 73,
-    "name": "Dylan Cardwell",
-    "team_id": 27,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 297,
-    "name": "Zach LaVine",
-    "team_id": 27,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 76,
-    "name": "Devin Carter",
-    "team_id": 27,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 394,
-    "name": "Daeqwon Plowden",
-    "team_id": 27,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 337,
-    "name": "Doug McDermott",
-    "team_id": 27,
-    "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 1078,
     "name": "Keegan Murray",
     "team_id": 27,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 204,
-    "name": "Killian Hayes",
-    "team_id": 27,
-    "position": "PG",
-    "is_active": true
+    "position": "SF",
+    "is_active": false
   },
   {
     "player_id": 442,
     "name": "Domantas Sabonis",
     "team_id": 27,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 21,
-    "name": "Patrick Baldwin Jr.",
+    "player_id": 471,
+    "name": "Jalen Slawson",
     "team_id": 27,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 485,
-    "name": "Isaiah Stevens",
-    "team_id": 27,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 224,
-    "name": "De'Andre Hunter",
+    "player_id": 2774,
+    "name": "Juan Toscano-Anderson",
     "team_id": 27,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 132,
-    "name": "Kris Dunn",
+    "player_id": 2775,
+    "name": "Sasha Vezenkov",
+    "team_id": 27,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 958,
+    "name": "Brandon Boston Jr.",
     "team_id": 28,
-    "position": "PG",
-    "is_active": true
+    "position": "SF",
+    "is_active": false
   },
   {
-    "player_id": 308,
-    "name": "Brook Lopez",
+    "player_id": 61,
+    "name": "Kobe Brown",
+    "team_id": 28,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 97,
+    "name": "Amir Coffey",
+    "team_id": 28,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 121,
+    "name": "Moussa Diabat\u00e9",
     "team_id": 28,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 35,
-    "name": "Nicolas Batum",
+    "player_id": 166,
+    "name": "Paul George",
     "team_id": 28,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 99,
-    "name": "John Collins",
+    "player_id": 192,
+    "name": "James Harden",
     "team_id": 28,
-    "position": "PF",
-    "is_active": true
+    "position": "PG",
+    "is_active": false
   },
   {
-    "player_id": 445,
-    "name": "Kobe Sanders",
+    "player_id": 226,
+    "name": "Bones Hyland",
     "team_id": 28,
-    "position": "SG",
-    "is_active": true
+    "position": "PG",
+    "is_active": false
   },
   {
     "player_id": 299,
     "name": "Kawhi Leonard",
     "team_id": 28,
     "position": "SF",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 315,
+    "name": "Terance Mann",
+    "team_id": 28,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 346,
     "name": "Jordan Miller",
     "team_id": 28,
     "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 85,
-    "name": "Cam Christie",
+    "player_id": 2786,
+    "name": "Xavier Moon",
     "team_id": 28,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 269,
-    "name": "Derrick Jones Jr.",
-    "team_id": 28,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 371,
-    "name": "Yanic Konan Niederh\u00e4user",
+    "player_id": 395,
+    "name": "Mason Plumlee",
     "team_id": 28,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 326,
-    "name": "Bennedict Mathurin",
-    "team_id": 28,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 45,
-    "name": "Bogdan Bogdanovi\u0107",
+    "player_id": 409,
+    "name": "Norman Powell",
     "team_id": 28,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 236,
-    "name": "Isaiah Jackson",
+    "player_id": 2789,
+    "name": "Joshua Primo",
+    "team_id": 28,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 973,
+    "name": "Daniel Theis",
     "team_id": 28,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 162,
-    "name": "Darius Garland",
+    "player_id": 544,
+    "name": "Russell Westbrook",
     "team_id": 28,
     "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 536,
-    "name": "TyTy Washington Jr.",
-    "team_id": 28,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 36,
-    "name": "Bradley Beal",
-    "team_id": 28,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 387,
-    "name": "Sean Pedulla",
-    "team_id": 28,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 380,
-    "name": "Norchad Omier",
-    "team_id": 28,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 222,
-    "name": "Jay Huff",
-    "team_id": 29,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 529,
-    "name": "Jarace Walker",
-    "team_id": 29,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 464,
-    "name": "Ben Sheppard",
-    "team_id": 29,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 467,
-    "name": "Pascal Siakam",
-    "team_id": 29,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 366,
-    "name": "Andrew Nembhard",
-    "team_id": 29,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 334,
-    "name": "T.J. McConnell",
-    "team_id": 29,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 368,
-    "name": "Aaron Nesmith",
-    "team_id": 29,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 237,
-    "name": "Quenton Jackson",
-    "team_id": 29,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 405,
-    "name": "Micah Potter",
-    "team_id": 29,
-    "position": "C",
-    "is_active": true
-  },
-  {
-    "player_id": 158,
-    "name": "Johnny Furphy",
-    "team_id": 29,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 389,
-    "name": "Taelon Peter",
-    "team_id": 29,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 264,
-    "name": "Kam Jones",
-    "team_id": 29,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 499,
-    "name": "Ethan Thompson",
-    "team_id": 29,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 61,
-    "name": "Kobe Brown",
-    "team_id": 29,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 508,
-    "name": "Obi Toppin",
-    "team_id": 29,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 471,
-    "name": "Jalen Slawson",
-    "team_id": 29,
-    "position": "SF",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 574,
     "name": "Ivica Zubac",
-    "team_id": 29,
+    "team_id": 28,
     "position": "C",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 2793,
+    "name": "Kendall Brown",
+    "team_id": 29,
+    "position": "SG",
+    "is_active": false
   },
   {
     "player_id": 189,
     "name": "Tyrese Haliburton",
     "team_id": 29,
     "position": "PG",
-    "is_active": true
+    "is_active": false
+  },
+  {
+    "player_id": 236,
+    "name": "Isaiah Jackson",
+    "team_id": 29,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 237,
+    "name": "Quenton Jackson",
+    "team_id": 29,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 1101,
+    "name": "James Johnson",
+    "team_id": 29,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 326,
+    "name": "Bennedict Mathurin",
+    "team_id": 29,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 334,
+    "name": "T.J. McConnell",
+    "team_id": 29,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 366,
+    "name": "Andrew Nembhard",
+    "team_id": 29,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 368,
+    "name": "Aaron Nesmith",
+    "team_id": 29,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 464,
+    "name": "Ben Sheppard",
+    "team_id": 29,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 475,
+    "name": "Jalen Smith",
+    "team_id": 29,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 508,
+    "name": "Obi Toppin",
+    "team_id": 29,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 513,
+    "name": "Oscar Tshiebwe",
+    "team_id": 29,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 514,
+    "name": "Myles Turner",
+    "team_id": 29,
+    "position": "C",
+    "is_active": false
+  },
+  {
+    "player_id": 529,
+    "name": "Jarace Walker",
+    "team_id": 29,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 936,
+    "name": "Isaiah Wong",
+    "team_id": 29,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 54,
+    "name": "Mikal Bridges",
+    "team_id": 30,
+    "position": "SF",
+    "is_active": false
+  },
+  {
+    "player_id": 2810,
+    "name": "Armoni Brooks",
+    "team_id": 30,
+    "position": "PG",
+    "is_active": false
   },
   {
     "player_id": 92,
     "name": "Nic Claxton",
     "team_id": 30,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 96,
     "name": "Noah Clowney",
     "team_id": 30,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 315,
-    "name": "Terance Mann",
+    "player_id": 150,
+    "name": "Dorian Finney-Smith",
+    "team_id": 30,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 252,
+    "name": "Cameron Johnson",
+    "team_id": 30,
+    "position": "PF",
+    "is_active": false
+  },
+  {
+    "player_id": 1120,
+    "name": "Keon Johnson",
     "team_id": 30,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 461,
     "name": "Day'Ron Sharpe",
     "team_id": 30,
     "position": "C",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 407,
-    "name": "Drake Powell",
+    "player_id": 1092,
+    "name": "Ben Simmons",
+    "team_id": 30,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 2819,
+    "name": "Dennis Smith Jr.",
+    "team_id": 30,
+    "position": "PG",
+    "is_active": false
+  },
+  {
+    "player_id": 496,
+    "name": "Cam Thomas",
     "team_id": 30,
     "position": "SG",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 567,
-    "name": "Danny Wolf",
+    "player_id": 892,
+    "name": "Lonnie Walker IV",
+    "team_id": 30,
+    "position": "SG",
+    "is_active": false
+  },
+  {
+    "player_id": 538,
+    "name": "Trendon Watford",
     "team_id": 30,
     "position": "PF",
-    "is_active": true
+    "is_active": false
   },
   {
-    "player_id": 561,
-    "name": "Ziaire Williams",
+    "player_id": 538,
+    "name": "Dariq Whitehead",
     "team_id": 30,
     "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 510,
-    "name": "Nolan Traor\u00e9",
-    "team_id": 30,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 401,
-    "name": "Michael Porter Jr.",
-    "team_id": 30,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 401,
-    "name": "Egor D\u0451min",
-    "team_id": 30,
-    "position": "PG",
-    "is_active": true
+    "is_active": false
   },
   {
     "player_id": 565,
     "name": "Jalen Wilson",
     "team_id": 30,
     "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 448,
-    "name": "Ben Saraf",
-    "team_id": 30,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 302,
-    "name": "E.J. Liddell",
-    "team_id": 30,
-    "position": "PF",
-    "is_active": true
-  },
-  {
-    "player_id": 4,
-    "name": "Ochai Agbaji",
-    "team_id": 30,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 145,
-    "name": "Tyson Etienne",
-    "team_id": 30,
-    "position": "PG",
-    "is_active": true
-  },
-  {
-    "player_id": 349,
-    "name": "Josh Minott",
-    "team_id": 30,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 253,
-    "name": "Chaney Johnson",
-    "team_id": 30,
-    "position": "SF",
-    "is_active": true
-  },
-  {
-    "player_id": 476,
-    "name": "Malachi Smith",
-    "team_id": 30,
-    "position": "SG",
-    "is_active": true
-  },
-  {
-    "player_id": 476,
-    "name": "Tre Scott",
-    "team_id": 30,
-    "position": "PF",
-    "is_active": true
+    "is_active": false
   }
 ]

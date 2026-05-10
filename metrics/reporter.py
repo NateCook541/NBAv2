@@ -71,8 +71,15 @@ class Reporter:
     def skipBreakdown(cls, skips):
         cls._out(f"\n--- Skip breakdown ---")
         cls._out(f"No player match : {skips.noPlayerMatch}")
-        cls._out(f"No opp match : {skips.noOppMatch}")
-        cls._out(f"No actuals : {skips.noActuals}")
+
+        # No opp
+        cls._out(f"No opp match : {skips.noOppMatch}")        
+        if getattr(skips, "noOppMatchByMonth", None):
+            cls._out("No opp match by month:")
+            for month, count in sorted(skips.noOppMatchByMonth.items()):
+                cls._out(f"  {month}: {count}")
+                cls._out(f"No actuals : {skips.noActuals}")
+        
         cls._out(f"No features : {skips.noFeatures}")
         cls._out(f"Line filtered : {skips.noLine}")
 
@@ -102,7 +109,7 @@ class Reporter:
         totalPnl = bets["pnl"].sum()
         roi = totalPnl / bets["stake"].sum()
  
-        cls._out(f"Win / Loss : {wins}W / {losses}L ({winRate:.1%})")
+        cls._out(f"Win / Loss : {wins}W / {losses}L ({winRate:.2%})")
         cls._out(f"Total P&L : ${totalPnl:.2f}")
         cls._out(f"ROI : {roi:.1%}")
         cls._out(f"Starting bank : ${startingBank:.2f}")
@@ -119,16 +126,13 @@ class Reporter:
             labels=["<12", "12-15", "15-18", "18-22", "22+"],
         )
         cls._out("\nWin rate by predicted score:")
-        cls._out(
-            bets.groupby("predBucket", observed=True)
-            .agg(
-                bets = ("pnl",  "count"),
-                winRate=("pnl",  lambda x: (x > 0).mean()),
-                avgEdge=("edge", "mean"),
-                totalPnl=("pnl", "sum"),
-            )
-            .to_string()
+        predSummary = bets.groupby("predBucket", observed=True).agg(
+            bets=("pnl", "count"),
+            winRate=("pnl", lambda x: (x > 0).mean()),
+            avgEdge=("edge", "mean"),
+            totalPnl=("pnl", "sum"),
         )
+        cls._out(predSummary.to_string(float_format=lambda x: f"{x:.4f}"))
  
         # Top / Worst bets
         cols = ["date", "player", "line", "predicted", "actual", "edge", "pnl"]
@@ -143,22 +147,18 @@ class Reporter:
             .head(5).to_string(index=False)
         )
 
-        # Temp
-        bets_12_15 = bets[(bets["predicted"] >= 12) & (bets["predicted"] < 15)]
-        bets_15_18 = bets[(bets["predicted"] >= 15) & (bets["predicted"] < 18)]
-
-        print(f"\n12-15 edge vs win rate correlation:")
-        print(bets_12_15[["edge", "pnl"]].corr())
-        print(f"\n15-18 edge vs win rate correlation:")
-        print(bets_15_18[["edge", "pnl"]].corr())
-
-        # Which players appear most in profitable 12-15 bets?
-        winners = bets_12_15[bets_12_15["pnl"] > 0]
-        print(winners["player"].value_counts().head(10))
-
-        # What's the avg line for wins vs losses in 12-15?
-        print(f"Winning line avg: {winners['line'].mean():.1f}")
-        print(f"Losing line avg:  {bets_12_15[bets_12_15['pnl'] < 0]['line'].mean():.1f}")
+        # Check if higher edge bets are actually winning more
+        bets["edge_bucket"] = pd.cut(bets["edge"], 
+            bins=[0, 0.05, 0.10, 0.15, 0.20, 1.0],
+            labels=["0-5%", "5-10%", "10-15%", "15-20%", "20%+"]
+        )
+        
+        print("\nWin rate by edge bucket:")
+        print(bets.groupby("edge_bucket", observed=True).agg(
+            bets=("pnl", "count"),
+            win_rate=("pnl", lambda x: (x > 0).mean()),
+            total_pnl=("pnl", "sum")
+        ).to_string())
 
 
     # Edge distribution

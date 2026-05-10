@@ -1,5 +1,6 @@
 import sqlite3
 import unicodedata
+from collections import Counter
 import pandas as pd
 import numpy as np
 from dataclasses import dataclass, field
@@ -44,6 +45,7 @@ class SkipCounters:
     noActuals: int=0
     noFeatures: int=0
     noLine: int=0
+    noOppMatchByMonth: Counter = field(default_factory=Counter, repr=False)
 
     def total(self):
         return (
@@ -86,10 +88,28 @@ def _kellyFractional(edge, usOdds, fraction=DEFAULT_KELLY_FRAC):
 
 
 def _normalize(name):
-    return "".join(
+    base = "".join(
         c for c in unicodedata.normalize("NFD", name)
         if unicodedata.category(c) != "Mn"
     ).lower().strip()
+    # Normalize punctuation and collapse initial-based variants:
+    # "C.J. McCollum" and "CJ McCollum" -> "cj mccollum".
+    cleaned = (
+        base.replace(".", " ")
+        .replace("'", "")
+        .replace("-", " ")
+    )
+    tokens = [t for t in cleaned.split() if t]
+    merged = []
+    i = 0
+    while i < len(tokens):
+        if i + 1 < len(tokens) and len(tokens[i]) == 1 and len(tokens[i + 1]) == 1:
+            merged.append(tokens[i] + tokens[i + 1])
+            i += 2
+            continue
+        merged.append(tokens[i])
+        i += 1
+    return " ".join(merged)
  
 
 def _loadProps(conn, startDate=None, endDate=None):
@@ -112,53 +132,89 @@ def _loadProps(conn, startDate=None, endDate=None):
 def _loadActuals(conn):
     df = pd.read_sql_query(
         """
-        SELECT p.name, g.game_date, pgl.points
+        SELECT pgl.player_id, g.game_date, pgl.points
         FROM Player_game_logs pgl
         JOIN Games   g ON pgl.game_id   = g.game_id
-        JOIN Players p ON pgl.player_id = p.player_id
         """,
         conn
     )
-    df["name_norm"] = df["name"].apply(_normalize)
-    return df.set_index(["name_norm", "game_date"])["points"].to_dict()
+    return df.set_index(["player_id", "game_date"])["points"].to_dict()
 
 
 def _loadPlayerMap(conn):
     df = pd.read_sql_query(
-        "SELECT player_id, name, team_id FROM Players", conn
+        "SELECT player_id, name FROM Players", conn
     )
+
     df["name_norm"] = df["name"].apply(_normalize)
-    df  = (
-            df.sort_values("player_id").drop_duplicates(
-                subset="name_norm", keep="last")
+    df = df.sort_values("player_id").drop_duplicates(
+        subset="name_norm", keep="last"
     )
-    return df.set_index("name_norm")[["player_id", "team_id"]].to_dict("index")
+
+    return df.set_index("name_norm")["player_id"].to_dict()
+
 
 def _loadOppMap(conn):
-    df = pd.read_sql_query(
     """
+    Returns {(player_id, game_date): {team_id, opp_team_id, is_home, rest_days}}
+    Keyed on player + date so mid-season trades are handled correctly.
+    """
+
+    df = pd.read_sql_query(
+        """
         SELECT pgl.player_id, g.game_date,
                g.home_team_id, g.away_team_id,
                pgl.is_home, pgl.rest_days
         FROM Player_game_logs pgl
         JOIN Games g ON pgl.game_id = g.game_id
-    """,
-    conn)
-    
+        """,
+        conn,
+    )
     result = {}
+
     for _, row in df.iterrows():
         if row.is_home:
-            teamID = row.home_team_id
+            teamID    = row.home_team_id
             oppTeamID = row.away_team_id
         else:
-            teamID = row.away_team_id
+            teamID    = row.away_team_id
             oppTeamID = row.home_team_id
 
         result[(int(row.player_id), row.game_date)] = {
-            "team_id": teamID,
+            "team_id":     teamID,
             "opp_team_id": oppTeamID,
-            "is_home": int(row.is_home),
-            "rest_days": int(row.rest_days) if pd.notna(row.rest_days) else 0,
+            "is_home":     int(row.is_home),
+            "rest_days":   int(row.rest_days) if pd.notna(row.rest_days) else 0,
+        }
+
+    return result
+
+
+def _loadScheduleMap(conn):
+    """
+    Returns {(game_date, team_id): {team_id, opp_team_id, is_home, game_id}}
+    """
+    df = pd.read_sql_query(
+        """
+        SELECT game_id, game_date, home_team_id, away_team_id
+        FROM Games
+        """,
+        conn,
+    )
+    result = {}
+
+    for _, row in df.iterrows():
+        result[(row.game_date, int(row.home_team_id))] = {
+            "team_id": int(row.home_team_id),
+            "opp_team_id": int(row.away_team_id),
+            "is_home": 1,
+            "game_id": row.game_id,
+        }
+        result[(row.game_date, int(row.away_team_id))] = {
+            "team_id": int(row.away_team_id),
+            "opp_team_id": int(row.home_team_id),
+            "is_home": 0,
+            "game_id": row.game_id,
         }
 
     return result
@@ -179,8 +235,41 @@ class BacktestEngine:
         self.minutes = minutesBundle
         self.calibrator = calibrator
         self.dbPath = Path(dbPath)
+        # We are reading the profitable edge cap directly from the calibrator
+        self.edgeCap = calibrator.profitableEdgeCap
+       
+        
+    # Helpers
 
+    
+    # Returns true for high variance games where model doesn't preform well
+    # which is then used to filter out lines.
+    def _isChaosGame(self, features):
+        ptsStd = float(features["ptsStd10"].iloc[0])
+        minStd = float(features["minStd10"].iloc[0])
+        predicted = float(features["avgPts10"].iloc[0])
 
+        # Player has high game to game scoring variance
+        if ptsStd > 8.0:
+            return True
+ 
+        # Player has high minutes variance (role unclear)
+        if minStd > 7.0:
+            return True
+ 
+        # Large injury opportunity making lineup disrupted
+        # injury_opportunity = missingPPG * (avgPts / avgMin)
+        # > 15 means a significant scorer is out
+        # Only apply to higher scoring players
+        if predicted >= 15:
+            injOpp = float(features["injury_opportunity"].iloc[0])
+            
+            if injOpp > 15.0:
+                return True
+
+        return False
+
+    
     # Public entry point
 
 
@@ -198,6 +287,7 @@ class BacktestEngine:
         actuals = _loadActuals(conn)
         playerMap = _loadPlayerMap(conn)
         oppMap = _loadOppMap(conn)
+        scheduleMap = _loadScheduleMap(conn)
         caches = preloadCaches(conn)
 
         conn.close()
@@ -205,6 +295,10 @@ class BacktestEngine:
         print(
             f"[BacktestEngine] {len(props)} props loaded \n"
             f"edge thresh={edgeThresh:.0%} | bankroll=${bankroll:.0f}"
+        )
+        print(
+            f"[BacktestEngine] prop date range: "
+            f"{props['game_date'].min()} -> {props['game_date'].max()}"
         )
 
         # Main loop
@@ -219,6 +313,7 @@ class BacktestEngine:
                 actuals = actuals,
                 playerMap = playerMap,
                 oppMap = oppMap,
+                scheduleMap = scheduleMap,
                 caches = caches,
                 edgeThresh = edgeThresh,
                 currentBank = currentBank,
@@ -240,30 +335,39 @@ class BacktestEngine:
     # Single prop evaulation
 
 
-    def _evaluateProp(self, prop, actuals, playerMap, oppMap, caches,
+    def _evaluateProp(self, prop, actuals, playerMap, oppMap, scheduleMap, caches,
                       edgeThresh, currentBank, skips):
         nameNorm = _normalize(prop.player_name)
-        date = prop.game_date
+        propDate = prop.game_date
+        date = propDate
 
         # Player lookup
         if nameNorm not in playerMap:
             skips.noPlayerMatch += 1
             return None, currentBank, skips
-    
-        playerID = playerMap[nameNorm]["player_id"]
+   
+        # Get player ID off name
+        playerID = playerMap.get(nameNorm)
+        if playerID is None:
+            skips.noPlayerMatch += 1
+            return None, currentBank, skips
 
         # Game context
         ctx = oppMap.get((playerID, date))
         if ctx is None:
+            print(
+                f"No opp match - player={prop.player_name} "
+                f"pid={playerID} prop_date={propDate} "
+            )
             skips.noOppMatch += 1
+            skips.noOppMatchByMonth[str(propDate)[:7]] += 1
             return None, currentBank, skips
 
         # Actuals
-        actualPts = actuals.get((nameNorm, date))
+        actualPts = actuals.get((playerID, date))
         if actualPts is None:
             skips.noActuals += 1
             return None, currentBank, skips
-
 
         # Feature building
         features = buildFeatures(
@@ -297,15 +401,36 @@ class BacktestEngine:
         predicted = self.points.predict(features)
 
 
+        # Filter 2. Cut out high usage guards in the 15-18 and 18-22 range as 
+        # model can't find a actual good edge here
+        pos = float(features["pos"].iloc[0])
+        if 15 <= predicted < 22 and pos <= 2.0:
+            skips.noLine += 1
+            return None, currentBank, skips
+       
+        # Cut out all predicted lines below 12 as no edge
+        if predicted < 12:
+            skips.noLine += 1
+            return None, currentBank, skips
+
         # Probailites
         myProb = self.calibrator.probOver(predicted, prop.line)
         fairOver, _ = _removeVig(prop.over_odds, prop.under_odds)
         edge = myProb - fairOver
 
+        
+        # More bet filters
+
+
+        # Filter 1. Profitable edge cap
+        if edge > self.edgeCap:
+            skips.noLine += 1
+            return None, currentBank, skips
+
         # No bet record
         if edge <= edgeThresh:
             return BetRecord(
-                date = date,
+                date = propDate,
                 player = prop.player_name,
                 line = prop.line,
                 predicted = round(predicted, 1),
@@ -330,7 +455,7 @@ class BacktestEngine:
         currentBank += pnl
 
         return BetRecord(
-                date = date,
+                date = propDate,
                 player = prop.player_name,
                 line = prop.line,
                 predicted = round(predicted, 1),

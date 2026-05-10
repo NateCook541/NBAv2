@@ -17,8 +17,8 @@ from config import (
 # File helpers
 
 
-def _probOverT(predicted, line, residualStd, df):
-    return float(1 - t_dist.cdf(line, df=df, loc=predicted, scale=residualStd))
+def _probOverT(predicted, line, sigma, df):
+    return float(1 - t_dist.cdf(line, df=df, loc=predicted, scale=sigma))
 
 def _estimateResidualStd(predictions, actuals):
     residuals = np.asarray(actuals) - np.asarray(predictions)
@@ -67,6 +67,19 @@ def _fitDfAndSigma(predictions, actuals, lines=None):
     return bestDF, bestSigma
 
 
+def _buildPlattData(predictions, actuals, lines, sigma, df):
+    actuals = np.asarray(actuals)
+    rawProbsAll, hitsAll = [], []
+
+    for line in lines:
+        raw = np.array([_probOverT(p, line, sigma, df) for p in predictions])
+        hit = (actuals > line).astype(float)
+        rawProbsAll.append(raw)
+        hitsAll.append(hit)
+
+    return np.concatenate(rawProbsAll), np.concatenate(hitsAll)
+
+
 # Calibrator class
 
 
@@ -93,6 +106,21 @@ class Calibrator:
     # Uncalibrated prob (Needed for debugging)
     def rawProbOver(self, predicted, line):
         return _probOverT(predicted, line, self.sigma, self.df)
+
+
+    # Convenience
+
+    
+    @property
+    def profitableEdgeCap(self):
+        """
+        Max edge that calibrator considers reliable, as if a edge is too far
+        then we want to just drop it as its most likely a error and we shouldn't
+        bet on it.
+
+        Computed in fit and used in backtest to filter out most likely bad bets
+        """
+        return float(self.meta.get("profitable_edge_Cap", 0.15))
 
 
     # Diagnostics
@@ -203,16 +231,19 @@ class Calibrator:
 
    
     @classmethod
-    def fit(cls, predictions, actuals, savePath=None, metadata=None):
+    def fit(cls, predictions, actuals, savePath=None, metadata=None, 
+            targetMode="absolute"):
         """
         Fits a new calibrator from holdout preds and actuals
     
         Steps
         1. Esimate residual std
-        2. Jointly optimizes df and sigma across full line range
-        3. Build (rawProb, hit) pairs across all prop relevant lines
-        4. Fit platt scale
-        5. Optional save
+        2. Print diagnostics for hit rates
+        3. Jointly optimizes df and sigma across full line range
+        4. Build (rawProb, hit) pairs across all prop relevant lines
+        5. Fit platt scale
+        6. Check high end compression and set edge cap
+        7. Optional save
         """
         predictions = np.asarray(predictions, dtype=float)
         actuals = np.asarray(
@@ -225,49 +256,99 @@ class Calibrator:
         residualStd = _estimateResidualStd(predictions, actuals)
         print(f"[Calibrator] residual std = {residualStd:.3f}")
 
-        # 2. Fit df empirically and find best sigma
+        # 2. Hit rate diagnoistics
 
         meanPred = float(predictions.mean())
-        print(f"\n[Calibrator] Hit rates (mean pred = {meanPred:.1f}):")
-        print(f"  {'Line':>6}  {'Actual hit rate':>16}")
+        meanAct = float(actuals.mean())
+
+        print(
+            f"\n[Calibrator] Hit rates "
+            f"(mean pred={meanPred:.1f}, mean actual={meanAct:.1f}):"
+        )
+        print(f"  {'Line':>6}  {'Actual hit rate':>16}  {'Model > line':>14}")
         for line in [10, 15, 20, 25, 30]:
-            print(f"  {line:>6}  {float(np.mean(actuals > line)):>16.3f}")
- 
+            actRate  = float(np.mean(actuals > line))
+            predRate = float(np.mean(predictions > line))
+            print(f"  {line:>6}  {actRate:>16.3f}  {predRate:>14.3f}")
+
+
+        # 3. Fit df and sigma
+
         df, optimalSigma = _fitDfAndSigma(predictions, actuals)
         print(f"[Calibrator] best df = {df:.2f}, sigma={optimalSigma:.3f}")
 
-        # 3. Build (raw prob and hit) pairs across mutiple lines
 
-        rawProbsAll, hitsAll = [], []
-        for line in PLATT_FIT_LINES:
-            raw = np.array([_probOverT(p, line, optimalSigma, df)
-                for p in predictions
-            ])
-            hit = (actuals > line).astype(float)
-            rawProbsAll.append(raw)
-            hitsAll.append(hit)
+        # 4. Build platt data with a line restriction
 
-        rawProbsAll = np.concatenate(rawProbsAll)
-        hitsAll = np.concatenate(hitsAll)
+        plattLines = [line for line in PLATT_FIT_LINES if 5 <= line <= 35]
+        rawProbs, hits = _buildPlattData(predictions, actuals, plattLines, optimalSigma, df)
 
-        # 4. Platt scaling (logistic regression on raw probs)
+        # 5. Platt scaling (logistic regression on raw probs)
 
         platt = LogisticRegression(
             solver="lbfgs",
-            max_iter=1000,
+            max_iter=2000,
         )
-        platt.fit(rawProbsAll.reshape(-1,1), hitsAll)
+        platt.fit(rawProbs.reshape(-1,1), hits)
+        
+        # 6. Compression check
+        
+        calAt60 = float(platt.predict_proba([[0.60]])[0, 1])
+        calAt80 = float(platt.predict_proba([[0.80]])[0, 1])
+        calAt90 = float(platt.predict_proba([[0.90]])[0, 1])
+        highCompression = calAt90 - calAt60
+        midCompression  = calAt80 - calAt60
+ 
+        print(
+            f"[Calibrator] Platt output: "
+            f"@60%={calAt60:.3f}, @80%={calAt80:.3f}, @90%={calAt90:.3f}"
+        )
+        print(
+            f"[Calibrator] Compression: "
+            f"60→90 span={highCompression:.3f}, "
+            f"60→80 span={midCompression:.3f}"
+        )
+ 
+        if highCompression < 0.10:
+            profitableEdgeCap = 0.10
+            print(
+                f"[Calibrator] Severe compression — "
+                f"capping profitable edge at {profitableEdgeCap:.0%}"
+            )
+        elif midCompression < 0.08:
+            profitableEdgeCap = 0.12
+            print(
+                f"[Calibrator] Moderate compression — "
+                f"capping profitable edge at {profitableEdgeCap:.0%}"
+            )
+        else:
+            profitableEdgeCap = 0.18
+            print(
+                f"[Calibrator] Compression acceptable — "
+                f"profitable edge cap={profitableEdgeCap:.0%}"
+            )
+
 
         instance = cls(
             platt = platt,
             df = df, 
             sigma = optimalSigma,
             residualStd = residualStd,
-            meta = metadata or {},
+            meta = {
+                **(metadata or {}),
+                "target_mode": targetMode,
+                "profitable_edge_cap": profitableEdgeCap,
+                "mean_pred": meanPred,
+                "platt_60": calAt60,
+                "platt_80": calAt80,
+                "platt_90": calAt90,
+            }
         )
         instance.printExamples(predMean=meanPred)
 
+
         # 5. Optional save
+
 
         if savePath:
             instance.save(savePath)
