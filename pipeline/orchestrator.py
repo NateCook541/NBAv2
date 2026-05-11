@@ -33,7 +33,7 @@ class Pipeline:
         points = PointsBundle.loadIfExists()
         minutes = MinutesBundle.loadIfExists()
         calibrator = Calibrator.loadIfExists()
-        
+               
         allSafe = (
                 points is not None and points.isSafeFor(backtestStartDate) and
                 minutes is not None and minutes.isSafeFor(backtestStartDate) and
@@ -86,34 +86,43 @@ class Pipeline:
         conn = sqlite3.connect(str(self.dbPath))
         caches = preloadCaches(conn)
         conn.close()
-
-        minutes = MinutesBundle.train(
+        
+        savedMinutes = MinutesBundle.loadIfExists()
+        minutesChanged = (
+                savedMinutes is None or
+                not savedMinutes.isSafeFor(endDate or "9999-99-99")
+        )
+        if minutesChanged:
+            print(f"[Pipeline] Training fresh minutes bundle")
+            minutes = MinutesBundle.train(
                 playerLogCache = caches.playerLogCache,
                 statusDF = caches.statusDF,
                 posCache = caches.posCache,
                 dbPath = self.dbPath,
                 endDate = endDate,
                 save = save
-        )
+            )
+        else:
+            print(f"[Pipeline] Saved minutes model is current, resuing")
+            minutes = savedMinutes
 
         # 2. Feature matrix
-        # Pass minutes bundle here so it rebuilds as it would be stale
-        # If need quick tests could edit
         print("\n--- Step 2. Feature matrix ---")
         X, y, dates = self.featureCachePath.loadOrBuild(
                 endDate = endDate,
                 dbPath = self.dbPath,
-                minutesBundle = minutes
+                minutesBundle = minutes if minutesChanged else None
         )
 
         # 3. Points model
         print("\n--- Step 3. Points model ---")
+        
         points = PointsBundle.train(
-                X = X,
-                y = y,
-                dates = dates,
-                save = save,
-                runMetrics = runMetrics
+                X,
+                y,
+                dates,
+                save=save,
+                runMetrics=runMetrics,
         )
 
         # 4. Calibrator
@@ -195,13 +204,13 @@ class Pipeline:
     
     # Refit the calibrator on the saved model for testing calibration changes
     def refitCalibrator(self, save=True):
+        from models.points import _splitChronologically, _applyPropPlayerFilter
+        from config import HOLDOUT_RATIO
+
         print("\n--- Refit calibrator ---")
 
         pointsModel = PointsBundle.load()
         X, y, dates = self.featureCachePath.loadOrBuild(dbPath=self.dbPath)
-
-        from models.points import _splitChronologically, _applyPropPlayerFilter
-        from config import HOLDOUT_RATIO
 
         mask = X["avgPts10"] > 0
         X, y, dates = (
@@ -210,10 +219,12 @@ class Pipeline:
                 dates[mask].reset_index(drop=True),
         )
 
-        _, XCal, _, yCal, calDates = _splitChronologically(
+        _, XCal, _, yCal, _, calDates = _splitChronologically(
                 X, y, dates, holdoutRatio=HOLDOUT_RATIO
         )
-        XCal, yCal, calDates = _applyPropPlayerFilter(Xcal, yCal, calDates)
+        XCal, yCal, calDates = _applyPropPlayerFilter(
+            XCal, yCal, calDates, minAvgPtsCal=5
+        )
         
         predictions = pointsModel.predictBatch(XCal)
 
@@ -239,15 +250,25 @@ class Pipeline:
 
 
     def evaluateModel(self):
-        from models.evaluate import evaluateModel
+        from models.evaluate import evaluateModel, walkForwardEvaluate
 
-        print("\n--- Evaluating saved calibrator ---")
+        print("\n--- Evaluating saved points model ---")
         points = PointsBundle.load()
 
         X, y, _ = self.featureCachePath.loadOrBuild(dbPath=self.dbPath)
 
         split = int(len(X) * 0.8)
-        evaluateModel(points.model, X.iloc[split:], y.iloc[split:])
+        XTest = X.iloc[split:].reset_index(drop=True)
+        yTest = y.iloc[split:].reset_index(drop=True)
+        evaluateModel(
+            points.model,
+            XTest,
+            yTest,
+            targetMode=points.meta.get("target_mode", "absolute"),
+            clipK=float(points.meta.get("prediction_clip_k", 0.0)),
+            biasMeta=points.meta.get("bias_correction", {}),
+        )
+        walkForwardEvaluate(X, y)
 
 
 # Evaluate calibrator
@@ -273,7 +294,7 @@ class Pipeline:
         _, XCal, _, yCal, _, calDates = _splitChronologically(
                 X, y, dates, holdoutRatio=HOLDOUT_RATIO
         )
-        XCal, yCal, _ = _applyPropPlayerFilter(XCal, yCal, calDates)
+        XCal, yCal, _ = _applyPropPlayerFilter(XCal, yCal, calDates, minAvgPtsCal=5)
         
         predictions = pointsModel.predictBatch(XCal)
 
@@ -283,4 +304,3 @@ class Pipeline:
         print(f"Actual std: {float(yCal.std()):.2f}")
 
         calibrator.printExamples(predMean=float(predictions.mean()))
-

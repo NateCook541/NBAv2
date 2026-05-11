@@ -44,15 +44,54 @@ HOLDOUT_RATIO = 0.20
 
 POINTS_MODEL_PARAMS = {
     "n_estimators":    400,
-    "max_depth":       6,
+    "max_depth":       5,
     "learning_rate":   0.05,
     "subsample":       0.8,
     "colsample_bytree":0.8,
-    "min_child_weight":5,
+    "min_child_weight":7,
     "n_jobs":         -1,
-    "objective":      "reg:squarederror",
+    "objective":      "reg:absoluteerror",
     "random_state":    42,
 }
+
+# Points target behavior
+# residual: model learns points - avgPts10, then adds avgPts10 back at inference
+# absolute: model learns raw points directly
+POINTS_TARGET_MODE = "residual"
+
+# Optional prediction clipping around player recent mean/stdev.
+# Set to <= 0 to disable clipping.
+PREDICTION_CLIP_K = 2.5
+PREDICTION_CLIP_CANDIDATES = [0.0, 2.5, 3.5]
+CLIP_LOWER_K_CANDIDATES = [0.0, 2.5]
+CLIP_UPPER_K_CANDIDATES = [2.5, 3.5, 4.5]
+CLIP_TAIL_PENALTY = 0.15
+
+# Walk-forward evaluation defaults
+WALKFORWARD_SPLITS = 6
+WALKFORWARD_MIN_TRAIN_ROWS = 16000
+WALKFORWARD_MAX_NEG_DELTA = -0.10
+WALKFORWARD_ALERT_DELTA = -0.05
+WF_TUNE_RATIO = 0.15
+USE_WF_RECENCY_WEIGHTS = True
+ENABLE_BASELINE_BLEND = True
+ENABLE_REGIME_ALPHA = True
+ALPHA_MIN = 0.55
+ALPHA_MAX = 1.0
+CHAOS_Q_MINSTD = 0.75
+CHAOS_Q_INJURY = 0.75
+TUNE_SCORE_LAMBDA_P95 = 0.08
+TUNE_SCORE_LAMBDA_NEG_DELTA = 0.75
+TUNE_SCORE_LAMBDA_NEG_DELTA_SQ = 1.25
+TUNE_MIN_DELTA_FOR_MODEL = 0.00
+ALPHA_CHAOS_MAX_WHEN_WEAK = 0.60
+ALPHA_SHRINK_TO_BASELINE = 0.20
+ALPHA_MAX_WHEN_NO_CLIP = 0.65
+
+# Recency weighting for points training rows
+USE_RECENCY_WEIGHTS = True
+RECENCY_WEIGHT_MIN = 0.8
+RECENCY_WEIGHT_MAX = 1.2
  
 MINUTES_MODEL_PARAMS = {
     "n_estimators":    300,
@@ -82,4 +121,3 @@ FLAT_STAKE = 10
 # Used to filter out really far out line preds as this is likely injury effects that scraper didn't catch
 MIN_LINE = 5
 MAX_LINE_DIFF = 10
-

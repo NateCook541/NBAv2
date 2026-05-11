@@ -1,8 +1,10 @@
 import os
 import requests
 import sqlite3
+import unicodedata
 from pathlib import Path
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 from data.dbManager import DBManager
 
@@ -48,9 +50,29 @@ def _getHistoricalProps(eventID, date):
 # PARSING
 
 # Flatted the nested Odds API response into a list of flat dict for upsertProps
-def _parseProps(eventData, gameDate):
+def _deriveGameDate(eventData, fallbackDate):
+    """
+    Use the event's commence_time instead of the requested pull date.
+    This avoids systematic date drift when the API date window returns
+    events that spill across neighboring calendar days.
+    """
+    commence = eventData.get("commence_time")
+    if not commence:
+        return fallbackDate
+
+    try:
+        dtUtc = datetime.fromisoformat(commence.replace("Z", "+00:00"))
+        # NBA reference dates in this project are US-local game days.
+        dtEt = dtUtc.astimezone(ZoneInfo("America/New_York"))
+        return dtEt.strftime("%Y-%m-%d")
+    except Exception:
+        return fallbackDate
+
+
+def _parseProps(eventData, fallbackDate):
     rows = []
     fetchedAt = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    gameDate = _deriveGameDate(eventData, fallbackDate)
 
     bookmakers = eventData.get("bookmakers", [])
     for book in bookmakers:
@@ -89,6 +111,29 @@ def _parseProps(eventData, gameDate):
                 })
     
     return rows
+
+
+def _normalizeName(name):
+    base = "".join(
+        c for c in unicodedata.normalize("NFD", name or "")
+        if unicodedata.category(c) != "Mn"
+    ).lower().strip()
+    cleaned = (
+        base.replace(".", " ")
+        .replace("'", "")
+        .replace("-", " ")
+    )
+    tokens = [t for t in cleaned.split() if t]
+    merged = []
+    i = 0
+    while i < len(tokens):
+        if i + 1 < len(tokens) and len(tokens[i]) == 1 and len(tokens[i + 1]) == 1:
+            merged.append(tokens[i] + tokens[i + 1])
+            i += 2
+            continue
+        merged.append(tokens[i])
+        i += 1
+    return " ".join(merged)
 
 
 # Get each date string between start and end (inclusive)
@@ -140,4 +185,3 @@ def pullHistoricalProps(startDate, endDate, dbPath="NBA.db", dryRun=False):
             print(f"No props found for {date}")
 
     print(f"\nDone. Total props stored: {totalRows}")
-

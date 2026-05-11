@@ -31,8 +31,8 @@ def main():
     parser.add_argument("--backtest", action="store_true")
     parser.add_argument("--edge-thresh", type=float, default=0.03)
     parser.add_argument("--bankroll", type=float, default=1000.0)
-    parser.add_argument("--start-date", type=float, default=None)
-    parser.add_argument("--end-date", type=float, default=None)
+    parser.add_argument("--start-date", type=str, default=None)
+    parser.add_argument("--end-date", type=str, default=None)
 
     # Shared args
     parser.add_argument("--db",  default="NBA.db")
@@ -57,6 +57,11 @@ def main():
                 edgeThresh = args.edge_thresh, 
                 bankroll = args.bankroll
         )
+    
+    if args.pull_props:
+        from betting.oddsCollector import pullHistoricalProps
+        pullHistoricalProps(args.pull_props[0], args.pull_props[1], dbPath=args.db)
+        
 
     if args.cache_data:
         pipeline.cacheFeatures()
@@ -65,14 +70,14 @@ def main():
         pipeline.refitCalibrator()
 
     if args.evaluate:
-        pipeline.evaluteModel()
+        pipeline.evaluateModel()
 
     if args.calibrator:
         pipeline.evaluateCalibrator()
     
     if args.scrape:
-        from data.scraper import ScrapeEngine
-        from data.db import DBManager
+        from data.scrapperEngine import ScrapeEngine
+        from data.dbManager import DBManager
 
         db = DBManager(args.db)
         db.initSchema()
@@ -84,21 +89,12 @@ def main():
             engine.close()
 
     if args.historical_seasons:
-        from data.scraper import ScrapeEngine
-        from data.db import DBManager
-
-        db = DBManager(args.db)
-        db.initSchema()
-        engine = ScrapeEngine(db=args.db, headless=True)
-
-        try:
-            _runHistorical(engine, db, args.historical_seasons)
-        finally:
-            engine.close()
+        scrapeHistorical(args.historical_seasons, dbPath=args.db, outputDir="output")
 
     if args.train_minutes:
         import sqlite3
-        from feature.cache import preloadCaches
+        from features.cache import preloadCaches
+        from models.minutes import MinutesBundle
 
         conn = sqlite3.connect(args.db)
         caches = preloadCaches(conn)
@@ -114,6 +110,10 @@ def main():
 
 
 def _runScrape(engine, db, args):
+    import json
+    outputDir = "output"
+    numLogGames = args.num_games
+    backfillFrom = args.backfill_from
     try:
         print("\n--------Scraping--------")
         teams = engine.scrapeTeams()
@@ -147,6 +147,9 @@ def _runScrape(engine, db, args):
     print("\n--------DB Updated Complete--------")
 
 def scrapeHistorical(seasons, dbPath="NBA.db", outputDir="output"):
+    import json
+    from data.scrapperEngine import ScrapeEngine
+    from data.dbManager import DBManager
     # Setup DB and Scrapper Engine
     db = DBManager(dbPath)
     db.initSchema()
@@ -192,4 +195,3 @@ if __name__ == "__main__":
     main()
 
 # :steam_smile
-

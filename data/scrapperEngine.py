@@ -820,10 +820,11 @@ class ScrapeEngine:
                             playerID = existingMap[normalized]
                         else:
                             while nextID in assignedIDs:
-                                playerID = nextID
-                                existingMap[normalized] = playerID # This prevents duplicates
                                 nextID += 1
-                                assignedIDs.add(playerID)
+                            playerID = nextID
+                            existingMap[normalized] = playerID
+                            assignedIDs.add(playerID)
+                            nextID += 1
 
                         players.append({
                             "player_id": playerID,
@@ -1106,4 +1107,3 @@ class ScrapeEngine:
             return res[0]
         else:
             return "2025-10-01" 
-

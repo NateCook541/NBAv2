@@ -23,19 +23,23 @@ featureOrder = [
 
     # Injury stats
     "missing_ppg_injury", "starters_out_count", "injury_opportunity", "player_status_flag", "player_is_questionable",
-    "missing_usage",
+    "missing_usage", "injury_min_std_interaction", "injury_q_interaction", "injury_avgmin_interaction",
 
     # Opp stats
-    "opp_def_rtg", "opp_pace", "opp_pts_allowed_to_pos",
+    "opp_def_rtg", "opp_pace", "opp_pts_allowed_to_pos", "opp_pts_allowed_pos_l10", "opp_def_rtg_trend",
+    "opp_key_defender_out", "opp_combined_pace", "opp_def_rtg_vs_pace",
+
+    # Player vs opp stats
+    "pts_vs_opp_avg", "pts_vs_opp_trend", "pts_vs_opps_n",
     
     # Location and rest stats
     "is_home", "rest_days", "back_to_back", 
-
-    # FIXME: Mabye add this later
-    #"games_last_7_days",
     
     # Pos stats
     "pos", "pos_injury_opportunity",
+
+    # Situational flags
+    "streak_score", "last_game_outlier",
 
     # Minutes prediction
     "mins_prediction",
@@ -203,6 +207,87 @@ def _injuryOpportunityByPos(statusDF, oppPosCache, playerPos, teamID, oppTeamID,
 
     return basePtsAllowed * (1 + 0.05 * defendersMissing)
 
+# Rolling window of pts avg vs specific opp
+def _oppPtsAllowedPosRolling(oppPosCache, oppTeamID, playerPos, date, window=10):
+    key = (oppTeamID, playerPos)
+    df = oppPosCache.get(key)
+
+    if df is None or df.empty:
+        return 0.0
+
+    past = df[df["game_date"] < date].tail(window)
+    if past.empty:
+        return 0.0
+
+    return float(past["points"].mean())
+
+def _oppDefRtgTrend(teamCache, oppTeamID, date):
+    df = teamCache.get(oppTeamID)
+    if df is None or df.empty:
+        return 0.0
+
+    past = df[df["date"] < date]
+    if len(past) < 5:
+        return 0.0
+
+    last5 = float(past.tail(5)["def_rtg"].mean())
+    last15 = float(past.tail(15)["def_rtg"].mean())
+    
+    return last5 - last15
+
+def _oppKeyDefenderOut(statusDF, oppPosCache, playerPos, oppTeamID, date):
+    dayBefore = (
+        datetime.strptime(date, "%Y-%m-%d") - timedelta(days=1)
+    ).strftime("%Y-%m-%d")
+    
+    injured = statusDF[
+        (statusDF.team_id == oppTeamID) &
+        (statusDF.scrape_date == dayBefore) &
+        (statusDF.status.isin(["Out", "Doubtful"]))
+    ]
+
+    if injured.empty:
+        return 0
+
+    key = (oppTeamID, playerPos)
+    if key not in oppPosCache:
+        return 0
+
+    return 1 if len(injured) > 0 else 0
+    
+def _ptsVsOpponenet(playerID, oppTeamID, date, cache):
+    if playerID not in cache:
+        return 0.0, 0.0, 0
+
+    df = cache[playerID]
+    past = df[df["game_date"] < date]
+
+    if "opp_team_id" not in past.columns:
+        return 0.0, 0.0, 0
+
+    vsOpp = past[past["opp_team_id"] == oppTeamID].tail(6)
+    n = len(vsOpp)
+
+    if n < 2:
+        return 0.0, 0.0, n
+
+    avgVsOpp = float(vsOpp["points"].mean())
+    return avgVsOpp, n
+
+def _streakScore(rolling, avgPts):
+    last5 = rolling.head(5)
+    if last5.empty:
+        return 0
+
+    return int((last5["points"] > avgPts).sum())
+
+def _lastGameOutlier(rolling, avgPts, ptsStd):
+    if rolling.empty or ptsStd == 0:
+        return 0
+    lastPts = float(rolling.iloc[0]["points"])
+
+    return 1 if lastPts > avgPts + 1.5 * ptsStd else 0
+
 
 # Builds the feature vector for training
 def buildFeatures(playerID, date, teamID, oppTeamID, 
@@ -210,16 +295,15 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
                   oppPosCache, teamGameTotals, minutesModel=None,
                   currentIsHome=None, currentRestDays=None
 ):
-    # Gets player rolling stats
+    # Rolling stats
     rolling = _rollingStatsCache(playerID, date, cache)
     if rolling is None or rolling.empty:
         return None
     
+    last10 = rolling.head(10)
     baseline = rolling.head(10).mean(numeric_only=True)
     ewma = rolling.head(10).ewm(span=5).mean(numeric_only=True).iloc[-1]
-
-    # Last 10 games for features below (can add more exg last 5)
-    last10 = rolling.head(10)
+    avgMin = float(baseline["minutes"]) if baseline["minutes"] > 0 else 1.0
 
     # Volatility
     ptsStd10 = float(last10["points"].std() or 0.0)
@@ -229,6 +313,9 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
     homePts = float(rolling[rolling["is_home"] == 1]["points"].mean()) if len(rolling[rolling["is_home"] == 1]) > 0 else baseline["points"]
     
     awayPts = float(rolling[rolling["is_home"] == 0]["points"].mean()) if len(rolling[rolling["is_home"] == 0]) > 0 else baseline["points"]
+    
+    homeRows = rolling[rolling["is_home"] == 1]
+    awayRows = rolling[rolling["is_home"] == 0]
 
     homeAwayDiff = homePts - awayPts
 
@@ -300,6 +387,33 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
     else:
         predictedMins = float(baseline["minutes"])
 
+    # Opp rolling def context
+    oppPtsAllowedPosL10 = _oppPtsAllowedPosRolling(
+        oppPosCache, oppTeamID, posStr, date, window=10
+    )
+    oppDefRtgTrend = _oppDefRtgTrend(teamCache, oppTeamID, date)
+    oppKeyDefenderOut = _oppKeyDefenderOut(
+        statusDF, oppPosCache, posStr, oppTeamID, date
+    )
+
+    # Player vs opp stats`
+    vsOppResult = _ptsVsOpponenet(playerID, oppTeamID, date, cache)
+    ptsVsOppAvg = vsOppResult[0]
+    ptsVsOppN = vsOppResult[1]
+    ptsVsOppTrend = (ptsVsOppAvg - last10avg) if ptsVsOppN >= 2 else 0.0
+
+    # Situational flags
+    oppCombinedPace = (
+        float(oppFeatures["pace"]) + float(oppFeatures["pace"])
+    ) / 2
+    
+    streakScore = _streakScore(rolling, last10avg)
+    lastGameOutlier = _lastGameOutlier(rolling, last10avg, ptsStd10)
+    oppDefRtgVsPace = (
+        float(oppFeatures["def_rtg"]) * float(oppFeatures["pace"]) / 100.0
+    )
+
+
     # Full feature vertex
     features = pd.DataFrame([{
         "avgPts10":              baseline["points"],
@@ -327,14 +441,27 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
         "player_status_flag":    playerStatus["player_status_flag"],
         "player_is_questionable":playerStatus["player_is_questionable"],
         "missing_usage":         injuryFeatures["missing_usage"],
+        "injury_min_std_interaction": float(injuryFeatures["missing_ppg"] * (baseline["points"] / avgMin) * minStd10),
+        "injury_q_interaction": float(injuryFeatures["missing_ppg"] * (baseline["points"] / avgMin) * playerStatus["player_is_questionable"]),
+        "injury_avgmin_interaction": float(injuryFeatures["missing_ppg"] * (baseline["points"] / avgMin) * baseline["minutes"]),
         "opp_def_rtg":           oppFeatures["def_rtg"],
         "opp_pace":              oppFeatures["pace"],
         "opp_pts_allowed_to_pos":oppPtsAllowedToPos,
+        "opp_pts_allowed_pos_l10": oppPtsAllowedPosL10,
+        "opp_def_rtg_trend": oppDefRtgTrend,
+        "opp_key_defender_out": oppKeyDefenderOut,
+        "opp_combined_pace": oppCombinedPace,
+        "opp_def_rtg_vs_pace": oppDefRtgVsPace,
+        "pts_vs_opp_avg": ptsVsOppAvg,
+        "pts_vs_opp_trend": ptsVsOppTrend,
+        "pts_vs_opps_n": float(ptsVsOppN),
         "is_home":               isHome,
         "rest_days":             restDays,
         "back_to_back":          isB2B,
         "pos":                   pos,
         "pos_injury_opportunity":posInjuryOpp,
+        "streak_score": float(streakScore),
+        "last_game_outlier": float(lastGameOutlier),
         "mins_prediction":       predictedMins,
     }])
 

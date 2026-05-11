@@ -202,7 +202,7 @@ class MinutesBundle:
         return bundle
 
 
-    # Backtest safety check
+    # Safety check
 
 
     # Needed to check if safe for the backtest testing
@@ -212,4 +212,20 @@ class MinutesBundle:
             return False
 
         return end <= backtestStartDate
+
+    
+    # Check for if minutes model is new or can reuse is training
+    def isCurrent(self, endDate=None):
+        modelEnd = self.meta.get("train_end_date")
+        if endDate is None:
+            return modelEnd is None
+        if modelEnd is None:
+            return True
+        return modelEnd >= endDate
+
+
+
+
+
+
 
