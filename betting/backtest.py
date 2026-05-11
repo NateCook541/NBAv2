@@ -355,10 +355,6 @@ class BacktestEngine:
         # Game context
         ctx = oppMap.get((playerID, date))
         if ctx is None:
-            print(
-                f"No opp match - player={prop.player_name} "
-                f"pid={playerID} prop_date={propDate} "
-            )
             skips.noOppMatch += 1
             skips.noOppMatchByMonth[str(propDate)[:7]] += 1
             return None, currentBank, skips

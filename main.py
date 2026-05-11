@@ -26,8 +26,6 @@ def main():
 
     # Props args
     parser.add_argument("--pull-props", nargs=2, metavar=("START_DATE", "END_DATE"))
-    parser.add_argument("--repair-prop-dates", action="store_true")
-    parser.add_argument("--apply-repair", action="store_true")
 
     # Backtest args
     parser.add_argument("--backtest", action="store_true")
@@ -63,13 +61,6 @@ def main():
     if args.pull_props:
         from betting.oddsCollector import pullHistoricalProps
         pullHistoricalProps(args.pull_props[0], args.pull_props[1], dbPath=args.db)
-
-    if args.repair_prop_dates:
-        from betting.oddsCollector import repairHistoricalPropDates
-        repairHistoricalPropDates(
-            dbPath=args.db,
-            dryRun=(not args.apply_repair),
-        )
         
 
     if args.cache_data:
