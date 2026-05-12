@@ -20,6 +20,17 @@ from config import (
 def _probOverT(predicted, line, sigma, df):
     return float(1 - t_dist.cdf(line, df=df, loc=predicted, scale=sigma))
 
+def _rawPushProb(predicted, line, sigma, df):
+    """
+    Rough push probability for integer lines assuming integer outcomes.
+    For half-point lines this should be near zero.
+    """
+    if not float(line).is_integer():
+        return 0.0
+    upper = float(t_dist.cdf(line + 0.5, df=df, loc=predicted, scale=sigma))
+    lower = float(t_dist.cdf(line - 0.5, df=df, loc=predicted, scale=sigma))
+    return max(0.0, upper - lower)
+
 def _estimateResidualStd(predictions, actuals):
     residuals = np.asarray(actuals) - np.asarray(predictions)
     q75, q25 = np.percentile(residuals, [75, 25])
@@ -79,13 +90,29 @@ def _buildPlattData(predictions, actuals, lines, sigma, df):
 
     return np.concatenate(rawProbsAll), np.concatenate(hitsAll)
 
+def _buildPlattDataUnder(predictions, actuals, lines, sigma, df):
+    actuals = np.asarray(actuals)
+    rawProbsAll, hitsAll = [], []
+
+    for line in lines:
+        raw = np.array([
+            float(t_dist.cdf(line, df=df, loc=p, scale=sigma))
+            for p in predictions
+        ])
+
+        hit = (actuals < line).astype(float)
+        rawProbsAll.append(raw)
+        hitsAll.append(hit)
+
+    return np.concatenate(rawProbsAll), np.concatenate(hitsAll)
 
 # Calibrator class
 
 
 class Calibrator:
-    def __init__(self, platt, df, sigma, residualStd, meta):
+    def __init__(self, platt, plattUnder, df, sigma, residualStd, meta):
         self.platt = platt
+        self.plattUnder = plattUnder
         self.df = df
         self.sigma = sigma
         self.residualStd = residualStd
@@ -102,6 +129,16 @@ class Calibrator:
             line, df=self.df, loc=predicted, scale=self.sigma
         ))
         return float(self.platt.predict_proba([[raw]])[0, 1])
+
+    # Returns calibrated P(acutal < line) given a raw point pred
+    # NOTE: Only (other) method backtest and prediction layers needs to call
+    def probUnder(self, predicted, line):
+        # Keep over/under coherent by deriving under from calibrated over.
+        # For integer lines we reserve an approximate push mass.
+        over = self.probOver(predicted, line)
+        push = _rawPushProb(predicted, line, self.sigma, self.df)
+        return float(np.clip(1.0 - over - push, 0.0, 1.0))
+
 
     # Uncalibrated prob (Needed for debugging)
     def rawProbOver(self, predicted, line):
@@ -120,7 +157,12 @@ class Calibrator:
 
         Computed in fit and used in backtest to filter out most likely bad bets
         """
-        return float(self.meta.get("profitable_edge_Cap", 0.15))
+        return float(
+            self.meta.get(
+                "profitable_edge_cap",
+                self.meta.get("profitable_edge_Cap", 0.15)
+            )
+        )
 
 
     # Diagnostics
@@ -192,6 +234,7 @@ class Calibrator:
     def save(self, path=CALIBRATOR_PATH):
         bundle = {
             "platt": self.platt,
+            "plattUnder": self.plattUnder,
             "df": self.df,
             "sigma": self.sigma,
             "residual std": self.residualStd,
@@ -210,12 +253,13 @@ class Calibrator:
 
         return cls(
                 platt = bundle["platt"],
+                plattUnder = bundle.get("plattUnder", bundle["platt"]),
                 df = bundle["df"],
                 sigma = bundle["sigma"],
                 residualStd = bundle.get("residual std", bundle.get("sigma")),
                 meta = {
                     k: v for k, v in bundle.items()
-                    if k not in ("platt", "df", "sigma", "residual std")
+                    if k not in ("platt", "plattUnder", "df", "sigma", "residual std")
                 },
         )
 
@@ -281,16 +325,27 @@ class Calibrator:
         # 4. Build platt data with a line restriction
 
         plattLines = [line for line in PLATT_FIT_LINES if 5 <= line <= 35]
+        
         rawProbs, hits = _buildPlattData(predictions, actuals, plattLines, optimalSigma, df)
+        rawProbsUnder, hitsUnder = _buildPlattDataUnder(predictions, actuals, plattLines, optimalSigma, df)
 
         # 5. Platt scaling (logistic regression on raw probs)
-
+        
         platt = LogisticRegression(
             solver="lbfgs",
             max_iter=2000,
         )
         platt.fit(rawProbs.reshape(-1,1), hits)
         
+        
+        plattUnder = LogisticRegression(
+            solver="lbfgs",
+            max_iter=2000,
+        )
+        
+        plattUnder.fit(rawProbsUnder.reshape(-1,1), hitsUnder)
+        
+
         # 6. Compression check
         
         calAt60 = float(platt.predict_proba([[0.60]])[0, 1])
@@ -328,9 +383,23 @@ class Calibrator:
                 f"profitable edge cap={profitableEdgeCap:.0%}"
             )
 
+        # Historical backtests showed edges above 15% are typically not reliable.
+        profitableEdgeCap = min(profitableEdgeCap, 0.15)
+        print(f"[Calibrator] Final enforced edge cap={profitableEdgeCap:.0%}")
+
+        # Unders
+
+        underAt40 = float(plattUnder.predict_proba([[0.40]])[0, 1])
+        underAt60 = float(plattUnder.predict_proba([[0.60]])[0, 1])
+        underAt80 = float(plattUnder.predict_proba([[0.80]])[0, 1])
+        print(
+            f"[Calibrator] Under Platt: "
+            f"@40%={underAt40:.3f}, @60%={underAt60:.3f}, @80%={underAt80:.3f}"
+        )
 
         instance = cls(
             platt = platt,
+            plattUnder = plattUnder,
             df = df, 
             sigma = optimalSigma,
             residualStd = residualStd,
@@ -342,6 +411,7 @@ class Calibrator:
                 "platt_60": calAt60,
                 "platt_80": calAt80,
                 "platt_90": calAt90,
+                "under_platt_60": underAt60,
             }
         )
         instance.printExamples(predMean=meanPred)

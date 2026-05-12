@@ -30,6 +30,7 @@ def main():
     # Backtest args
     parser.add_argument("--backtest", action="store_true")
     parser.add_argument("--edge-thresh", type=float, default=0.03)
+    parser.add_argument("--under-edge-thresh", type=float, default=0.10)
     parser.add_argument("--bankroll", type=float, default=1000.0)
     parser.add_argument("--start-date", type=str, default=None)
     parser.add_argument("--end-date", type=str, default=None)
@@ -55,6 +56,7 @@ def main():
                 startDate = args.start_date, 
                 endDate = args.end_date, 
                 edgeThresh = args.edge_thresh, 
+                underEdgeThresh = args.under_edge_thresh,
                 bankroll = args.bankroll
         )
     

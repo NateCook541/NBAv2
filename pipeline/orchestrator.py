@@ -6,7 +6,7 @@ from pathlib import Path
 from config import (
     DB_PATH, FEATURE_CACHE_PATH,
     MODEL_PATH, CALIBRATOR_PATH, MINUTES_PATH,
-    DEFAULT_EDGE_THRESH, DEFAULT_BANKROLL, DEFAULT_KELLY_FRAC,
+    DEFAULT_EDGE_THRESH, DEFAULT_UNDER_EDGE_THRESH, DEFAULT_BANKROLL, DEFAULT_KELLY_FRAC,
 )
 from features.cache import FeatureCache, preloadCaches
 from models.minutes import MinutesBundle
@@ -149,8 +149,8 @@ class Pipeline:
 # Backtest
         
 
-    def backtest(self, startDate=None, endDate=None, 
-                 edgeThresh=DEFAULT_EDGE_THRESH, bankroll=DEFAULT_BANKROLL):
+    def backtest(self, startDate=None, endDate=None, edgeThresh=DEFAULT_EDGE_THRESH,
+                 underEdgeThresh=DEFAULT_UNDER_EDGE_THRESH, bankroll=DEFAULT_BANKROLL):
         """
         Run a full backtest on props data
 
@@ -181,6 +181,7 @@ class Pipeline:
                 startDate = startDate,
                 endDate = endDate,
                 edgeThresh = edgeThresh,
+                underEdgeThresh = underEdgeThresh,
                 bankroll = bankroll
         )
 

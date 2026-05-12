@@ -10,7 +10,10 @@ from typing import Optional
 from config import (
     DB_PATH,
     DEFAULT_EDGE_THRESH, DEFAULT_BANKROLL, FLAT_STAKE,
+    DEFAULT_UNDER_EDGE_THRESH,
     MIN_LINE, MAX_LINE_DIFF, DEFAULT_KELLY_FRAC,
+    UNDER_MIN_DISAGREEMENT, OVER_MIN_DISAGREEMENT,
+    UNDER_MIN_PREDICTED_POINTS, OVER_BLOCK_PREDICTED_RANGE,
 )
 
 from features.cache import preloadCaches
@@ -20,7 +23,6 @@ from metrics.reporter import Reporter
 
 # Mutiple small dataclasses
 # Desgin to keep the loops in backtesting more readable
-
 
 @dataclass
 class BetRecord:
@@ -36,7 +38,8 @@ class BetRecord:
     stake: float
     pnl: float
     bankroll: float
-
+    betSide: str
+    betOdds: float
 
 @dataclass
 class SkipCounters:
@@ -273,8 +276,8 @@ class BacktestEngine:
     # Public entry point
 
 
-    def run(self, startDate=None, endDate=None, 
-            edgeThresh=DEFAULT_EDGE_THRESH, bankroll=DEFAULT_BANKROLL):
+    def run(self, startDate=None, endDate=None, edgeThresh=DEFAULT_EDGE_THRESH,
+            underEdgeThresh=DEFAULT_UNDER_EDGE_THRESH, bankroll=DEFAULT_BANKROLL):
         
         # Load data from db
 
@@ -294,7 +297,8 @@ class BacktestEngine:
 
         print(
             f"[BacktestEngine] {len(props)} props loaded \n"
-            f"edge thresh={edgeThresh:.0%} | bankroll=${bankroll:.0f}"
+            f"edge thresh={edgeThresh:.0%} | under edge thresh={underEdgeThresh:.0%} "
+            f"| bankroll=${bankroll:.0f}"
         )
         print(
             f"[BacktestEngine] prop date range: "
@@ -316,6 +320,7 @@ class BacktestEngine:
                 scheduleMap = scheduleMap,
                 caches = caches,
                 edgeThresh = edgeThresh,
+                underEdgeThresh = underEdgeThresh,
                 currentBank = currentBank,
                 skips = skips
             )
@@ -336,7 +341,7 @@ class BacktestEngine:
 
 
     def _evaluateProp(self, prop, actuals, playerMap, oppMap, scheduleMap, caches,
-                      edgeThresh, currentBank, skips):
+                      edgeThresh, underEdgeThresh, currentBank, skips):
         nameNorm = _normalize(prop.player_name)
         propDate = prop.game_date
         date = propDate
@@ -410,12 +415,49 @@ class BacktestEngine:
             return None, currentBank, skips
 
         # Probailites
-        myProb = self.calibrator.probOver(predicted, prop.line)
-        fairOver, _ = _removeVig(prop.over_odds, prop.under_odds)
-        edge = myProb - fairOver
+        overProb = self.calibrator.probOver(predicted, prop.line)
+        underProb = self.calibrator.probUnder(predicted, prop.line)
 
+        fairOver, fairUnder = _removeVig(prop.over_odds, prop.under_odds)
         
-        # More bet filters
+        overEdge = overProb - fairOver
+        underEdge = underProb - fairUnder
+      
+        overDisagreement = predicted - prop.line
+        underDisagreement = prop.line - predicted
+
+        canBetOver = overDisagreement >= OVER_MIN_DISAGREEMENT
+        canBetUnder = underDisagreement >= UNDER_MIN_DISAGREEMENT
+
+        if canBetOver and (not canBetUnder or overEdge >= underEdge):
+            edge = overEdge
+            betSide = "over"
+            betOdds = prop.over_odds
+            myProb = overProb
+            fair = fairOver
+        elif canBetUnder:
+            edge = underEdge
+            betSide = "under"
+            betOdds = prop.under_odds
+            myProb = underProb
+            fair = fairUnder
+        else:
+            edge = max(overEdge, underEdge)
+            betSide = "over" if overEdge >= underEdge else "under"
+            betOdds = prop.over_odds if betSide == "over" else prop.under_odds
+            myProb = overProb if betSide == "over" else underProb
+            fair = fairOver if betSide == "over" else fairUnder
+
+        # Side-specific regime filters.
+        # These are based on stable backtest underperformance pockets.
+        if betSide == "under" and predicted < UNDER_MIN_PREDICTED_POINTS:
+            skips.noLine += 1
+            return None, currentBank, skips
+
+        overBlockLow, overBlockHigh = OVER_BLOCK_PREDICTED_RANGE
+        if betSide == "over" and overBlockLow <= predicted < overBlockHigh:
+            skips.noLine += 1
+            return None, currentBank, skips
 
 
         # Filter 1. Profitable edge cap
@@ -423,22 +465,30 @@ class BacktestEngine:
             skips.noLine += 1
             return None, currentBank, skips
 
+
+        sideEdgeThresh = edgeThresh if betSide == "over" else underEdgeThresh
+
         # No bet record
-        if edge <= edgeThresh:
+        if edge <= sideEdgeThresh:
+            noBetProb = overProb if betSide == "over" else underProb
+            noBetFair = fairOver if betSide == "over" else fairUnder
             return BetRecord(
                 date = propDate,
                 player = prop.player_name,
                 line = prop.line,
                 predicted = round(predicted, 1),
                 actual = actualPts,
-                myProb = round(myProb, 3),
-                bookProb = round(fairOver, 3),
+                myProb = round(noBetProb, 3),
+                bookProb = round(noBetFair, 3),
                 edge = round(edge, 3),
                 bet = False,
                 stake = 0.0,
-                pnl = 0.0,
+                pnl = 0.0,                    
                 bankroll = round(currentBank, 2),
-            ), currentBank, skips
+                betSide = betSide,
+                betOdds = float(betOdds),
+            ), currentBank, skips     
+        
 
         # Bet sizing
         # Kelly is unimplmented for now until preformance improves
@@ -446,8 +496,8 @@ class BacktestEngine:
         # This is to reduce noise for working on improvments
         stake = FLAT_STAKE
 
-        won = actualPts > prop.line
-        pnl = stake * _payoutMultiplier(prop.over_odds) if won else -stake
+        won = (actualPts > prop.line) if betSide == "over" else (actualPts < prop.line)
+        pnl = stake * _payoutMultiplier(betOdds) if won else -stake
         currentBank += pnl
 
         return BetRecord(
@@ -457,10 +507,12 @@ class BacktestEngine:
                 predicted = round(predicted, 1),
                 actual = actualPts,
                 myProb = round(myProb, 3),
-                bookProb = round(fairOver, 3),
+                bookProb = round(fair, 3),
                 edge = round(edge, 3),
                 bet = True,
                 stake = round(stake, 2),
                 pnl = round(pnl, 2),
                 bankroll = round(currentBank, 2),
+                betSide = betSide,
+                betOdds = round(betOdds, 3),
             ), currentBank, skips

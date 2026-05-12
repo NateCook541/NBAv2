@@ -114,6 +114,7 @@ DF_BOUNDS    = (2.1, 30.0)
 # Betting
 
 DEFAULT_EDGE_THRESH = 0.03
+DEFAULT_UNDER_EDGE_THRESH = 0.10
 DEFAULT_BANKROLL = 1000
 DEFAULT_KELLY_FRAC = 0.25
 FLAT_STAKE = 10
@@ -121,3 +122,12 @@ FLAT_STAKE = 10
 # Used to filter out really far out line preds as this is likely injury effects that scraper didn't catch
 MIN_LINE = 5
 MAX_LINE_DIFF = 10
+
+UNDER_MIN_DISAGREEMENT = 5.0
+OVER_MIN_DISAGREEMENT  = 2.0
+
+# Side/prediction regime filters from backtest diagnostics
+# Unders below this predicted points level have been structurally weak.
+UNDER_MIN_PREDICTED_POINTS = 22.0
+# Overs in this band have been structurally weak.
+OVER_BLOCK_PREDICTED_RANGE = (18.0, 22.0)

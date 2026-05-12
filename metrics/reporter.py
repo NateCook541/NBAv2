@@ -118,7 +118,15 @@ class Reporter:
             f"Return : "
             f"{((finalBank - startingBank) / startingBank):.1%}"
         )
- 
+
+        if "betSide" in bets.columns:
+            print("\nResults by bet side:")
+            print(bets.groupby("betSide").agg(
+            bets =("pnl", "count"),
+            win_rate =("pnl", lambda x: (x > 0).mean()),
+            total_pnl =("pnl", "sum"),
+        ).to_string())
+        
         # Win rate by predicted score bucket
         bets["predBucket"] = pd.cut(
             bets["predicted"],
@@ -132,6 +140,14 @@ class Reporter:
             avgEdge=("edge", "mean"),
             totalPnl=("pnl", "sum"),
         )
+        if "betSide" in bets.columns:
+            print("\nWin rate by pred bucket and side:")
+            print(bets.groupby(["predBucket", "betSide"], observed=True).agg(
+            bets=("pnl", "count"),
+            win_rate=("pnl", lambda x: (x > 0).mean()),
+            total_pnl=("pnl", "sum"),
+        ).to_string())
+        
         cls._out(predSummary.to_string(float_format=lambda x: f"{x:.4f}"))
  
         # Top / Worst bets
