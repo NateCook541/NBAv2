@@ -110,14 +110,40 @@ PLATT_FIT_LINES = list(range(10, 46, 3))
 
 SIGMA_BOUNDS = (3.0, 25.0)
 DF_BOUNDS    = (2.1, 30.0)
+DEFAULT_UNDER_CALIBRATION_MODE = "hybrid"
+DEFAULT_UNDER_HIGH_CUTOFF = 22.0
+DEFAULT_UNDER_RELIABILITY_SHRINK = 0.10
 
 # Betting
 
 DEFAULT_EDGE_THRESH = 0.03
 DEFAULT_UNDER_EDGE_THRESH = 0.10
+DEFAULT_SELECTION_MODE = "threshold"
+DEFAULT_BET_BUDGET = 1000
+DEFAULT_BET_BUDGET_TOLERANCE = 50
+DEFAULT_MARKET_PROB_SHRINK = 0.15
 DEFAULT_BANKROLL = 1000
 DEFAULT_KELLY_FRAC = 0.25
 FLAT_STAKE = 10
+UNDER22_SCORE_MODE = "hybrid"  # edge | ev | hybrid
+# 22+ under quality model (config-only; no CLI knobs)
+UNDER22_USE_EV_MARGIN = True
+UNDER22_SCORE_W_EV_MARGIN = 0.40
+UNDER22_SCORE_W_CONFIDENCE = 0.15
+UNDER22_SCORE_W_ODDS_COST = 0.20
+UNDER22_SCORE_W_RELIABILITY = 0.25
+UNDER22_SCORE_W_EDGE = 0.20
+# Reference break-even probability where odds are considered "neutral cost".
+UNDER22_BREAKEVEN_BASE = 0.52
+# Soft price-mix controls (applied only to 22+ under selection edge).
+# Negative values penalize a breakeven bucket, positive values boost it.
+UNDER22_BREAKEVEN_SOFT_ADJUST = {
+    "le_52": -0.060,   # <=52%
+    "52_54": -0.025,   # 52-54%
+    "54_56":  0.010,   # 54-56%
+    "gt_56": -0.010,   # >56%
+}
+UNDER22_MARKET_ANCHOR_ENABLED = True
 
 # Used to filter out really far out line preds as this is likely injury effects that scraper didn't catch
 MIN_LINE = 5

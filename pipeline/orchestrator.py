@@ -6,7 +6,12 @@ from pathlib import Path
 from config import (
     DB_PATH, FEATURE_CACHE_PATH,
     MODEL_PATH, CALIBRATOR_PATH, MINUTES_PATH,
-    DEFAULT_EDGE_THRESH, DEFAULT_UNDER_EDGE_THRESH, DEFAULT_BANKROLL, DEFAULT_KELLY_FRAC,
+    DEFAULT_EDGE_THRESH, DEFAULT_UNDER_EDGE_THRESH,
+    DEFAULT_SELECTION_MODE, DEFAULT_BET_BUDGET,
+    DEFAULT_BET_BUDGET_TOLERANCE, DEFAULT_MARKET_PROB_SHRINK,
+    DEFAULT_UNDER_CALIBRATION_MODE, DEFAULT_UNDER_HIGH_CUTOFF,
+    DEFAULT_UNDER_RELIABILITY_SHRINK,
+    DEFAULT_BANKROLL, DEFAULT_KELLY_FRAC,
 )
 from features.cache import FeatureCache, preloadCaches
 from models.minutes import MinutesBundle
@@ -29,7 +34,8 @@ class Pipeline:
     # Helpers
 
 
-    def _loadOrTrainBundle(self, backtestStartDate):
+    def _loadOrTrainBundle(self, backtestStartDate, underCalibrationMode,
+                           underHighCutoff, underReliabilityShrink):
         points = PointsBundle.loadIfExists()
         minutes = MinutesBundle.loadIfExists()
         calibrator = Calibrator.loadIfExists()
@@ -51,7 +57,13 @@ class Pipeline:
                 f"Saved bundle is not leakage safe for {backtestStartDate}"
                 f"\nNot using saved model"
         )
-        return self.train(endDate=backtestStartDate, save=False) 
+        return self.train(
+            endDate=backtestStartDate,
+            save=False,
+            underCalibrationMode=underCalibrationMode,
+            underHighCutoff=underHighCutoff,
+            underReliabilityShrink=underReliabilityShrink,
+        ) 
 
 
     def _earliestPropDate(self):
@@ -67,7 +79,10 @@ class Pipeline:
     # Train
 
 
-    def train(self, endDate=None, save=True, runMetrics=False):
+    def train(self, endDate=None, save=True, runMetrics=False,
+              underCalibrationMode=DEFAULT_UNDER_CALIBRATION_MODE,
+              underHighCutoff=DEFAULT_UNDER_HIGH_CUTOFF,
+              underReliabilityShrink=DEFAULT_UNDER_RELIABILITY_SHRINK):
         """
         Full model train
         1. Train minutes model
@@ -131,6 +146,9 @@ class Pipeline:
                 predictions = points.calPredictions,
                 actuals = points.calActuals,
                 savePath = CALIBRATOR_PATH if save else None,
+                underCalibrationMode = underCalibrationMode,
+                underHighCutoff = underHighCutoff,
+                underReliabilityShrink = underReliabilityShrink,
                 metadata = {
                     "train_end_date": endDate,
                     "calibration_start_date": points.meta.get("calibration_start_date"),
@@ -150,7 +168,15 @@ class Pipeline:
         
 
     def backtest(self, startDate=None, endDate=None, edgeThresh=DEFAULT_EDGE_THRESH,
-                 underEdgeThresh=DEFAULT_UNDER_EDGE_THRESH, bankroll=DEFAULT_BANKROLL):
+                 underEdgeThresh=DEFAULT_UNDER_EDGE_THRESH,
+                 selectionMode=DEFAULT_SELECTION_MODE,
+                 betBudget=DEFAULT_BET_BUDGET,
+                 budgetTolerance=DEFAULT_BET_BUDGET_TOLERANCE,
+                 marketProbShrink=DEFAULT_MARKET_PROB_SHRINK,
+                 underCalibrationMode=DEFAULT_UNDER_CALIBRATION_MODE,
+                 underHighCutoff=DEFAULT_UNDER_HIGH_CUTOFF,
+                 underReliabilityShrink=DEFAULT_UNDER_RELIABILITY_SHRINK,
+                 bankroll=DEFAULT_BANKROLL):
         """
         Run a full backtest on props data
 
@@ -167,7 +193,10 @@ class Pipeline:
         backtestStart = startDate or self._earliestPropDate()
 
         points, minutes, calibrator = self._loadOrTrainBundle(
-                backtestStartDate = backtestStart
+                backtestStartDate = backtestStart,
+                underCalibrationMode = underCalibrationMode,
+                underHighCutoff = underHighCutoff,
+                underReliabilityShrink = underReliabilityShrink,
         )
 
         engine = BacktestEngine(
@@ -182,6 +211,11 @@ class Pipeline:
                 endDate = endDate,
                 edgeThresh = edgeThresh,
                 underEdgeThresh = underEdgeThresh,
+                selectionMode = selectionMode,
+                betBudget = betBudget,
+                budgetTolerance = budgetTolerance,
+                marketProbShrink = marketProbShrink,
+                underCalibrationMode = underCalibrationMode,
                 bankroll = bankroll
         )
 

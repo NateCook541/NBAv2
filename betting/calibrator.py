@@ -10,7 +10,10 @@ from sklearn.linear_model import LogisticRegression
 from config import (
     CALIBRATOR_PATH,
     CAL_FIT_LINES, PLATT_FIT_LINES,
-    SIGMA_BOUNDS, DF_BOUNDS
+    SIGMA_BOUNDS, DF_BOUNDS,
+    DEFAULT_UNDER_CALIBRATION_MODE,
+    DEFAULT_UNDER_HIGH_CUTOFF,
+    DEFAULT_UNDER_RELIABILITY_SHRINK,
 )
 
 
@@ -110,9 +113,10 @@ def _buildPlattDataUnder(predictions, actuals, lines, sigma, df):
 
 
 class Calibrator:
-    def __init__(self, platt, plattUnder, df, sigma, residualStd, meta):
+    def __init__(self, platt, plattUnder, plattUnderHigh, df, sigma, residualStd, meta):
         self.platt = platt
         self.plattUnder = plattUnder
+        self.plattUnderHigh = plattUnderHigh
         self.df = df
         self.sigma = sigma
         self.residualStd = residualStd
@@ -133,11 +137,46 @@ class Calibrator:
     # Returns calibrated P(acutal < line) given a raw point pred
     # NOTE: Only (other) method backtest and prediction layers needs to call
     def probUnder(self, predicted, line):
-        # Keep over/under coherent by deriving under from calibrated over.
-        # For integer lines we reserve an approximate push mass.
+        mode = str(
+            self.meta.get("under_calibration_mode", DEFAULT_UNDER_CALIBRATION_MODE)
+        ).lower().strip()
+        highCut = float(self.meta.get("under_high_cutoff", DEFAULT_UNDER_HIGH_CUTOFF))
+        useHigh = (predicted >= highCut) or (line >= highCut)
+
+        # Complement baseline for coherence.
         over = self.probOver(predicted, line)
         push = _rawPushProb(predicted, line, self.sigma, self.df)
-        return float(np.clip(1.0 - over - push, 0.0, 1.0))
+        complement = float(np.clip(1.0 - over - push, 0.0, 1.0))
+
+        # Dedicated under calibration path.
+        rawUnder = float(t_dist.cdf(line, df=self.df, loc=predicted, scale=self.sigma))
+        underGlobal = float(self.plattUnder.predict_proba([[rawUnder]])[0, 1])
+        underHigh = (
+            float(self.plattUnderHigh.predict_proba([[rawUnder]])[0, 1])
+            if self.plattUnderHigh is not None
+            else underGlobal
+        )
+        dedicated = underHigh if useHigh else underGlobal
+
+        if mode == "complement":
+            return complement
+        if mode == "dedicated":
+            return float(np.clip(dedicated, 0.0, 1.0))
+        # hybrid: use dedicated on high regime, complement elsewhere
+        value = dedicated if useHigh else complement
+        return float(np.clip(value, 0.0, 1.0))
+
+    def underExtraShrink(self, predicted, line):
+        highCut = float(self.meta.get("under_high_cutoff", DEFAULT_UNDER_HIGH_CUTOFF))
+        if not ((predicted >= highCut) or (line >= highCut)):
+            return 0.0
+        base = float(
+            self.meta.get("under_reliability_shrink", DEFAULT_UNDER_RELIABILITY_SHRINK)
+        )
+        highBrier = float(self.meta.get("under_high_brier", 0.25))
+        # Increase shrink when reliability is poor in high under regime.
+        uncertainty = float(np.clip((highBrier - 0.22) / 0.10, 0.0, 1.0))
+        return float(np.clip(base * (1.0 + uncertainty), 0.0, 0.35))
 
 
     # Uncalibrated prob (Needed for debugging)
@@ -235,6 +274,7 @@ class Calibrator:
         bundle = {
             "platt": self.platt,
             "plattUnder": self.plattUnder,
+            "plattUnderHigh": self.plattUnderHigh,
             "df": self.df,
             "sigma": self.sigma,
             "residual std": self.residualStd,
@@ -254,12 +294,13 @@ class Calibrator:
         return cls(
                 platt = bundle["platt"],
                 plattUnder = bundle.get("plattUnder", bundle["platt"]),
+                plattUnderHigh = bundle.get("plattUnderHigh", bundle.get("plattUnder", bundle["platt"])),
                 df = bundle["df"],
                 sigma = bundle["sigma"],
                 residualStd = bundle.get("residual std", bundle.get("sigma")),
                 meta = {
                     k: v for k, v in bundle.items()
-                    if k not in ("platt", "plattUnder", "df", "sigma", "residual std")
+                    if k not in ("platt", "plattUnder", "plattUnderHigh", "df", "sigma", "residual std")
                 },
         )
 
@@ -276,7 +317,9 @@ class Calibrator:
    
     @classmethod
     def fit(cls, predictions, actuals, savePath=None, metadata=None, 
-            targetMode="absolute"):
+            targetMode="absolute", underCalibrationMode=DEFAULT_UNDER_CALIBRATION_MODE,
+            underHighCutoff=DEFAULT_UNDER_HIGH_CUTOFF,
+            underReliabilityShrink=DEFAULT_UNDER_RELIABILITY_SHRINK):
         """
         Fits a new calibrator from holdout preds and actuals
     
@@ -328,6 +371,10 @@ class Calibrator:
         
         rawProbs, hits = _buildPlattData(predictions, actuals, plattLines, optimalSigma, df)
         rawProbsUnder, hitsUnder = _buildPlattDataUnder(predictions, actuals, plattLines, optimalSigma, df)
+        highLines = [line for line in plattLines if line >= float(underHighCutoff)]
+        rawProbsUnderHigh, hitsUnderHigh = _buildPlattDataUnder(
+            predictions, actuals, highLines, optimalSigma, df
+        )
 
         # 5. Platt scaling (logistic regression on raw probs)
         
@@ -344,6 +391,15 @@ class Calibrator:
         )
         
         plattUnder.fit(rawProbsUnder.reshape(-1,1), hitsUnder)
+
+        plattUnderHigh = LogisticRegression(
+            solver="lbfgs",
+            max_iter=2000,
+        )
+        if len(hitsUnderHigh) >= 200 and len(np.unique(hitsUnderHigh)) > 1:
+            plattUnderHigh.fit(rawProbsUnderHigh.reshape(-1, 1), hitsUnderHigh)
+        else:
+            plattUnderHigh = plattUnder
         
 
         # 6. Compression check
@@ -392,26 +448,40 @@ class Calibrator:
         underAt40 = float(plattUnder.predict_proba([[0.40]])[0, 1])
         underAt60 = float(plattUnder.predict_proba([[0.60]])[0, 1])
         underAt80 = float(plattUnder.predict_proba([[0.80]])[0, 1])
+        underHighAt60 = float(plattUnderHigh.predict_proba([[0.60]])[0, 1])
         print(
             f"[Calibrator] Under Platt: "
             f"@40%={underAt40:.3f}, @60%={underAt60:.3f}, @80%={underAt80:.3f}"
         )
+        print(
+            f"[Calibrator] Under High ({underHighCutoff:.1f}+): "
+            f"@60%={underHighAt60:.3f}"
+        )
+        underGlobalBrier = float(np.mean((rawProbsUnder - hitsUnder) ** 2))
+        underHighBrier = float(np.mean((rawProbsUnderHigh - hitsUnderHigh) ** 2)) if len(hitsUnderHigh) else underGlobalBrier
 
         instance = cls(
             platt = platt,
             plattUnder = plattUnder,
+            plattUnderHigh = plattUnderHigh,
             df = df, 
             sigma = optimalSigma,
             residualStd = residualStd,
             meta = {
                 **(metadata or {}),
                 "target_mode": targetMode,
+                "under_calibration_mode": str(underCalibrationMode).lower().strip(),
+                "under_high_cutoff": float(underHighCutoff),
+                "under_reliability_shrink": float(underReliabilityShrink),
                 "profitable_edge_cap": profitableEdgeCap,
                 "mean_pred": meanPred,
                 "platt_60": calAt60,
                 "platt_80": calAt80,
                 "platt_90": calAt90,
                 "under_platt_60": underAt60,
+                "under_high_platt_60": underHighAt60,
+                "under_global_brier": underGlobalBrier,
+                "under_high_brier": underHighBrier,
             }
         )
         instance.printExamples(predMean=meanPred)
