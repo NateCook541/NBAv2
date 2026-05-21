@@ -30,14 +30,13 @@ def main():
     # Backtest args
     parser.add_argument("--backtest", action="store_true")
     parser.add_argument("--edge-thresh", type=float, default=0.03)
-    parser.add_argument("--under-edge-thresh", type=float, default=0.10)
-    parser.add_argument("--selection-mode", choices=["threshold", "rank"], default="threshold")
-    parser.add_argument("--bet-budget", type=int, default=1000)
-    parser.add_argument("--budget-tolerance", type=int, default=50)
-    parser.add_argument("--market-prob-shrink", type=float, default=0.15)
     parser.add_argument("--bankroll", type=float, default=1000.0)
     parser.add_argument("--start-date", type=str, default=None)
     parser.add_argument("--end-date", type=str, default=None)
+    
+    # Backtest testing args
+    parser.add_argument("--edge-thresh-sweep", action="store_true")
+    parser.add_argument("--backtest-fold-test", action="store_true")
 
     # Shared args
     parser.add_argument("--db",  default="NBA.db")
@@ -53,21 +52,29 @@ def main():
     if args.train:
         pipeline.train(endDate=args.train_end_date, 
                        runMetrics=args.metrics,
-    )
+        )
 
     if args.backtest:
         pipeline.backtest(
                 startDate = args.start_date, 
                 endDate = args.end_date, 
                 edgeThresh = args.edge_thresh, 
-                underEdgeThresh = args.under_edge_thresh,
-                selectionMode = args.selection_mode,
-                betBudget = args.bet_budget,
-                budgetTolerance = args.budget_tolerance,
-                marketProbShrink = args.market_prob_shrink,
                 bankroll = args.bankroll
         )
     
+    if args.edge_thresh_sweep:
+        pipeline.sweepOverThresholds(
+                startDate = args.start_date, 
+                endDate = args.end_date, 
+                bankroll = args.bankroll
+        )
+
+    if args.backtest_fold_test:
+        pipeline.walkForwardOverThresholds(
+                 startDate = args.start_date,
+                 endDate = args.end_date 
+        )
+
     if args.pull_props:
         from betting.oddsCollector import pullHistoricalProps
         pullHistoricalProps(args.pull_props[0], args.pull_props[1], dbPath=args.db)

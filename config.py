@@ -110,50 +110,57 @@ PLATT_FIT_LINES = list(range(10, 46, 3))
 
 SIGMA_BOUNDS = (3.0, 25.0)
 DF_BOUNDS    = (2.1, 30.0)
-DEFAULT_UNDER_CALIBRATION_MODE = "hybrid"
-DEFAULT_UNDER_HIGH_CUTOFF = 22.0
-DEFAULT_UNDER_RELIABILITY_SHRINK = 0.10
 
 # Betting
 
 DEFAULT_EDGE_THRESH = 0.03
-DEFAULT_UNDER_EDGE_THRESH = 0.10
-DEFAULT_SELECTION_MODE = "threshold"
-DEFAULT_BET_BUDGET = 1000
-DEFAULT_BET_BUDGET_TOLERANCE = 50
-DEFAULT_MARKET_PROB_SHRINK = 0.15
 DEFAULT_BANKROLL = 1000
 DEFAULT_KELLY_FRAC = 0.25
 FLAT_STAKE = 10
-UNDER22_SCORE_MODE = "hybrid"  # edge | ev | hybrid
-# 22+ under quality model (config-only; no CLI knobs)
-UNDER22_USE_EV_MARGIN = True
-UNDER22_SCORE_W_EV_MARGIN = 0.40
-UNDER22_SCORE_W_CONFIDENCE = 0.15
-UNDER22_SCORE_W_ODDS_COST = 0.20
-UNDER22_SCORE_W_RELIABILITY = 0.25
-UNDER22_SCORE_W_EDGE = 0.20
-# Reference break-even probability where odds are considered "neutral cost".
-UNDER22_BREAKEVEN_BASE = 0.52
-# Soft price-mix controls (applied only to 22+ under selection edge).
-# Negative values penalize a breakeven bucket, positive values boost it.
-UNDER22_BREAKEVEN_SOFT_ADJUST = {
-    "le_52": -0.060,   # <=52%
-    "52_54": -0.025,   # 52-54%
-    "54_56":  0.010,   # 54-56%
-    "gt_56": -0.010,   # >56%
-}
-UNDER22_MARKET_ANCHOR_ENABLED = True
 
 # Used to filter out really far out line preds as this is likely injury effects that scraper didn't catch
 MIN_LINE = 5
 MAX_LINE_DIFF = 10
 
-UNDER_MIN_DISAGREEMENT = 5.0
 OVER_MIN_DISAGREEMENT  = 2.0
 
-# Side/prediction regime filters from backtest diagnostics
-# Unders below this predicted points level have been structurally weak.
-UNDER_MIN_PREDICTED_POINTS = 22.0
-# Overs in this band have been structurally weak.
-OVER_BLOCK_PREDICTED_RANGE = (18.0, 22.0)
+# Over quality guards
+ENABLE_OVER_MID_POS_GUARD = True
+OVER_MID_POS_GUARD_RANGE = (15.0, 22.0)
+OVER_MID_POS_GUARD_MAX_POS = 2.0
+
+ENABLE_OVER_WEAK_BUCKET_GUARD = True
+OVER_WEAK_BUCKET_RANGE = (18.0, 22.0)
+OVER_WEAK_BUCKET_MAX_POS = 3.0
+
+# Threshold sweep helper defaults (for targeting 900-1000 bets)
+OVER_EDGE_THRESH_CANDIDATES = [0.07, 0.08, 0.09]
+OVER_TARGET_BETS_MIN = 850
+OVER_TARGET_BETS_MAX = 1050
+
+# Quality gate for borderline over edges.
+# Applied only when edge is in [EDGE_THRESH, QUALITY_GATE_MAX_EDGE].
+ENABLE_OVER_QUALITY_GATE = False
+OVER_QUALITY_GATE_MAX_EDGE = 0.10
+OVER_QUALITY_GATE_MIN_SCORE = 0.18
+OVER_QUALITY_W_CONFIDENCE = 0.45
+OVER_QUALITY_W_DISAGREEMENT = 0.35
+OVER_QUALITY_W_POS = 0.20
+
+# Over probability reliability controls (soft, generalizable).
+ENABLE_OVER_RELIABILITY_SHRINK = True
+OVER_RELIABILITY_SHRINK_12_15 = 0.00
+OVER_RELIABILITY_SHRINK_15_18 = 0.03
+OVER_RELIABILITY_SHRINK_18_22 = 0.12
+OVER_RELIABILITY_SHRINK_22P = 0.02
+
+# Soft edge adjustments by predicted bucket (applied after calibration).
+ENABLE_OVER_SOFT_BUCKET_ADJUST = True
+OVER_SOFT_EDGE_ADJUST_12_15 = 0.000
+OVER_SOFT_EDGE_ADJUST_15_18 = -0.004
+OVER_SOFT_EDGE_ADJUST_18_22 = -0.020
+OVER_SOFT_EDGE_ADJUST_22P = 0.002
+
+# Bucketed over calibrator (predicted-points regimes)
+ENABLE_BUCKETED_OVER_CALIBRATION = True
+OVER_CAL_BUCKET_MIN_SAMPLES = 300

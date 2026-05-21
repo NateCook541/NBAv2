@@ -6,11 +6,9 @@ from pathlib import Path
 from config import (
     DB_PATH, FEATURE_CACHE_PATH,
     MODEL_PATH, CALIBRATOR_PATH, MINUTES_PATH,
-    DEFAULT_EDGE_THRESH, DEFAULT_UNDER_EDGE_THRESH,
-    DEFAULT_SELECTION_MODE, DEFAULT_BET_BUDGET,
-    DEFAULT_BET_BUDGET_TOLERANCE, DEFAULT_MARKET_PROB_SHRINK,
-    DEFAULT_UNDER_CALIBRATION_MODE, DEFAULT_UNDER_HIGH_CUTOFF,
-    DEFAULT_UNDER_RELIABILITY_SHRINK,
+    DEFAULT_EDGE_THRESH,
+    OVER_EDGE_THRESH_CANDIDATES,
+    OVER_TARGET_BETS_MIN, OVER_TARGET_BETS_MAX,
     DEFAULT_BANKROLL, DEFAULT_KELLY_FRAC,
 )
 from features.cache import FeatureCache, preloadCaches
@@ -34,8 +32,7 @@ class Pipeline:
     # Helpers
 
 
-    def _loadOrTrainBundle(self, backtestStartDate, underCalibrationMode,
-                           underHighCutoff, underReliabilityShrink):
+    def _loadOrTrainBundle(self, backtestStartDate):
         points = PointsBundle.loadIfExists()
         minutes = MinutesBundle.loadIfExists()
         calibrator = Calibrator.loadIfExists()
@@ -57,13 +54,7 @@ class Pipeline:
                 f"Saved bundle is not leakage safe for {backtestStartDate}"
                 f"\nNot using saved model"
         )
-        return self.train(
-            endDate=backtestStartDate,
-            save=False,
-            underCalibrationMode=underCalibrationMode,
-            underHighCutoff=underHighCutoff,
-            underReliabilityShrink=underReliabilityShrink,
-        ) 
+        return self.train(endDate=backtestStartDate, save=False) 
 
 
     def _earliestPropDate(self):
@@ -79,10 +70,7 @@ class Pipeline:
     # Train
 
 
-    def train(self, endDate=None, save=True, runMetrics=False,
-              underCalibrationMode=DEFAULT_UNDER_CALIBRATION_MODE,
-              underHighCutoff=DEFAULT_UNDER_HIGH_CUTOFF,
-              underReliabilityShrink=DEFAULT_UNDER_RELIABILITY_SHRINK):
+    def train(self, endDate=None, save=True, runMetrics=False):
         """
         Full model train
         1. Train minutes model
@@ -146,9 +134,6 @@ class Pipeline:
                 predictions = points.calPredictions,
                 actuals = points.calActuals,
                 savePath = CALIBRATOR_PATH if save else None,
-                underCalibrationMode = underCalibrationMode,
-                underHighCutoff = underHighCutoff,
-                underReliabilityShrink = underReliabilityShrink,
                 metadata = {
                     "train_end_date": endDate,
                     "calibration_start_date": points.meta.get("calibration_start_date"),
@@ -168,14 +153,6 @@ class Pipeline:
         
 
     def backtest(self, startDate=None, endDate=None, edgeThresh=DEFAULT_EDGE_THRESH,
-                 underEdgeThresh=DEFAULT_UNDER_EDGE_THRESH,
-                 selectionMode=DEFAULT_SELECTION_MODE,
-                 betBudget=DEFAULT_BET_BUDGET,
-                 budgetTolerance=DEFAULT_BET_BUDGET_TOLERANCE,
-                 marketProbShrink=DEFAULT_MARKET_PROB_SHRINK,
-                 underCalibrationMode=DEFAULT_UNDER_CALIBRATION_MODE,
-                 underHighCutoff=DEFAULT_UNDER_HIGH_CUTOFF,
-                 underReliabilityShrink=DEFAULT_UNDER_RELIABILITY_SHRINK,
                  bankroll=DEFAULT_BANKROLL):
         """
         Run a full backtest on props data
@@ -192,12 +169,7 @@ class Pipeline:
         # Find the backtest start date if not supplied
         backtestStart = startDate or self._earliestPropDate()
 
-        points, minutes, calibrator = self._loadOrTrainBundle(
-                backtestStartDate = backtestStart,
-                underCalibrationMode = underCalibrationMode,
-                underHighCutoff = underHighCutoff,
-                underReliabilityShrink = underReliabilityShrink,
-        )
+        points, minutes, calibrator = self._loadOrTrainBundle(backtestStartDate = backtestStart)
 
         engine = BacktestEngine(
                 pointsBundle = points,
@@ -210,18 +182,132 @@ class Pipeline:
                 startDate = startDate,
                 endDate = endDate,
                 edgeThresh = edgeThresh,
-                underEdgeThresh = underEdgeThresh,
-                selectionMode = selectionMode,
-                betBudget = betBudget,
-                budgetTolerance = budgetTolerance,
-                marketProbShrink = marketProbShrink,
-                underCalibrationMode = underCalibrationMode,
                 bankroll = bankroll
         )
 
         print("\n" + "=" * 55)
         print("BACKTEST: Complete")
         print("=" * 55)
+
+
+    # Backtest multi edge threshold testing
+
+
+    def sweepOverThresholds(self, startDate=None, endDate=None, thresholds=None, bankroll=DEFAULT_BANKROLL):
+        """
+        Runs multiple over-only backtests at different edge thresholds and prints
+        a compact comparison table for selecting a 900-1000 bet operating point.
+        """
+        from betting.backtest import BacktestEngine
+
+        testThresholds = list(thresholds or OVER_EDGE_THRESH_CANDIDATES)
+        backtestStart = startDate or self._earliestPropDate()
+        points, minutes, calibrator = self._loadOrTrainBundle(backtestStartDate=backtestStart)
+        engine = BacktestEngine(pointsBundle=points, minutesBundle=minutes, calibrator=calibrator, dbPath=self.dbPath)
+
+        rows = []
+        for thresh in testThresholds:
+            results = engine.run(
+                startDate=startDate,
+                endDate=endDate,
+                edgeThresh=float(thresh),
+                bankroll=bankroll,
+            )
+            finalBank = float(results["bankroll"].iloc[-1]) if not results.empty else bankroll
+            summary = BacktestEngine.summarizeResults(results, startingBank=bankroll, finalBank=finalBank)
+            rows.append(
+                {
+                    "edge_thresh": float(thresh),
+                    "bets": summary["bets"],
+                    "win_rate": summary["win_rate"],
+                    "roi": summary["roi"],
+                    "total_pnl": summary["total_pnl"],
+                    "final_bank": summary["final_bank"],
+                }
+            )
+
+        import pandas as pd
+        table = pd.DataFrame(rows).sort_values(["win_rate", "roi"], ascending=[False, False]).reset_index(drop=True)
+        print("\n--- Over Threshold Sweep ---")
+        print(table.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
+        return table
+
+    
+    # Backtest fold testing
+
+
+    def walkForwardOverThresholds(self, startDate=None, endDate=None, thresholds=None,
+                                  bankroll=DEFAULT_BANKROLL, folds=4):
+        """
+        Walk-forward threshold selection:
+        choose threshold on prior window, evaluate on subsequent window.
+        """
+        import pandas as pd
+        from betting.backtest import BacktestEngine, _loadProps
+
+        testThresholds = list(thresholds or OVER_EDGE_THRESH_CANDIDATES)
+        backtestStart = startDate or self._earliestPropDate()
+        points, minutes, calibrator = self._loadOrTrainBundle(backtestStartDate=backtestStart)
+        engine = BacktestEngine(pointsBundle=points, minutesBundle=minutes, calibrator=calibrator, dbPath=self.dbPath)
+
+        conn = sqlite3.connect(str(self.dbPath))
+        props = _loadProps(conn, startDate, endDate)
+        conn.close()
+        dates = sorted(pd.to_datetime(props["game_date"]).dt.date.unique())
+        if len(dates) < (folds * 4):
+            print("[WalkForwardOver] Not enough dates for robust walk-forward.")
+            return pd.DataFrame()
+
+        step = max(1, len(dates) // (folds + 1))
+        rows = []
+
+        for i in range(1, folds + 1):
+            train_end_idx = min(len(dates) - 2, i * step)
+            test_end_idx = min(len(dates) - 1, (i + 1) * step)
+            train_start = str(dates[0])
+            train_end = str(dates[train_end_idx])
+            test_start = str(dates[train_end_idx + 1])
+            test_end = str(dates[test_end_idx])
+
+            best = None
+            for thresh in testThresholds:
+                trainRes = engine.run(startDate=train_start, endDate=train_end, edgeThresh=float(thresh), bankroll=bankroll)
+                trainFinal = float(trainRes["bankroll"].iloc[-1]) if not trainRes.empty else bankroll
+                s = BacktestEngine.summarizeResults(trainRes, bankroll, trainFinal)
+                bets = s["bets"]
+                inBand = (OVER_TARGET_BETS_MIN <= bets <= OVER_TARGET_BETS_MAX)
+                score = s["win_rate"] + (0.25 * s["roi"])
+                if (best is None) or (inBand and not best["in_band"]) or (
+                    inBand == best["in_band"] and score > best["score"]
+                ):
+                    best = {"thresh": float(thresh), "score": float(score), "in_band": inBand}
+
+            chosen = best["thresh"]
+            testRes = engine.run(startDate=test_start, endDate=test_end, edgeThresh=chosen, bankroll=bankroll)
+            testFinal = float(testRes["bankroll"].iloc[-1]) if not testRes.empty else bankroll
+            ts = BacktestEngine.summarizeResults(testRes, bankroll, testFinal)
+            rows.append(
+                {
+                    "fold": i,
+                    "train_range": f"{train_start}..{train_end}",
+                    "test_range": f"{test_start}..{test_end}",
+                    "chosen_thresh": chosen,
+                    "bets": ts["bets"],
+                    "win_rate": ts["win_rate"],
+                    "roi": ts["roi"],
+                    "total_pnl": ts["total_pnl"],
+                }
+            )
+
+        out = pd.DataFrame(rows)
+        print("\n--- Walk-Forward Over Thresholds ---")
+        print(out.to_string(index=False, float_format=lambda x: f"{x:.4f}" if isinstance(x, float) else str(x)))
+        if not out.empty:
+            print(
+                f"\n[WalkForwardOver] mean bets={out['bets'].mean():.1f} "
+                f"mean win_rate={out['win_rate'].mean():.4f} mean roi={out['roi'].mean():.4f}"
+            )
+        return out
 
 
 # Cache features

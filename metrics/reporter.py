@@ -82,6 +82,12 @@ class Reporter:
         
         cls._out(f"No features : {skips.noFeatures}")
         cls._out(f"Line filtered : {skips.noLine}")
+        if getattr(skips, "noMidPosGuard", 0):
+            cls._out(f"  - Mid-pos guard skips : {skips.noMidPosGuard}")
+        if getattr(skips, "noWeakBucketGuard", 0):
+            cls._out(f"  - Weak-bucket guard skips : {skips.noWeakBucketGuard}")
+        if getattr(skips, "noQualityGate", 0):
+            cls._out(f"  - Quality-gate skips : {skips.noQualityGate}")
 
 
 
@@ -119,14 +125,6 @@ class Reporter:
             f"{((finalBank - startingBank) / startingBank):.1%}"
         )
 
-        if "betSide" in bets.columns:
-            print("\nResults by bet side:")
-            print(bets.groupby("betSide").agg(
-            bets =("pnl", "count"),
-            win_rate =("pnl", lambda x: (x > 0).mean()),
-            total_pnl =("pnl", "sum"),
-        ).to_string())
-        
         # Win rate by predicted score bucket
         bets["predBucket"] = pd.cut(
             bets["predicted"],
@@ -140,14 +138,6 @@ class Reporter:
             avgEdge=("edge", "mean"),
             totalPnl=("pnl", "sum"),
         )
-        if "betSide" in bets.columns:
-            print("\nWin rate by pred bucket and side:")
-            print(bets.groupby(["predBucket", "betSide"], observed=True).agg(
-            bets=("pnl", "count"),
-            win_rate=("pnl", lambda x: (x > 0).mean()),
-            total_pnl=("pnl", "sum"),
-        ).to_string())
-        
         cls._out(predSummary.to_string(float_format=lambda x: f"{x:.4f}"))
  
         # Top / Worst bets
@@ -175,46 +165,6 @@ class Reporter:
             win_rate=("pnl", lambda x: (x > 0).mean()),
             total_pnl=("pnl", "sum")
         ).to_string())
-
-        # 22+ under diagnostics by EV and odds bands
-        if all(c in bets.columns for c in ("evPerDollar", "betOdds", "betSide", "predicted", "breakevenProb", "evMargin")):
-            under22 = bets[(bets["betSide"] == "under") & (bets["predicted"] >= 22)].copy()
-            if not under22.empty:
-                under22["ev_bucket"] = pd.cut(
-                    under22["evMargin"],
-                    bins=[-1.0, 0.0, 0.01, 0.02, 0.04, 0.06, 1.0],
-                    labels=["<=0", "0-1%", "1-2%", "2-4%", "4-6%", "6%+"],
-                )
-                under22["odds_bucket"] = pd.cut(
-                    under22["betOdds"],
-                    bins=[-1000, -170, -130, -105, 1000],
-                    labels=["<=-170", "-170..-130", "-130..-105", ">=-105"],
-                )
-                under22["breakeven_bucket"] = pd.cut(
-                    under22["breakevenProb"],
-                    bins=[0.0, 0.52, 0.54, 0.56, 1.0],
-                    labels=["<=52%", "52-54%", "54-56%", "56%+"],
-                )
-                print("\n22+ UNDER by EV bucket:")
-                print(under22.groupby("ev_bucket", observed=True).agg(
-                    bets=("pnl", "count"),
-                    win_rate=("pnl", lambda x: (x > 0).mean()),
-                    total_pnl=("pnl", "sum"),
-                ).to_string())
-                print("\n22+ UNDER by breakeven bucket:")
-                print(under22.groupby("breakeven_bucket", observed=True).agg(
-                    bets=("pnl", "count"),
-                    win_rate=("pnl", lambda x: (x > 0).mean()),
-                    avg_ev_margin=("evMargin", "mean"),
-                    total_pnl=("pnl", "sum"),
-                ).to_string())
-                print("\n22+ UNDER by odds bucket:")
-                print(under22.groupby("odds_bucket", observed=True).agg(
-                    bets=("pnl", "count"),
-                    win_rate=("pnl", lambda x: (x > 0).mean()),
-                    total_pnl=("pnl", "sum"),
-                ).to_string())
-
 
     # Edge distribution
 
