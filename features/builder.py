@@ -16,7 +16,7 @@ featureOrder = [
     "home_pts_avg", "away_pts_avg", "home_away_diff",
         
     # ewm stats and standard dev stats
-    "formPts5", "formMin5", "minStd10", "ptsStd10", "over20_rate",
+    "formPts5", "formMin5", "minStd10", "ptsStd10", "over20_rate", "pts_cv",
 
     # Simple trend stats
     "pts_trend", "min_trend", "usage_rate",
@@ -336,6 +336,7 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
     # Get injury (status) and oppnenet features
     injuryFeatures = _injuryContext(statusDF, cache, teamGameTotals, teamID, date)
     oppFeatures = _oppContext(teamCache, oppTeamID, date)
+    teamFeatures = _oppContext(teamCache, teamID, date)
     playerStatus = _playerStatusContext(statusDF, playerID, date)
 
     # Read the actual target-game context when available. Fallback to latest prior row.
@@ -404,7 +405,7 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
 
     # Situational flags
     oppCombinedPace = (
-        float(oppFeatures["pace"]) + float(oppFeatures["pace"])
+        float(teamFeatures["pace"]) + float(oppFeatures["pace"])
     ) / 2
     
     streakScore = _streakScore(rolling, last10avg)
@@ -432,6 +433,9 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
         "minStd10":              minStd10,
         "ptsStd10":              ptsStd10,
         "over20_rate":           over20_rate,
+        "pts_cv":                ptsStd10 / max(last10avg, 1.0),
+        "mins_cv":               minStd10 / max(float(baseline["minutes"]), 1.0),
+        "recent_scoring_ratio":  float(rolling.head(3)["points"].mean()) / max(last10avg, 1.0),
         "pts_trend":             ptsTrend,
         "min_trend":             minTrend,
         "usage_rate":            usageRate,

@@ -7,14 +7,14 @@ from config import (
     DB_PATH, FEATURE_CACHE_PATH,
     MODEL_PATH, CALIBRATOR_PATH, MINUTES_PATH,
     DEFAULT_EDGE_THRESH,
-    OVER_EDGE_THRESH_CANDIDATES,
-    OVER_TARGET_BETS_MIN, OVER_TARGET_BETS_MAX,
     DEFAULT_BANKROLL, DEFAULT_KELLY_FRAC,
 )
 from features.cache import FeatureCache, preloadCaches
 from models.minutes import MinutesBundle
 from models.points import PointsBundle
 from betting.calibrator import Calibrator
+from betting.filters import FilterSet
+
 
 class Pipeline:
     """
@@ -65,6 +65,19 @@ class Pipeline:
         if res and res[0]:
             return str(res[0])
         raise ValueError("No props found in database")
+
+
+    def _propDateRange(self):
+        conn = sqlite3.connect(str(self.dbPath))
+        res = conn.execute(
+            "SELECT MIN(game_date), MAX(game_date) FROM Props"
+        ).fetchone()
+
+        conn.close()
+        if res and res[0] and res[1]:
+            return str(res[0]), str(res[1])
+        raise ValueError("No props found in database")
+
 
 
     # Train
@@ -190,125 +203,187 @@ class Pipeline:
         print("=" * 55)
 
 
-    # Backtest multi edge threshold testing
-
-
-    def sweepOverThresholds(self, startDate=None, endDate=None, thresholds=None, bankroll=DEFAULT_BANKROLL):
-        """
-        Runs multiple over-only backtests at different edge thresholds and prints
-        a compact comparison table for selecting a 900-1000 bet operating point.
-        """
-        from betting.backtest import BacktestEngine
-
-        testThresholds = list(thresholds or OVER_EDGE_THRESH_CANDIDATES)
-        backtestStart = startDate or self._earliestPropDate()
-        points, minutes, calibrator = self._loadOrTrainBundle(backtestStartDate=backtestStart)
-        engine = BacktestEngine(pointsBundle=points, minutesBundle=minutes, calibrator=calibrator, dbPath=self.dbPath)
-
-        rows = []
-        for thresh in testThresholds:
-            results = engine.run(
-                startDate=startDate,
-                endDate=endDate,
-                edgeThresh=float(thresh),
-                bankroll=bankroll,
-            )
-            finalBank = float(results["bankroll"].iloc[-1]) if not results.empty else bankroll
-            summary = BacktestEngine.summarizeResults(results, startingBank=bankroll, finalBank=finalBank)
-            rows.append(
-                {
-                    "edge_thresh": float(thresh),
-                    "bets": summary["bets"],
-                    "win_rate": summary["win_rate"],
-                    "roi": summary["roi"],
-                    "total_pnl": summary["total_pnl"],
-                    "final_bank": summary["final_bank"],
-                }
-            )
-
-        import pandas as pd
-        table = pd.DataFrame(rows).sort_values(["win_rate", "roi"], ascending=[False, False]).reset_index(drop=True)
-        print("\n--- Over Threshold Sweep ---")
-        print(table.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
-        return table
-
+    # Walk forward fold test
     
-    # Backtest fold testing
 
+    def walkForwardOverThresholds(self, startDate = None, endDate = None, nFolds = 5, 
+                                  edgeThresh = DEFAULT_EDGE_THRESH, 
+                                  bankroll = DEFAULT_BANKROLL, filterSets = None):
+        """
+        Walk-forward backtest over held-out time folds.
+ 
+        For each fold the model is checked for leakage safety against that
+        fold's start date it is never fitted on fold data.
+ 
+        A baseline FilterSet (no optional filters) is always run first so
+        every other FilterSet result can be compared against it directly.
+        This makes it immediately visible whether a filter is adding real
+        value or just cherry picking a lucky in sample period.
+        """
 
-    def walkForwardOverThresholds(self, startDate=None, endDate=None, thresholds=None,
-                                  bankroll=DEFAULT_BANKROLL, folds=4):
-        """
-        Walk-forward threshold selection:
-        choose threshold on prior window, evaluate on subsequent window.
-        """
         import pandas as pd
-        from betting.backtest import BacktestEngine, _loadProps
-
-        testThresholds = list(thresholds or OVER_EDGE_THRESH_CANDIDATES)
-        backtestStart = startDate or self._earliestPropDate()
-        points, minutes, calibrator = self._loadOrTrainBundle(backtestStartDate=backtestStart)
-        engine = BacktestEngine(pointsBundle=points, minutesBundle=minutes, calibrator=calibrator, dbPath=self.dbPath)
-
+        from betting.backtest import BacktestEngine
+        from betting.filters import FilterSet
+        from metrics.reporter import Reporter
+ 
         conn = sqlite3.connect(str(self.dbPath))
-        props = _loadProps(conn, startDate, endDate)
+        propDates = pd.read_sql_query(
+            """
+            SELECT DISTINCT game_date
+            FROM Props
+            WHERE over_odds IS NOT NULL AND under_odds IS NOT NULL
+            ORDER BY game_date
+            """,
+            conn,
+        )["game_date"].tolist()
         conn.close()
-        dates = sorted(pd.to_datetime(props["game_date"]).dt.date.unique())
-        if len(dates) < (folds * 4):
-            print("[WalkForwardOver] Not enough dates for robust walk-forward.")
-            return pd.DataFrame()
+ 
+        if startDate:
+            propDates = [d for d in propDates if d >= startDate]
+        if endDate:
+            propDates = [d for d in propDates if d <= endDate]
+ 
+        if len(propDates) < nFolds:
+            raise ValueError(
+                f"Only {len(propDates)} prop dates available — "
+                f"cannot split into {nFolds} folds."
+            )
+ 
+        # Split the sorted date list into nFolds equal-ish chunks
+        foldSize = len(propDates) // nFolds
+        folds = []
+        for i in range(nFolds):
+            chunkStart = i * foldSize
+            chunkEnd   = (i + 1) * foldSize if i < nFolds - 1 else len(propDates)
+            folds.append((propDates[chunkStart], propDates[chunkEnd - 1]))
+ 
+        print(f"\n[WalkForward] {nFolds} folds across {len(propDates)} prop dates")
+        print(f"[WalkForward] Full range: {propDates[0]} → {propDates[-1]}")
+        for i, (fs, fe) in enumerate(folds):
+            print(f"  fold {i + 1}: {fs} → {fe}")
 
-        step = max(1, len(dates) // (folds + 1))
-        rows = []
-
-        for i in range(1, folds + 1):
-            train_end_idx = min(len(dates) - 2, i * step)
-            test_end_idx = min(len(dates) - 1, (i + 1) * step)
-            train_start = str(dates[0])
-            train_end = str(dates[train_end_idx])
-            test_start = str(dates[train_end_idx + 1])
-            test_end = str(dates[test_end_idx])
-
-            best = None
-            for thresh in testThresholds:
-                trainRes = engine.run(startDate=train_start, endDate=train_end, edgeThresh=float(thresh), bankroll=bankroll)
-                trainFinal = float(trainRes["bankroll"].iloc[-1]) if not trainRes.empty else bankroll
-                s = BacktestEngine.summarizeResults(trainRes, bankroll, trainFinal)
-                bets = s["bets"]
-                inBand = (OVER_TARGET_BETS_MIN <= bets <= OVER_TARGET_BETS_MAX)
-                score = s["win_rate"] + (0.25 * s["roi"])
-                if (best is None) or (inBand and not best["in_band"]) or (
-                    inBand == best["in_band"] and score > best["score"]
-                ):
-                    best = {"thresh": float(thresh), "score": float(score), "in_band": inBand}
-
-            chosen = best["thresh"]
-            testRes = engine.run(startDate=test_start, endDate=test_end, edgeThresh=chosen, bankroll=bankroll)
-            testFinal = float(testRes["bankroll"].iloc[-1]) if not testRes.empty else bankroll
-            ts = BacktestEngine.summarizeResults(testRes, bankroll, testFinal)
-            rows.append(
-                {
-                    "fold": i,
-                    "train_range": f"{train_start}..{train_end}",
-                    "test_range": f"{test_start}..{test_end}",
-                    "chosen_thresh": chosen,
-                    "bets": ts["bets"],
-                    "win_rate": ts["win_rate"],
-                    "roi": ts["roi"],
-                    "total_pnl": ts["total_pnl"],
+        # FilterSet list always include baseline
+        baseline = FilterSet.baseline()
+        if filterSets is None:
+            filterSets = [baseline, FilterSet()]
+        else:
+            names = [f.name for f in filterSets]
+            if baseline.name not in names:
+                filterSets = [baseline] + list(filterSets)
+ 
+        # Run every FilterSet across every fold 
+        allResults = {}
+ 
+        for fs in filterSets:
+            print(f"\n{'='*60}")
+            print(f"WALK-FORWARD  [filter={fs.name}]")
+            print(f"{'='*60}")
+ 
+            foldResults = []
+ 
+            for foldIdx, (foldStart, foldEnd) in enumerate(folds):
+                print(f"\nFold {foldIdx + 1}/{nFolds}: {foldStart} → {foldEnd}")
+ 
+                # Leakage-safe model for this folds start date
+                points, minutes, calibrator = self._loadOrTrainBundle(
+                    backtestStartDate=foldStart
+                )
+ 
+                engine = BacktestEngine(
+                    pointsBundle = points,
+                    minutesBundle = minutes,
+                    calibrator = calibrator,
+                    dbPath = self.dbPath,
+                    filterSet = fs,
+                )
+ 
+                results = engine.run(
+                    startDate = foldStart,
+                    endDate = foldEnd,
+                    edgeThresh = edgeThresh,
+                    bankroll = bankroll,
+                )
+ 
+                bets = results[results["bet"]] if not results.empty else results
+                if bets.empty:
+                    foldPnl = 0.0
+                    foldBets = 0
+                    foldWr = 0.0
+                    foldRoi = 0.0
+                else:
+                    foldPnl = float(bets["pnl"].sum())
+                    foldBets = len(bets)
+                    foldWr = float((bets["pnl"] > 0).mean())
+                    stakeSum = float(bets["stake"].sum())
+                    foldRoi = foldPnl / stakeSum if stakeSum > 0 else 0.0
+ 
+                foldResult = {
+                    "fold": foldIdx + 1,
+                    "start": foldStart,
+                    "end": foldEnd,
+                    "bets": foldBets,
+                    "win_rate": round(foldWr, 4),
+                    "total_pnl": round(foldPnl, 2),
+                    "roi": round(foldRoi, 4),
                 }
+                foldResults.append(foldResult)
+ 
+                # Per fold edge bucket report
+                if not bets.empty:
+                    print(f"\nEdge bucket performance (fold {foldIdx + 1}):")
+                    Reporter.edgeBucketReport(bets)
+ 
+                    print(f"\nMonthly P&L (fold {foldIdx + 1}):")
+                    Reporter.monthlyPnl(bets)
+ 
+            allResults[fs.name] = foldResults
+ 
+            # Aggregate fold summary
+            # Compare against baseline if available
+            baselinePnl = None
+            if fs.name != baseline.name and baseline.name in allResults:
+                baselinePnl = sum(
+                    r["total_pnl"] for r in allResults[baseline.name]
+                )
+ 
+            Reporter.walkForwardSummary(
+                foldResults  = foldResults,
+                filterName   = fs.name,
+                baselinePnl  = baselinePnl,
             )
+ 
+        # Cross filter comparison table
+        self._printCrossFilterSummary(allResults, filterSets)
+ 
+        return allResults
 
-        out = pd.DataFrame(rows)
-        print("\n--- Walk-Forward Over Thresholds ---")
-        print(out.to_string(index=False, float_format=lambda x: f"{x:.4f}" if isinstance(x, float) else str(x)))
-        if not out.empty:
-            print(
-                f"\n[WalkForwardOver] mean bets={out['bets'].mean():.1f} "
-                f"mean win_rate={out['win_rate'].mean():.4f} mean roi={out['roi'].mean():.4f}"
+    def _printCrossFilterSummary(self, allResults, filterSets):
+        import pandas as pd
+        from metrics.reporter import Reporter
+
+        rows = []
+        for fs in filterSets:
+            foldResults = allResults.get(fs.name, [])
+            if not foldResults:
+                continue
+            
+            totalPnl = sum(r["total_pnl"] for r in foldResults)
+            totalBets = sum(r["bets"] for r in foldResults)
+            profFolds = sum(1 for r in foldResults if r["total_pnl"] > 0)
+            avgWr = (
+                sum(r["win_rate"] for r in foldResults) / len(foldResults)
             )
-        return out
-
+            row = {
+                "filter": fs.name,
+                "total_pnl": round(totalPnl, 2),
+                "total_bets": totalBets,
+                "avg_win_rate": round(avgWr, 4),
+                "prof_folds": f"{profFolds}/{len(foldResults)}",
+                **fs.asDict(),
+            }
+            rows.append(row)
+ 
+        Reporter.filterSweepTable(rows)
 
 # Cache features
 

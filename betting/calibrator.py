@@ -9,7 +9,6 @@ from sklearn.linear_model import LogisticRegression
 
 from config import (
     CALIBRATOR_PATH, CAL_FIT_LINES, PLATT_FIT_LINES, SIGMA_BOUNDS, DF_BOUNDS,
-    ENABLE_BUCKETED_OVER_CALIBRATION, OVER_CAL_BUCKET_MIN_SAMPLES,
 )
 
 
@@ -59,13 +58,46 @@ def _fitDfAndSigma(predictions, actuals, lines=None):
     bestSigma = float(np.clip(bestParams[1], *SIGMA_BOUNDS))
     print(f"[Calibrator] joint fit: df={bestDF:.2f}\n[Calibrator] sigma={bestSigma:.3f}, loss={bestLoss:.6f}")
     return bestDF, bestSigma
+    
+
+# SPLIT NORMAL ATTEMPT
 
 
-def _buildPlattData(predictions, actuals, lines, sigma, df):
+# Fits a split normal distribution, left for below and right for above   
+def _fitSplitSigma(predictions, actuals):
+    residuals = np.asarray(actuals) - np.asarray(predictions)
+
+    left = residuals[residuals <= 0]        
+    right = residuals[residuals > 0]
+
+    sigmaLeft = float(np.sqrt(np.mean(left ** 2))) if len(left) > 10 else 7.0
+    sigmaRight = float(np.sqrt(np.mean(right ** 2))) if len(right) > 10 else 7.0
+
+    sigmaLeft = float(np.clip(sigmaLeft, *SIGMA_BOUNDS))
+    sigmaRight = float(np.clip(sigmaRight, *SIGMA_BOUNDS))
+
+    print(f"[Calibrator] split-normal: sigma_left={sigmaLeft:.3f}, sigma_right={sigmaRight:.3f}")
+    print(f"[Calibrator] left tail n={len(left)}, right tail n={len(right)}")
+    return sigmaLeft, sigmaRight
+    
+def _probOverSplitNormal(predicted, line, sigmaLeft, sigmaRight):
+    from scipy.stats import norm
+    delta = line - predicted
+
+    if delta <= 0:
+        return float(norm.sf(delta / sigmaRight))
+    else:
+        return float(norm.sf(delta / sigmaLeft))
+
+
+def _buildPlattData(predictions, actuals, lines, sigmaLeft, sigmaRight):
     actuals = np.asarray(actuals)
     rawProbsAll, hitsAll = [], []
     for line in lines:
-        raw = np.array([_probOverT(p, line, sigma, df) for p in predictions])
+        raw = np.array([
+            _probOverSplitNormal(p, line, sigmaLeft, sigmaRight)
+            for p in predictions
+        ])
         hit = (actuals > line).astype(float)
         rawProbsAll.append(raw)
         hitsAll.append(hit)
@@ -73,11 +105,10 @@ def _buildPlattData(predictions, actuals, lines, sigma, df):
 
 
 class Calibrator:
-    def __init__(self, platt, plattByBucket, df, sigma, residualStd, meta):
+    def __init__(self, platt, sigmaLeft, sigmaRight, residualStd, meta):
         self.platt = platt
-        self.plattByBucket = plattByBucket or {}
-        self.df = df
-        self.sigma = sigma
+        self.sigmaLeft = sigmaLeft
+        self.sigmaRight = sigmaRight
         self.residualStd = residualStd
         self.meta = meta
 
@@ -88,26 +119,12 @@ class Calibrator:
     # Returns calibrated P(acutal > line) given a raw point pred
     # NOTE: Only method backtest and prediction layers needs to call
     def probOver(self, predicted, line):
-        raw = float(1 - t_dist.cdf(line, df=self.df, loc=predicted, scale=self.sigma))
-        model = self.plattByBucket.get(self._bucketLabel(predicted), self.platt)
-        return float(model.predict_proba([[raw]])[0, 1])
-
-    @staticmethod
-    def _bucketLabel(predicted):
-        p = float(predicted)
-        if p < 12:
-            return "<12"
-        if p < 15:
-            return "12-15"
-        if p < 18:
-            return "15-18"
-        if p < 22:
-            return "18-22"
-        return "22+"
+        raw = _probOverSplitNormal(predicted, line, self.sigmaLeft, self.sigmaRight)
+        return float(self.platt.predict_proba([[raw]])[0, 1])
 
     # Uncalibrated prob (needed for debuging)
     def rawProbOver(self, predicted, line):
-        return _probOverT(predicted, line, self.sigma, self.df)
+        return _probOverSplitNormal(predicted, line, self.sigmaLeft, self.sigmaRight)
 
 
     # Convience
@@ -127,7 +144,7 @@ class Calibrator:
     def printExamples(self, predMean=18.0, lines=None):
         if lines is None:
             lines = [10, 15, 20, 25, 30, 35, 40]
-        print(f"\n[Calibrator] sigma={self.sigma:.3f}  df={self.df:.2f}")
+        print(f"\n[Calibrator] sigma_left={self.sigmaLeft:.3f}  sigma_right={self.sigmaRight:.3f}")
         print(f"\n[Calibrator] {'Line':>6}  {'Raw':>8}  {'Calibrated':>12}")
         for line in lines:
             raw = self.rawProbOver(predMean, line)
@@ -179,12 +196,11 @@ class Calibrator:
     # Persistance
 
 
-    def save(self   , path=CALIBRATOR_PATH):
+    def save(self, path=CALIBRATOR_PATH):
         bundle = {
             "platt": self.platt,
-            "plattByBucket": self.plattByBucket,
-            "df": self.df,
-            "sigma": self.sigma,
+            "sigma left": self.sigmaLeft,
+            "sigma right": self.sigmaRight,
             "residual std": self.residualStd,
             **self.meta,
         }
@@ -199,11 +215,10 @@ class Calibrator:
         bundle = joblib.load(path)
         return cls(
             platt=bundle["platt"],
-            plattByBucket=bundle.get("plattByBucket", {}),
-            df=bundle["df"],
-            sigma=bundle["sigma"],
+            sigmaLeft=bundle["sigma left"],
+            sigmaRight=bundle["sigma right"],
             residualStd=bundle.get("residual std", bundle.get("sigma")),
-            meta={k: v for k, v in bundle.items() if k not in ("platt", "plattByBucket", "plattUnder", "plattUnderHigh", "df", "sigma", "residual std")},
+            meta={k: v for k, v in bundle.items() if k not in ("platt", "plattUnder", "plattUnderHigh", "df", "sigma", "residual std")},
         )
 
     @classmethod
@@ -250,39 +265,35 @@ class Calibrator:
             predRate = float(np.mean(predictions > line))
             print(f"  {line:>6}  {actRate:>16.3f}  {predRate:>14.3f}")
 
-        # 3. Fit df and sigma
-
-        df, optimalSigma = _fitDfAndSigma(predictions, actuals)
-        print(f"[Calibrator] best df = {df:.2f}, sigma={optimalSigma:.3f}")
+        # 3. Fit split nromal sigmas
+        
+        sigmaLeft, sigmaRight = _fitSplitSigma(predictions, actuals)
 
         # 4. Build platt data with a line restriction
 
         plattLines = [line for line in PLATT_FIT_LINES if 5 <= line <= 35]
-        rawProbs, hits = _buildPlattData(predictions, actuals, plattLines, optimalSigma, df)
+        rawProbs, hits = _buildPlattData(predictions, actuals, plattLines, sigmaLeft, sigmaRight)
 
         # 5. Platt scaling (logistic regression on raw probs)
 
+        nBins = 20
+        binEdges = np.linspace(0.0, 1.0, nBins + 1)
+        binMidpoints = []
+        binHitRates = []
+
+        for i in range(nBins):
+            lo, hi = binEdges[i], binEdges[i + 1]
+            mask = (rawProbs >= lo) & (rawProbs < hi)
+            if mask.sum() < 5:   # skip bins with too few observations
+                continue
+            binMidpoints.append(float(rawProbs[mask].mean()))
+            binHitRates.append(float(hits[mask].mean()))
+
+        binMidpoints = np.array(binMidpoints)
+        binHitRates = np.array(binHitRates)
+
         platt = LogisticRegression(solver="lbfgs", max_iter=2000)
         platt.fit(rawProbs.reshape(-1, 1), hits)
-
-        # Optional bucketed over calibrators
-        plattByBucket = {}
-        bucketCounts = {}
-        if ENABLE_BUCKETED_OVER_CALIBRATION:
-            labels = np.array([cls._bucketLabel(p) for p in predictions])
-            for label in ["<12", "12-15", "15-18", "18-22", "22+"]:
-                mask = labels == label
-                n = int(mask.sum())
-                bucketCounts[label] = n
-                if n < OVER_CAL_BUCKET_MIN_SAMPLES:
-                    continue
-                rawB, hitsB = _buildPlattData(predictions[mask], actuals[mask], plattLines, optimalSigma, df)
-                if len(np.unique(hitsB)) < 2:
-                    continue
-                modelB = LogisticRegression(solver="lbfgs", max_iter=2000)
-                modelB.fit(rawB.reshape(-1, 1), hitsB)
-                plattByBucket[label] = modelB
-            print(f"[Calibrator] Bucket calibrators fitted: {sorted(plattByBucket.keys())} | counts={bucketCounts}")
 
         # 6. Compression check
 
@@ -310,9 +321,8 @@ class Calibrator:
 
         instance = cls(
             platt=platt,
-            plattByBucket=plattByBucket,
-            df=df,
-            sigma=optimalSigma,
+            sigmaLeft=sigmaLeft,
+            sigmaRight=sigmaRight,
             residualStd=residualStd,
             meta={
                 **(metadata or {}),
@@ -322,7 +332,6 @@ class Calibrator:
                 "platt_60": calAt60,
                 "platt_80": calAt80,
                 "platt_90": calAt90,
-                "bucketed_over_enabled": bool(ENABLE_BUCKETED_OVER_CALIBRATION),
             },
         )
         instance.printExamples(predMean=meanPred)
@@ -338,3 +347,4 @@ class Calibrator:
     def isSafeFor(self, backtestStartDate):
         end = self.meta.get("calibration_end_date", "")
         return bool(end) and end < backtestStartDate
+

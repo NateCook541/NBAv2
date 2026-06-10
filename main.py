@@ -35,7 +35,6 @@ def main():
     parser.add_argument("--end-date", type=str, default=None)
     
     # Backtest testing args
-    parser.add_argument("--edge-thresh-sweep", action="store_true")
     parser.add_argument("--backtest-fold-test", action="store_true")
 
     # Shared args
@@ -62,13 +61,6 @@ def main():
                 bankroll = args.bankroll
         )
     
-    if args.edge_thresh_sweep:
-        pipeline.sweepOverThresholds(
-                startDate = args.start_date, 
-                endDate = args.end_date, 
-                bankroll = args.bankroll
-        )
-
     if args.backtest_fold_test:
         pipeline.walkForwardOverThresholds(
                  startDate = args.start_date,

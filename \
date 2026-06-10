@@ -113,13 +113,13 @@ DF_BOUNDS    = (2.1, 30.0)
 
 # Betting
 
-DEFAULT_EDGE_THRESH = 0.08
+DEFAULT_EDGE_THRESH = 0.15
 DEFAULT_BANKROLL = 1000
 DEFAULT_KELLY_FRAC = 0.25
 FLAT_STAKE = 10
 
 # Used to filter out really far out line preds as this is likely injury effects that scraper didn't catch
-MIN_LINE = 10
+MIN_LINE = 5
 MAX_LINE_DIFF = 15
 
 OVER_MIN_DISAGREEMENT  = 2.0

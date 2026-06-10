@@ -14,33 +14,11 @@ from config import (
     MIN_LINE,
     MAX_LINE_DIFF,
     OVER_MIN_DISAGREEMENT,
-    ENABLE_OVER_MID_POS_GUARD,
-    OVER_MID_POS_GUARD_RANGE,
-    OVER_MID_POS_GUARD_MAX_POS,
-    ENABLE_OVER_WEAK_BUCKET_GUARD,
-    OVER_WEAK_BUCKET_RANGE,
-    OVER_WEAK_BUCKET_MAX_POS,
-    ENABLE_OVER_RELIABILITY_SHRINK,
-    OVER_RELIABILITY_SHRINK_12_15,
-    OVER_RELIABILITY_SHRINK_15_18,
-    OVER_RELIABILITY_SHRINK_18_22,
-    OVER_RELIABILITY_SHRINK_22P,
-    ENABLE_OVER_SOFT_BUCKET_ADJUST,
-    OVER_SOFT_EDGE_ADJUST_12_15,
-    OVER_SOFT_EDGE_ADJUST_15_18,
-    OVER_SOFT_EDGE_ADJUST_18_22,
-    OVER_SOFT_EDGE_ADJUST_22P,
-    ENABLE_OVER_QUALITY_GATE,
-    OVER_QUALITY_GATE_MAX_EDGE,
-    OVER_QUALITY_GATE_MIN_SCORE,
-    OVER_QUALITY_W_CONFIDENCE,
-    OVER_QUALITY_W_DISAGREEMENT,
-    OVER_QUALITY_W_POS,
 )
 from features.builder import buildFeatures
 from features.cache import preloadCaches
 from metrics.reporter import Reporter
-
+from betting.filters import FilterSet
 
 @dataclass
 class BetRecord:
@@ -67,9 +45,9 @@ class SkipCounters:
     noActuals: int = 0
     noFeatures: int = 0
     noLine: int = 0
-    noMidPosGuard: int = 0
-    noWeakBucketGuard: int = 0
-    noQualityGate: int = 0
+    noOppMatchByMonth: Counter = field(default_factory=Counter, repr=False)
+    filteredOut: int = 0
+    filterReasons: Counter = field(default_factory=Counter, repr=False)
     noOppMatchByMonth: Counter = field(default_factory=Counter, repr=False)
 
 
@@ -90,44 +68,6 @@ def _payoutMultiplier(usOdds):
     if usOdds > 0:
         return usOdds / 100
     return 100 / abs(usOdds)
-
-
-def _predBucket(predicted):
-    if predicted < 12:
-        return "<12"
-    if predicted < 15:
-        return "12-15"
-    if predicted < 18:
-        return "15-18"
-    if predicted < 22:
-        return "18-22"
-    return "22+"
-
-
-def _overReliabilityShrink(predicted):
-    b = _predBucket(predicted)
-    if b == "12-15":
-        return float(OVER_RELIABILITY_SHRINK_12_15)
-    if b == "15-18":
-        return float(OVER_RELIABILITY_SHRINK_15_18)
-    if b == "18-22":
-        return float(OVER_RELIABILITY_SHRINK_18_22)
-    if b == "22+":
-        return float(OVER_RELIABILITY_SHRINK_22P)
-    return 0.0
-
-
-def _overSoftEdgeAdjust(predicted):
-    b = _predBucket(predicted)
-    if b == "12-15":
-        return float(OVER_SOFT_EDGE_ADJUST_12_15)
-    if b == "15-18":
-        return float(OVER_SOFT_EDGE_ADJUST_15_18)
-    if b == "18-22":
-        return float(OVER_SOFT_EDGE_ADJUST_18_22)
-    if b == "22+":
-        return float(OVER_SOFT_EDGE_ADJUST_22P)
-    return 0.0
 
 
 def _normalize(name):
@@ -260,7 +200,7 @@ class BacktestEngine:
         self.edgeCap = calibrator.profitableEdgeCap
         # We are reading the profitable edge cap directly from the calibrator
         self.edgeCap = calibrator.profitableEdgeCap
-        self.filters = filterSet or FilterSet()
+        self.filterSet = filterSet if filterSet is not None else FilterSet.baseline()
 
     def run(self, startDate=None, endDate=None, edgeThresh=DEFAULT_EDGE_THRESH, bankroll=DEFAULT_BANKROLL):
        # Load data from db
@@ -412,40 +352,29 @@ class BacktestEngine:
             skips.noFeatures += 1
             return None, currentBank, skips
 
-        # Prediction
-        predicted = self.points.predict(features)
-
-        # Filter applying
-        passes, reason = self.filters.passes(predicted, pos, prop.line)
-        if not passes:
+        # Line sanity filter
+        avgPts = float(features["avgPts10"].iloc[0])
+        if prop.line < MIN_LINE or abs(prop.line - avgPts) > MAX_LINE_DIFF:
             skips.noLine += 1
             return None, currentBank, skips
 
-        # Probailites
-        rawProb = self.calibrator.probOver(predicted, prop.line)
-        fairOver, _ = _removeVig(prop.over_odds, prop.under_odds)
-        if ENABLE_OVER_RELIABILITY_SHRINK:
-        else:
-            myProb = rawProb
-        edge = myProb - fairOver
-        if ENABLE_OVER_SOFT_BUCKET_ADJUST:
-            edge += _overSoftEdgeAdjust(predicted)
+        # Prediction
+        predicted = self.points.predict(features)
 
-        # Soft quality gate for borderline edges to preserve volume while
-        # improving hit rate quality near the decision boundary.
-        if ENABLE_OVER_QUALITY_GATE and edgeThresh <= edge <= OVER_QUALITY_GATE_MAX_EDGE:
-            confidence = max(0.0, abs(myProb - fairOver))
-            disagreement = max(0.0, min((predicted - prop.line) / 6.0, 1.0))
-            posScore = max(0.0, min((pos - 1.0) / 4.0, 1.0))
-            qualityScore = (
-                (OVER_QUALITY_W_CONFIDENCE * confidence)
-                + (OVER_QUALITY_W_DISAGREEMENT * disagreement)
-                + (OVER_QUALITY_W_POS * posScore)
-            )
-            if qualityScore < OVER_QUALITY_GATE_MIN_SCORE:
-                skips.noLine += 1
-                skips.noQualityGate += 1
-                return None, currentBank, skips
+        # Filters
+        passed, filterReason = self.filterSet.passes(
+            predicted = predicted,
+            propLine = prop.line,
+        )
+        if not passed:
+            skips.filteredOut += 1
+            skips.filterReasons[filterReason] += 1
+            return None, currentBank, skips
+
+        # Probailites
+        myProb = self.calibrator.probOver(predicted, prop.line)
+        fairOver, _ = _removeVig(prop.over_odds, prop.under_odds)
+        edge = myProb - fairOver
 
         # No bet record
         if edge <= edgeThresh:
