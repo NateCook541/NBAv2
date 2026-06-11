@@ -194,17 +194,19 @@ class Pipeline:
 
         points, minutes, calibrator = self._loadOrTrainBundle(backtestStartDate = backtestStart)
 
+        fs = FilterSet.edgeDonutHole() 
+        
         engine = BacktestEngine(
                 pointsBundle = points,
                 minutesBundle = minutes,
                 calibrator = calibrator,
-                dbPath = self.dbPath
+                dbPath = self.dbPath,
+                filterSet = fs
         )
 
         results = engine.run(
                 startDate = startDate,
                 endDate = endDate,
-                edgeThresh = edgeThresh,
                 bankroll = bankroll
         )
 
@@ -279,7 +281,7 @@ class Pipeline:
         # FilterSet list always include baseline
         baseline = FilterSet.baseline()
         if filterSets is None:
-            filterSets = [baseline, FilterSet()]
+            filterSets = [FilterSet.edgeDonutHole(), FilterSet.baseline()]  
         else:
             names = [f.name for f in filterSets]
             if baseline.name not in names:

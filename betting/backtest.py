@@ -15,6 +15,7 @@ from config import (
     MIN_LINE,
     MAX_LINE_DIFF,
     OVER_MIN_DISAGREEMENT,
+    DEFAULT_KELLY_FRAC,
 )
 from features.builder import buildFeatures
 from features.cache import preloadCaches
@@ -72,6 +73,12 @@ def _payoutMultiplier(usOdds):
         return usOdds / 100
     return 100 / abs(usOdds)
 
+def _kellyFractional(edge, usOdds, fraction=DEFAULT_KELLY_FRAC):
+    b = _payoutMultiplier(usOdds)
+    p = edge + _impliedProb(usOdds)
+    q = 1 - p
+    kelly = (b * p - q) / b
+    return max(0.0, kelly * fraction)
 
 def _normalize(name):
     base = "".join(
@@ -222,7 +229,7 @@ class BacktestEngine:
 
         print(
             f"[BacktestEngine] {len(props)} props loaded \n"
-            f"edge thresh={edgeThresh:.0%} | max edge={self.edgeCap:.0%} | "
+            f"edge thresh={edgeThresh} | max edge={self.edgeCap:.0%} | "
             f"bankroll=${bankroll:.0f}"
         )
         print(
@@ -404,7 +411,8 @@ class BacktestEngine:
         # Kelly is unimplmented for now until preformance improves
         # with current setup
         # This is to reduce noise for working on improvments
-        stake = FLAT_STAKE
+        stake = _kellyFractional(edge, prop.over_odds) * currentBank
+        stake = round(min(stake, currentBank * 0.10), 2) # Hard cap at 10% of current bankroll
 
         won = actualPts > prop.line
         pnl = stake * _payoutMultiplier(prop.over_odds) if won else -stake
