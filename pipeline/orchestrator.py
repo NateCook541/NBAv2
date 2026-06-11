@@ -83,7 +83,8 @@ class Pipeline:
     # Train
 
 
-    def train(self, endDate=None, save=True, runMetrics=False):
+    def train(self, endDate=None, save=True, runMetrics=False,
+              forceRetrain=False, useCachedFeatures=False):
         """
         Full model train
         1. Train minutes model
@@ -104,9 +105,18 @@ class Pipeline:
         conn.close()
         
         savedMinutes = MinutesBundle.loadIfExists()
+        if useCachedFeatures and savedMinutes is None:
+            raise ValueError(
+                "useCachedFeatures=True requires a saved minutes model for "
+                "backtest-time feature generation."
+            )
+
         minutesChanged = (
-                savedMinutes is None or
-                not savedMinutes.isSafeFor(endDate or "9999-99-99")
+                (not useCachedFeatures) and (
+                    forceRetrain or
+                    savedMinutes is None or
+                    not savedMinutes.isSafeFor(endDate or "9999-99-99")
+                )
         )
         if minutesChanged:
             print(f"[Pipeline] Training fresh minutes bundle")
@@ -208,12 +218,14 @@ class Pipeline:
 
     def walkForwardOverThresholds(self, startDate = None, endDate = None, nFolds = 5, 
                                   edgeThresh = DEFAULT_EDGE_THRESH, 
-                                  bankroll = DEFAULT_BANKROLL, filterSets = None):
+                                  bankroll = DEFAULT_BANKROLL, filterSets = None,
+                                  retrainEachFold = True,
+                                  retrainMinutesEachFold = False):
         """
         Walk-forward backtest over held-out time folds.
  
-        For each fold the model is checked for leakage safety against that
-        fold's start date it is never fitted on fold data.
+        For each fold the points model and calibrator are trained only on data
+        before that fold's start date, then reused across filter comparisons.
  
         A baseline FilterSet (no optional filters) is always run first so
         every other FilterSet result can be compared against it directly.
@@ -259,6 +271,8 @@ class Pipeline:
  
         print(f"\n[WalkForward] {nFolds} folds across {len(propDates)} prop dates")
         print(f"[WalkForward] Full range: {propDates[0]} → {propDates[-1]}")
+        print(f"[WalkForward] Retrain each fold: {retrainEachFold}")
+        print(f"[WalkForward] Retrain minutes each fold: {retrainMinutesEachFold}")
         for i, (fs, fe) in enumerate(folds):
             print(f"  fold {i + 1}: {fs} → {fe}")
 
@@ -269,10 +283,11 @@ class Pipeline:
         else:
             names = [f.name for f in filterSets]
             if baseline.name not in names:
-                filterSets = [baseline] + list(filterSets)
- 
+                filterSets = [baseline] + list(filterSets) 
+
         # Run every FilterSet across every fold 
         allResults = {}
+        foldBundles = {}
  
         for fs in filterSets:
             print(f"\n{'='*60}")
@@ -284,10 +299,25 @@ class Pipeline:
             for foldIdx, (foldStart, foldEnd) in enumerate(folds):
                 print(f"\nFold {foldIdx + 1}/{nFolds}: {foldStart} → {foldEnd}")
  
-                # Leakage-safe model for this folds start date
-                points, minutes, calibrator = self._loadOrTrainBundle(
-                    backtestStartDate=foldStart
-                )
+                # Leakage-safe model for this fold's start date.
+                if foldStart not in foldBundles:
+                    if retrainEachFold:
+                        print(
+                            f"[WalkForward] Training fold bundle through "
+                            f"{foldStart} (exclusive)"
+                        )
+                        foldBundles[foldStart] = self.train(
+                            endDate=foldStart,
+                            save=False,
+                            forceRetrain=retrainMinutesEachFold,
+                            useCachedFeatures=not retrainMinutesEachFold,
+                        )
+                    else:
+                        foldBundles[foldStart] = self._loadOrTrainBundle(
+                            backtestStartDate=foldStart
+                        )
+
+                points, minutes, calibrator = foldBundles[foldStart]
  
                 engine = BacktestEngine(
                     pointsBundle = points,
@@ -437,7 +467,8 @@ class Pipeline:
         )
         print(
                 f"Calibrator refitted"
-                f"sigma={calibrator.sigma:.3f}, df={calibrator.df:.2f}"
+                f"sigma_left={calibrator.sigmaLeft:.3f}, "
+                f"sigma_right={calibrator.sigmaRight:.3f}"
         )
         return calibrator
 

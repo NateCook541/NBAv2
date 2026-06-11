@@ -11,6 +11,7 @@ from config import (
     CALIBRATOR_PATH, CAL_FIT_LINES, PLATT_FIT_LINES, SIGMA_BOUNDS, DF_BOUNDS,
 )
 
+CALIBRATOR_ALGORITHM_VERSION = 2
 
 def _probOverT(predicted, line, sigma, df):
     return float(1 - t_dist.cdf(line, df=df, loc=predicted, scale=sigma))
@@ -85,9 +86,8 @@ def _probOverSplitNormal(predicted, line, sigmaLeft, sigmaRight):
     delta = line - predicted
 
     if delta <= 0:
-        return float(norm.sf(delta / sigmaRight))
-    else:
         return float(norm.sf(delta / sigmaLeft))
+    return float(norm.sf(delta / sigmaRight))
 
 
 def _buildPlattData(predictions, actuals, lines, sigmaLeft, sigmaRight):
@@ -120,7 +120,13 @@ class Calibrator:
     # NOTE: Only method backtest and prediction layers needs to call
     def probOver(self, predicted, line):
         raw = _probOverSplitNormal(predicted, line, self.sigmaLeft, self.sigmaRight)
-        return float(self.platt.predict_proba([[raw]])[0, 1])
+        if predicted < 15.0:
+            scaler = self.platt["low"]
+        elif predicted < 22.0:
+            scaler = self.platt["mid"]
+        else:
+            scaler = self.platt["high"]
+        return float(scaler.predict_proba([[raw]])[0, 1])
 
     # Uncalibrated prob (needed for debuging)
     def rawProbOver(self, predicted, line):
@@ -135,7 +141,7 @@ class Calibrator:
         """
         Max edge that calibrator considers as reliable
         """
-        return float(self.meta.get("profitable_edge_cap", self.meta.get("profitable_edge_Cap", 0.15)))
+        return float(self.meta.get("profitable_edge_cap", self.meta.get("profitable_edge_Cap", 0.20)))
 
 
     # Diagnostics
@@ -145,11 +151,12 @@ class Calibrator:
         if lines is None:
             lines = [10, 15, 20, 25, 30, 35, 40]
         print(f"\n[Calibrator] sigma_left={self.sigmaLeft:.3f}  sigma_right={self.sigmaRight:.3f}")
-        print(f"\n[Calibrator] {'Line':>6}  {'Raw':>8}  {'Calibrated':>12}")
+        print(f"\n[Calibrator] {'Line':>6}  {'Raw':>8}  {'Calibrated':>12} {'Tier':>6}")
         for line in lines:
             raw = self.rawProbOver(predMean, line)
             cal = self.probOver(predMean, line)
-            print(f"{line:>6}  {raw:>8.3f}  {cal:>12.3f}")
+            tier = "low" if predMean < 15 else ("mid" if predMean < 22 else "high")
+            print(f"{line:>6}  {raw:>8.3f}  {cal:>12.3f}  {tier:>6}")
 
     # Returns a DF of line, predicted prob bucket, acutal hit rate, n
     # Reading this lets us diagnose over/under confidense on prop range
@@ -213,8 +220,11 @@ class Calibrator:
         if not Path(path).exists():
             raise FileNotFoundError(f"No calibrator at {path}")
         bundle = joblib.load(path)
+        platt = bundle["platt"]
+        if not isinstance(platt, dict):
+            platt = {"low": platt, "mid": platt, "high": platt, "global": platt}
         return cls(
-            platt=bundle["platt"],
+            platt=platt,
             sigmaLeft=bundle["sigma left"],
             sigmaRight=bundle["sigma right"],
             residualStd=bundle.get("residual std", bundle.get("sigma")),
@@ -276,30 +286,51 @@ class Calibrator:
 
         # 5. Platt scaling (logistic regression on raw probs)
 
-        nBins = 20
-        binEdges = np.linspace(0.0, 1.0, nBins + 1)
-        binMidpoints = []
-        binHitRates = []
+        # Testing tiered platt scaling
+        
+        predArray = np.asarray(predictions, dtype=float)
 
-        for i in range(nBins):
-            lo, hi = binEdges[i], binEdges[i + 1]
-            mask = (rawProbs >= lo) & (rawProbs < hi)
-            if mask.sum() < 5:   # skip bins with too few observations
-                continue
-            binMidpoints.append(float(rawProbs[mask].mean()))
-            binHitRates.append(float(hits[mask].mean()))
+        lowMask = predArray < 15.0
+        midMask = (predArray >= 15.0) & (predArray < 22.0)
+        highMask = predArray >= 22.0
 
-        binMidpoints = np.array(binMidpoints)
-        binHitRates = np.array(binHitRates)
+        print(f"[Calibrator] Tiered Platt split: "
+              f"low(n={lowMask.sum()}) mid(n={midMask.sum()}) high(n={highMask.sum()})")
 
-        platt = LogisticRegression(solver="lbfgs", max_iter=2000)
-        platt.fit(rawProbs.reshape(-1, 1), hits)
+        def _fitTierPlatt(tierMask, tierLabel):
+            if tierMask.sum() < 30:
+                print(f"[Calibrator] {tierLabel} tier too small ({tierMask.sum()}), using global fit")
+                return None
+            tierRawProbs, tierHits = _buildPlattData(
+                    predictions[tierMask], actuals[tierMask], plattLines, sigmaLeft, sigmaRight
+            )
+
+            lr = LogisticRegression(solver="lbfgs", max_iter=2000)
+            lr.fit(tierRawProbs.reshape(-1, 1), tierHits)
+            cal60 = float(lr.predict_proba([[0.60]])[0, 1])
+            cal80 = float(lr.predict_proba([[0.80]])[0, 1])
+            print(f"[Calibrator] {tierLabel} Platt: @60%={cal60:.3f}, @80%={cal80:.3f}")
+            return lr  
+
+        plattLow = _fitTierPlatt(lowMask, "low (<15)")
+        plattMid = _fitTierPlatt(midMask, "mid (15-22)")
+        plattHigh = _fitTierPlatt(highMask, "high (22+)")
+        
+        plattGlobal = LogisticRegression(solver="lbfgs", max_iter=2000)
+        plattGlobal.fit(rawProbs.reshape(-1, 1), hits)
+
+        platt = {
+                "low": plattLow or plattGlobal,
+                "mid": plattMid or plattGlobal,
+                "high": plattHigh or plattGlobal,
+                "global": plattGlobal
+        }
 
         # 6. Compression check
 
-        calAt60 = float(platt.predict_proba([[0.60]])[0, 1])
-        calAt80 = float(platt.predict_proba([[0.80]])[0, 1])
-        calAt90 = float(platt.predict_proba([[0.90]])[0, 1])
+        calAt60 = float(platt["global"].predict_proba([[0.60]])[0, 1])
+        calAt80 = float(platt["global"].predict_proba([[0.80]])[0, 1])
+        calAt90 = float(platt["global"].predict_proba([[0.90]])[0, 1])
         highCompression = calAt90 - calAt60
         midCompression = calAt80 - calAt60
 
@@ -327,6 +358,7 @@ class Calibrator:
             meta={
                 **(metadata or {}),
                 "target_mode": targetMode,
+                "calibrator_algorithm_version": CALIBRATOR_ALGORITHM_VERSION,
                 "profitable_edge_cap": profitableEdgeCap,
                 "mean_pred": meanPred,
                 "platt_60": calAt60,
@@ -345,6 +377,7 @@ class Calibrator:
 
     # Backtest safety
     def isSafeFor(self, backtestStartDate):
+        if int(self.meta.get("calibrator_algorithm_version", 0)) < CALIBRATOR_ALGORITHM_VERSION:
+            return False
         end = self.meta.get("calibration_end_date", "")
         return bool(end) and end < backtestStartDate
-

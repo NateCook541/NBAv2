@@ -12,6 +12,8 @@ from config import (
     USE_RECENCY_WEIGHTS, RECENCY_WEIGHT_MIN, RECENCY_WEIGHT_MAX,
 )
 
+POINTS_BUNDLE_VERSION = 2
+
 
 # Helpers
 
@@ -83,7 +85,7 @@ def _computeBiasMeta(rawPredictions, actuals, X):
     bucketBias = {
             "lt12": float(residuals[avg < 12].mean()) if np.any(avg < 12) else 0.0,
             "12to20": float(residuals[(avg >= 12) & (avg < 20)].mean()) if np.any((avg >= 12) & (avg < 20)) else 0.0,
-            "gte20": float(residuals[avg >= 12].mean()) if np.any(avg >= 12) else 0.0
+            "gte20": float(residuals[avg >= 20].mean()) if np.any(avg >= 20) else 0.0
     }
     return {
             "global_bias": globalBias,
@@ -316,6 +318,7 @@ class PointsBundle:
                 "train_rows": int(len(XTrain)),
                 "calibration_rows": int(len(XCal)),
                 "target_mode": targetMode,
+                "points_bundle_version": POINTS_BUNDLE_VERSION,
                 "prediction_clip_k": float(PREDICTION_CLIP_K),
                 "bias_correction": biasMeta,
                 "recency_weights": bool(USE_RECENCY_WEIGHTS),
@@ -340,6 +343,8 @@ class PointsBundle:
 
     # Needed to check if safe for the backtest testing
     def isSafeFor(self, backtestStartDate):
+        if int(self.meta.get("points_bundle_version", 0)) < POINTS_BUNDLE_VERSION:
+            return False
         end = self.meta.get("train_end_date")
         if not end:
             last = self.meta.get("train_last_date", "")

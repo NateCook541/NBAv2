@@ -135,7 +135,7 @@ class Reporter:
         cls._out(predSummary.to_string(float_format=lambda x: f"{x:.4f}"))
  
         # Top / Worst bets
-        cols = ["date", "player", "line", "predicted", "actual", "edge", "pnl"]
+        cols = ["date", "player", "line", "predicted", "actual", "predDiff", "edge", "pnl"]
         cls._out("\nTop 5 bets by edge:")
         cls._out(
             bets.sort_values("edge", ascending=False)[cols]
@@ -212,6 +212,7 @@ class Reporter:
                     )
             
             cls.calibrationAccuracy(bets)
+            cls.marginBucketReport(bets)
     
     @classmethod
     def walkForwardSummary(cls, foldResults, filterName = "default", baselinePnl = None):
@@ -375,4 +376,30 @@ class Reporter:
             f"gap={overall_wr - overall_myProb:+.3f}"
         )
 
+    @classmethod
+    def marginBucketReport(cls, bets: pd.DataFrame) -> None:
+        """
+        Shows whether the model's point margin over the book line is behaving
+        monotonically before odds/calibration are considered.
+        """
+        if bets.empty or "predDiff" not in bets.columns:
+            return
+
+        bets = bets.copy()
+        bets["marginBucket"] = pd.cut(
+            bets["predDiff"],
+            bins=[-99, 1, 2, 3, 4, 5, 99],
+            labels=["<=1", "1-2", "2-3", "3-4", "4-5", "5+"],
+        )
+        summary = bets.groupby("marginBucket", observed=True).agg(
+            bets=("pnl", "count"),
+            winRate=("pnl", lambda x: (x > 0).mean()),
+            avgPredDiff=("predDiff", "mean"),
+            avgRawProb=("rawProb", "mean"),
+            avgMyProb=("myProb", "mean"),
+            totalPnl=("pnl", "sum"),
+        )
+
+        cls._out("\nWin rate by predicted-line margin:")
+        cls._out(summary.to_string(float_format=lambda x: f"{x:.4f}"))
 

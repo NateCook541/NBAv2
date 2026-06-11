@@ -9,6 +9,7 @@ import pandas as pd
 from config import (
     DB_PATH,
     DEFAULT_EDGE_THRESH,
+    MAX_BET_EDGE,
     DEFAULT_BANKROLL,
     FLAT_STAKE,
     MIN_LINE,
@@ -27,6 +28,8 @@ class BetRecord:
     line: float
     predicted: float
     actual: float
+    predDiff: float
+    rawProb: float
     myProb: float
     bookProb: float
     edge: float
@@ -197,9 +200,7 @@ class BacktestEngine:
         self.minutes = minutesBundle
         self.calibrator = calibrator
         self.dbPath = Path(dbPath)
-        self.edgeCap = calibrator.profitableEdgeCap
-        # We are reading the profitable edge cap directly from the calibrator
-        self.edgeCap = calibrator.profitableEdgeCap
+        self.edgeCap = MAX_BET_EDGE
         self.filterSet = filterSet if filterSet is not None else FilterSet.baseline()
 
     def run(self, startDate=None, endDate=None, edgeThresh=DEFAULT_EDGE_THRESH, bankroll=DEFAULT_BANKROLL):
@@ -221,7 +222,8 @@ class BacktestEngine:
 
         print(
             f"[BacktestEngine] {len(props)} props loaded \n"
-            f"edge thresh={edgeThresh:.0%} | bankroll=${bankroll:.0f}"
+            f"edge thresh={edgeThresh:.0%} | max edge={self.edgeCap:.0%} | "
+            f"bankroll=${bankroll:.0f}"
         )
         print(
             f"[BacktestEngine] prop date range: "
@@ -351,39 +353,44 @@ class BacktestEngine:
         if features is None:
             skips.noFeatures += 1
             return None, currentBank, skips
-
+        
+        # IDK
         # Line sanity filter
-        avgPts = float(features["avgPts10"].iloc[0])
-        if prop.line < MIN_LINE or abs(prop.line - avgPts) > MAX_LINE_DIFF:
-            skips.noLine += 1
-            return None, currentBank, skips
+        #avgPts = float(features["avgPts10"].iloc[0])
+        #if prop.line < MIN_LINE or abs(prop.line - avgPts) > MAX_LINE_DIFF:
+         #   skips.noLine += 1
+         #   return None, currentBank, skips
 
         # Prediction
         predicted = self.points.predict(features)
-
+        
+        # Probailites
+        rawProb = self.calibrator.rawProbOver(predicted, prop.line)
+        myProb = self.calibrator.probOver(predicted, prop.line)
+        fairOver, _ = _removeVig(prop.over_odds, prop.under_odds)
+        edge = myProb - fairOver
+        
         # Filters
         passed, filterReason = self.filterSet.passes(
             predicted = predicted,
             propLine = prop.line,
+            edge = edge
         )
         if not passed:
             skips.filteredOut += 1
             skips.filterReasons[filterReason] += 1
             return None, currentBank, skips
 
-        # Probailites
-        myProb = self.calibrator.probOver(predicted, prop.line)
-        fairOver, _ = _removeVig(prop.over_odds, prop.under_odds)
-        edge = myProb - fairOver
-
         # No bet record
-        if edge <= edgeThresh:
+        if edge <= edgeThresh or edge > self.edgeCap:
             return BetRecord(
                 date = propDate,
                 player = prop.player_name,
                 line = prop.line,
                 predicted = round(predicted, 1),
                 actual = actualPts,
+                predDiff = round(predicted - prop.line, 2),
+                rawProb = round(rawProb, 3),
                 myProb = round(myProb, 3),
                 bookProb = round(fairOver, 3),
                 edge = round(edge, 3),
@@ -409,6 +416,8 @@ class BacktestEngine:
                 line = prop.line,
                 predicted = round(predicted, 1),
                 actual = actualPts,
+                predDiff = round(predicted - prop.line, 2),
+                rawProb = round(rawProb, 3),
                 myProb = round(myProb, 3),
                 bookProb = round(fairOver, 3),
                 edge = round(edge, 3),

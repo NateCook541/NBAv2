@@ -41,10 +41,27 @@ class FilterSet:
     # ------------------------------------------------------------------ #
     overMinDisagreement: float = 0.0
 
-    def passes(self, predicted: float, propLine: float) -> tuple[bool, str]:
+    # ------------------------------------------------------------------ #
+    # Edge "donut hole"
+    # Across all 5 walk-forward folds, the 8-11% edge band was negative
+    # in 4/5 folds (n=91-142 per fold) while 5-8% and 11-15% were
+    # positive in 4/5 folds each. This excludes a middle band of edges
+    # while keeping both the low- and high-edge bands.
+    # Disabled by default — set donutLow/donutHigh to enable.
+    # e.g. donutLow=0.08, donutHigh=0.11 skips bets with
+    # 0.08 <= edge < 0.11
+    # ------------------------------------------------------------------ #
+    donutLow: float = 0.0
+    donutHigh: float = 0.0
+
+    def passes(self, predicted: float, propLine: float, edge: float = None) -> tuple[bool, str]:
         """
         Returns (passes: bool, reason: str).
         reason is an empty string when the prop passes.
+
+        edge is optional so existing callers that don't pass it still work
+        for the minPredicted / overMinDisagreement filters. The donut hole
+        filter is a no-op if edge is not provided.
         """
 
         if self.minPredicted > 0 and predicted < self.minPredicted:
@@ -53,6 +70,10 @@ class FilterSet:
         if self.overMinDisagreement > 0:
             if (predicted - propLine) < self.overMinDisagreement:
                 return False, "overMinDisagreement"
+
+        if edge is not None and self.donutHigh > self.donutLow:
+            if self.donutLow <= edge < self.donutHigh:
+                return False, "edgeDonutHole"
 
         return True, ""
 
@@ -81,3 +102,12 @@ class FilterSet:
         etc).  Every other FilterSet should be compared against this.
         """
         return cls(name="baseline")
+
+    @classmethod
+    def edgeDonutHole(cls, low: float = 0.08, high: float = 0.11) -> "FilterSet":
+        """
+        Skips bets with edge in [low, high). Defaults to the 8-11% band
+        identified as consistently weak across walk-forward folds.
+        """
+        return cls(name="edgeDonutHole", donutLow=low, donutHigh=high)
+

@@ -32,14 +32,17 @@ featureOrder = [
     # Player vs opp stats
     "pts_vs_opp_avg", "pts_vs_opp_trend", "pts_vs_opps_n",
     
+    # Player def stats
+    "team_def_rtg", "rating_diff",
+
     # Location and rest stats
-    "is_home", "rest_days", "back_to_back", 
+    "is_home", "rest_days", "back_to_back", "games_last_7",
     
     # Pos stats
     "pos", "pos_injury_opportunity",
 
     # Situational flags
-    "streak_score", "last_game_outlier",
+    "streak_score", "last_game_outlier", "role_stability",
 
     # Minutes prediction
     "mins_prediction",
@@ -51,7 +54,7 @@ featureOrder = [
 def _rollingStats(playerID, date, conn):
     # Query the db for players rolling stats and create a pandas df to return of results
     query = """
-        SELECT pgl.points, pgl.minutes, pgl.fg_pct, pgl.is_home, pgl.rest_days
+        SELECT pgl.points, pgl.minutes, pgl.fg_pct, pgl.is_home, pgl.rest_days, pgl.game_date
         FROM Player_game_logs pgl
         JOIN Games g ON pgl.game_id = g.game_id
         WHERE pgl.player_id = ? AND g.game_date < ?
@@ -414,6 +417,7 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
         float(oppFeatures["def_rtg"]) * float(oppFeatures["pace"]) / 100.0
     )
 
+    gamesLast7 = len(rolling[rolling["game_date"] >= (datetime.strptime(date, "%Y-%m-%d") - timedelta(days=7)).strftime("%Y-%m-%d")]) if "game_date" in rolling.columns else 0
 
     # Full feature vertex
     features = pd.DataFrame([{
@@ -459,13 +463,17 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
         "pts_vs_opp_avg": ptsVsOppAvg,
         "pts_vs_opp_trend": ptsVsOppTrend,
         "pts_vs_opps_n": float(ptsVsOppN),
+        "team_def_rtg": teamFeatures["def_rtg"],
+        "rating_diff": teamFeatures["def_rtg"] - oppFeatures["def_rtg"],
         "is_home":               isHome,
         "rest_days":             restDays,
         "back_to_back":          isB2B,
+        "games_last_7":          gamesLast7,
         "pos":                   pos,
         "pos_injury_opportunity":posInjuryOpp,
         "streak_score": float(streakScore),
         "last_game_outlier": float(lastGameOutlier),
+        "role_stability": float(rolling.head(5)["minutes"].std() or 0.0) / max(float(rolling["minutes"].std() or 1.0), 1.0),
         "mins_prediction":       predictedMins,
     }])
 
