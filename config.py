@@ -44,11 +44,11 @@ HOLDOUT_RATIO = 0.20
 
 POINTS_MODEL_PARAMS = {
     "n_estimators":    400,
-    "max_depth":       5,
+    "max_depth":       4,
     "learning_rate":   0.05,
     "subsample":       0.8,
     "colsample_bytree":0.8,
-    "min_child_weight":7,
+    "min_child_weight":10,
     "n_jobs":         -1,
     "objective":      "reg:absoluteerror",
     "random_state":    42,
@@ -103,6 +103,8 @@ MINUTES_MODEL_PARAMS = {
     "random_state":    42,
 }
 
+BIAS_SHRINK_K = 500
+
 # Calibrator
 
 CAL_FIT_LINES   = list(range(10, 40, 3))
@@ -110,6 +112,8 @@ PLATT_FIT_LINES = list(range(10, 46, 3))
 
 SIGMA_BOUNDS = (3.0, 25.0)
 DF_BOUNDS    = (2.1, 30.0)
+
+PLATT_DAMPING = 0.5
 
 # Betting
 

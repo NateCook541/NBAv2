@@ -10,6 +10,7 @@ from config import (
     MIN_AVGPTS_CAL, MIN_AVGMIN_CAL,
     POINTS_TARGET_MODE, PREDICTION_CLIP_K,
     USE_RECENCY_WEIGHTS, RECENCY_WEIGHT_MIN, RECENCY_WEIGHT_MAX,
+    BIAS_SHRINK_K
 )
 
 POINTS_BUNDLE_VERSION = 2
@@ -74,23 +75,41 @@ def _applyBiasCorrection(predictions, X, biasMeta):
     corrected[highMask] += float(bucketBias.get("gte20", 0.0))
     return corrected
 
-def _computeBiasMeta(rawPredictions, actuals, X):
-    raw = np.asarray(rawPredictions, dtype=float) 
+def _computeBiasMeta(rawPredictions, actuals, X, shrinkK=BIAS_SHRINK_K):
+    raw = np.asarray(rawPredictions, dtype=float)
     actual = np.asarray(actuals, dtype=float)
     residuals = actual - raw
 
     globalBias = float(residuals.mean())
 
     avg = X["avgPts10"].to_numpy(dtype=float)
-    bucketBias = {
-            "lt12": float(residuals[avg < 12].mean()) if np.any(avg < 12) else 0.0,
-            "12to20": float(residuals[(avg >= 12) & (avg < 20)].mean()) if np.any((avg >= 12) & (avg < 20)) else 0.0,
-            "gte20": float(residuals[avg >= 20].mean()) if np.any(avg >= 20) else 0.0
-    }
+    lowMask = avg < 12
+    midMask = (avg >= 12) & (avg < 20)
+    highMask = avg >= 20
+
+    def _shrunk(mask):
+        n = int(mask.sum())
+        if n == 0:
+            return 0.0, 0
+        bucketMean = float(residuals[mask].mean())
+        weight = n / (n + shrinkK)
+        return weight * bucketMean + (1 - weight) * globalBias, n
+
+    lt12Bias, lt12N = _shrunk(lowMask)
+    midBias, midN = _shrunk(midMask)
+    highBias, highN = _shrunk(highMask)
+
+    print(
+        f"[PointsBundle] Bias shrink (k={shrinkK}): "
+        f"lt12 n={lt12N} -> {lt12Bias:+.3f}  "
+        f"12to20 n={midN} -> {midBias:+.3f}  "
+        f"gte20 n={highN} -> {highBias:+.3f}"
+    )
+
     return {
-            "global_bias": globalBias,
-            "bucket_bias": bucketBias
-    }
+        "global_bias": globalBias,
+        "bucket_bias": {"lt12": lt12Bias, "12to20": midBias, "gte20": highBias},
+    } 
 
 
 # Public bundle class
@@ -320,7 +339,7 @@ class PointsBundle:
                 "target_mode": targetMode,
                 "points_bundle_version": POINTS_BUNDLE_VERSION,
                 "prediction_clip_k": float(PREDICTION_CLIP_K),
-                "bias_correction": biasMeta,
+                "bias_correction": {"global_bias": 0.0, "bucket_bias": {}},
                 "recency_weights": bool(USE_RECENCY_WEIGHTS),
         }
 

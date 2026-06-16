@@ -9,6 +9,7 @@ from sklearn.linear_model import LogisticRegression
 
 from config import (
     CALIBRATOR_PATH, CAL_FIT_LINES, PLATT_FIT_LINES, SIGMA_BOUNDS, DF_BOUNDS,
+    PLATT_DAMPING
 )
 
 CALIBRATOR_ALGORITHM_VERSION = 2
@@ -105,13 +106,13 @@ def _buildPlattData(predictions, actuals, lines, sigmaLeft, sigmaRight):
 
 
 class Calibrator:
-    def __init__(self, platt, sigmaLeft, sigmaRight, residualStd, meta):
+    def __init__(self, platt, sigmaLeft, sigmaRight, residualStd, meta, plattDamping):
         self.platt = platt
         self.sigmaLeft = sigmaLeft
         self.sigmaRight = sigmaRight
         self.residualStd = residualStd
         self.meta = meta
-
+        self.plattDamping = PLATT_DAMPING if plattDamping is None else plattDamping
     
     # Core probablity methods
 
@@ -126,7 +127,9 @@ class Calibrator:
             scaler = self.platt["mid"]
         else:
             scaler = self.platt["high"]
-        return float(scaler.predict_proba([[raw]])[0, 1])
+
+        calibrated = float(scaler.predict_proba([[raw]])[0, 1])
+        return raw + self.plattDamping * (calibrated - raw)
 
     # Uncalibrated prob (needed for debuging)
     def rawProbOver(self, predicted, line):
@@ -209,6 +212,7 @@ class Calibrator:
             "sigma left": self.sigmaLeft,
             "sigma right": self.sigmaRight,
             "residual std": self.residualStd,
+            "platt damping": self.plattDamping,
             **self.meta,
         }
         Path(path).parent.mkdir(parents=True, exist_ok=True)
@@ -229,6 +233,7 @@ class Calibrator:
             sigmaRight=bundle["sigma right"],
             residualStd=bundle.get("residual std", bundle.get("sigma")),
             meta={k: v for k, v in bundle.items() if k not in ("platt", "plattUnder", "plattUnderHigh", "df", "sigma", "residual std")},
+            plattDamping=bundle.get("platt damping"),
         )
 
     @classmethod
@@ -365,6 +370,7 @@ class Calibrator:
                 "platt_80": calAt80,
                 "platt_90": calAt90,
             },
+            plattDamping=PLATT_DAMPING,
         )
         instance.printExamples(predMean=meanPred)
 

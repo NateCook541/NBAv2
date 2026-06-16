@@ -54,6 +54,9 @@ class FilterSet:
     donutLow: float = 0.0
     donutHigh: float = 0.0
 
+
+    maxPredicted: float = 0.0
+
     def passes(self, predicted: float, propLine: float, edge: float = None) -> tuple[bool, str]:
         """
         Returns (passes: bool, reason: str).
@@ -67,6 +70,9 @@ class FilterSet:
         if self.minPredicted > 0 and predicted < self.minPredicted:
             return False, "minPredicted"
 
+        if self.maxPredicted > 0 and predicted >= self.maxPredicted:
+            return False, "maxPredicted"
+
         if self.overMinDisagreement > 0:
             if (predicted - propLine) < self.overMinDisagreement:
                 return False, "overMinDisagreement"
@@ -74,6 +80,7 @@ class FilterSet:
         if edge is not None and self.donutHigh > self.donutLow:
             if self.donutLow <= edge < self.donutHigh:
                 return False, "edgeDonutHole"
+
 
         return True, ""
 
@@ -110,4 +117,8 @@ class FilterSet:
         identified as consistently weak across walk-forward folds.
         """
         return cls(name="edgeDonutHole", donutLow=low, donutHigh=high)
+
+    @classmethod
+    def under22(cls):
+        return cls(name="under22", maxPredicted=22.0)
 

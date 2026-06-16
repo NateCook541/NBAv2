@@ -82,7 +82,7 @@ class Reporter:
         
         cls._out(f"No features : {skips.noFeatures}")
         cls._out(f"Line filtered : {skips.noLine}")
-
+        cls._out(f"No rolling history: {skips.noRollingHistory}")
 
 
     @classmethod

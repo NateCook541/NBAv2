@@ -78,6 +78,48 @@ class Pipeline:
             return str(res[0]), str(res[1])
         raise ValueError("No props found in database")
 
+    def _propDates(self, startDate=None, endDate=None):
+        conn = sqlite3.connect(str(self.dbPath))
+        query = """
+            SELECT DISTINCT game_date
+            FROM Props
+            WHERE over_odds IS NOT NULL AND under_odds IS NOT NULL
+        """
+        params = []
+        if startDate:
+            query += " AND game_date >= ?"
+            params.append(startDate)
+        if endDate:
+            query += " AND game_date <= ?"
+            params.append(endDate)
+        query += " ORDER BY game_date"
+        rows = conn.execute(query, params).fetchall()
+        conn.close()
+
+        dates = [str(row[0]) for row in rows]
+        if not dates:
+            raise ValueError("No props found for the requested timeframe")
+        return dates
+
+    def _splitPropDatesByMonths(self, startDate=None, endDate=None, months=1):
+        if months < 1:
+            raise ValueError("months must be >= 1")
+
+        import pandas as pd
+
+        propDates = self._propDates(startDate=startDate, endDate=endDate)
+        parsed = pd.to_datetime(propDates)
+        first = parsed.min()
+        firstMonthIndex = first.year * 12 + first.month
+
+        groups = {}
+        for raw, date in zip(propDates, parsed):
+            monthIndex = date.year * 12 + date.month
+            periodIdx = (monthIndex - firstMonthIndex) // months
+            groups.setdefault(periodIdx, []).append(raw)
+
+        return [(dates[0], dates[-1]) for _, dates in sorted(groups.items())]
+
 
 
     # Train
@@ -176,7 +218,8 @@ class Pipeline:
         
 
     def backtest(self, startDate=None, endDate=None, edgeThresh=DEFAULT_EDGE_THRESH,
-                 bankroll=DEFAULT_BANKROLL):
+                 bankroll=DEFAULT_BANKROLL, retrainEveryMonths=None,
+                 retrainMinutes=False):
         """
         Run a full backtest on props data
 
@@ -188,6 +231,19 @@ class Pipeline:
         print("\n" + "=" * 55)
         print("BACKTEST: Start")
         print("=" * 55)
+
+        if retrainEveryMonths is not None and retrainEveryMonths > 0:
+            results = self._backtestWithPeriodicRetraining(
+                startDate=startDate,
+                endDate=endDate,
+                bankroll=bankroll,
+                retrainEveryMonths=retrainEveryMonths,
+                retrainMinutes=retrainMinutes,
+            )
+            print("\n" + "=" * 55)
+            print("BACKTEST: Complete")
+            print("=" * 55)
+            return results
 
         # Find the backtest start date if not supplied
         backtestStart = startDate or self._earliestPropDate()
@@ -213,6 +269,86 @@ class Pipeline:
         print("\n" + "=" * 55)
         print("BACKTEST: Complete")
         print("=" * 55)
+
+        return results
+
+    def _backtestWithPeriodicRetraining(self, startDate, endDate,
+                                        bankroll, retrainEveryMonths,
+                                        retrainMinutes):
+        import pandas as pd
+        from betting.backtest import BacktestEngine
+        from metrics.reporter import Reporter
+
+        periods = self._splitPropDatesByMonths(
+            startDate=startDate,
+            endDate=endDate,
+            months=retrainEveryMonths,
+        )
+
+        print(
+            f"[Backtest] Periodic retraining every {retrainEveryMonths} "
+            f"month(s) across {len(periods)} test periods"
+        )
+        print(f"[Backtest] Retrain minutes each period: {retrainMinutes}")
+        for idx, (periodStart, periodEnd) in enumerate(periods, start=1):
+            print(f"  period {idx}: {periodStart} → {periodEnd}")
+
+        fs =FilterSet(
+            name="edgeDonut_under22",
+            #donutLow=0.08,
+            #donutHigh=0.11,
+            maxPredicted=22.0,
+        )
+
+        currentBank = bankroll
+        allResults = []
+
+        for idx, (periodStart, periodEnd) in enumerate(periods, start=1):
+            print(f"\n{'='*60}")
+            print(f"BACKTEST PERIOD {idx}/{len(periods)}: {periodStart} → {periodEnd}")
+            print(f"{'='*60}")
+            print(
+                f"[Backtest] Training bundle through {periodStart} "
+                f"(exclusive)"
+            )
+
+            points, minutes, calibrator = self.train(
+                endDate=periodStart,
+                save=False,
+                forceRetrain=retrainMinutes,
+                useCachedFeatures=not retrainMinutes,
+            )
+
+            engine = BacktestEngine(
+                pointsBundle=points,
+                minutesBundle=minutes,
+                calibrator=calibrator,
+                dbPath=self.dbPath,
+                filterSet=fs,
+            )
+
+            results = engine.run(
+                startDate=periodStart,
+                endDate=periodEnd,
+                bankroll=currentBank,
+            )
+
+            if not results.empty:
+                results = results.copy()
+                results["retrain_period"] = idx
+                results["model_train_end"] = periodStart
+                currentBank = float(results["bankroll"].iloc[-1])
+                allResults.append(results)
+
+        combined = pd.concat(allResults, ignore_index=True) if allResults else pd.DataFrame()
+        combined.to_csv("backtest_results.csv", index=False)
+
+        print(f"\n{'='*52}")
+        print("PERIODIC RETRAIN BACKTEST SUMMARY")
+        print(f"{'='*52}")
+        Reporter.backtestSummary(combined, bankroll, currentBank)
+
+        return combined
 
 
     # Walk forward fold test
