@@ -1,7 +1,9 @@
+import joblib
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from xgboost import XGBRegressor
+from pathlib import Path
 
 from config import (
     POINTS_MODEL_PARAMS, POINTS_TARGET_MODE, PREDICTION_CLIP_K,
@@ -127,6 +129,17 @@ def evaluateModel(model, XTest, yTest, targetMode="absolute", clipK=0.0, biasMet
             f"p90={np.percentile(resid,90):.1f}")
 
     _printDirectionalDiagnostics(debug)
+    
+    # Feature Importance
+    if hasattr(model, "feature_importances_"):
+        importance = pd.Series(
+            model.feature_importances_,
+            index=XTest.columns
+        ).sort_values(ascending=False)
+
+        print("\nTop 30 Feature Importances:")
+        print(importance.to_string())
+   
     return predictions
 
 
