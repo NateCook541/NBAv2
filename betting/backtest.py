@@ -118,7 +118,51 @@ def _loadProps(conn, startDate=None, endDate=None):
         query += " AND game_date <= ?"
         params.append(endDate)
     query += " ORDER BY game_date"
-    return pd.read_sql_query(query, conn, params=params)
+    df = pd.read_sql_query(query, conn, params=params)
+    return _deduplicateProps(df)
+
+
+def _deduplicateProps(df):
+    """
+    When multiple props exist for the same player on the same date
+    (DraftKings alternate lines), keep the single row whose line is
+    closest to the group median.  For even-sized groups where the true
+    median falls between two rows, the lower line is kept — a
+    conservative choice that is harder for the model to beat.
+
+    Rows are selected by choosing the prop_id with the minimum absolute
+    distance to the group median line, breaking ties by taking the
+    lower line (min prop_id among tied rows).
+    """
+    dup_mask = df.duplicated(subset=["game_date", "player_name"], keep=False)
+    n_dups = dup_mask.sum()
+    if n_dups == 0:
+        return df
+
+    clean = df[~dup_mask].copy()
+    dupes = df[dup_mask].copy()
+
+    def _pick_median_row(group):
+        median_line = group["line"].median()
+        group = group.copy()
+        group["_dist"] = (group["line"] - median_line).abs()
+        min_dist = group["_dist"].min()
+        candidates = group[group["_dist"] == min_dist]
+        return candidates.loc[[candidates["line"].idxmin()]]
+
+    deduped = (
+        dupes
+        .groupby(["game_date", "player_name"], group_keys=False)[df.columns.tolist()]
+        .apply(_pick_median_row)
+        .drop(columns=["_dist"], errors="ignore")
+        .reset_index(drop=True)
+    )
+
+    n_removed = n_dups - len(deduped)
+    print(f"[Props] Deduplicated {n_dups} rows → kept {len(deduped)} "
+          f"(removed {n_removed} alternate lines)")
+
+    return pd.concat([clean, deduped], ignore_index=True).sort_values("game_date").reset_index(drop=True)
 
 
 def _loadActuals(conn):
@@ -383,10 +427,12 @@ class BacktestEngine:
         edge = myProb - fairOver
         
         # Filters
+        pos = float(features["pos"].iloc[0]) if "pos" in features.columns else None
         passed, filterReason = self.filterSet.passes(
             predicted = predicted,
             propLine = prop.line,
-            edge = edge
+            edge = edge,
+            pos = pos,
         )
         if not passed:
             skips.filteredOut += 1
@@ -419,10 +465,10 @@ class BacktestEngine:
         # Kelly is unimplmented for now until preformance improves
         # with current setup
         # This is to reduce noise for working on improvments
-        #stake = _kellyFractional(edge, prop.over_odds) * currentBank
-        #stake = round(min(stake, currentBank * 0.10), 2) # Hard cap at 10% of current bankroll
+        stake = _kellyFractional(edge, prop.over_odds) * currentBank
+        stake = round(min(stake, currentBank * 0.10), 2) # Hard cap at 10% of current bankroll
     
-        stake = FLAT_STAKE
+        #stake = FLAT_STAKE
 
         won = actualPts > prop.line
         pnl = stake * _payoutMultiplier(prop.over_odds) if won else -stake

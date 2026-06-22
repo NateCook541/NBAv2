@@ -57,7 +57,48 @@ class FilterSet:
 
     maxPredicted: float = 0.0
 
-    def passes(self, predicted: float, propLine: float, edge: float = None) -> tuple[bool, str]:
+    # ------------------------------------------------------------------ #
+    # PG / PF high-scorer filter
+    # PG (pos=1) and PF (pos=4) in the 18-22 predicted range showed
+    # consistently negative ROI across both seasons combined:
+    #   PG 18-22: 36.9% WR / -$370 (n=122)
+    #   PF 18-22: 44.9% WR / -$185 (n=118)
+    # SG (52.9% / -$12), SF (58.2% / +$142), C (56.8% / +$67) are fine.
+    # Set blockGuardHighScorer=True to enable.
+    # ------------------------------------------------------------------ #
+    blockGuardHighScorer: bool = False
+    guardHighScorerMinPred: float = 18.0
+    guardHighScorerMaxPred: float = 22.0
+
+    # ------------------------------------------------------------------ #
+    # Mid-range edge donut (15-18 predicted, 9-12% edge)
+    # The 9-12% edge band within the 15-18 predicted bucket showed
+    # consistently negative ROI across BOTH seasons:
+    #   10-11%: 2024-25 -$54 (n=26), 2025-26 -$86 (n=39)
+    #   11-12%: 2024-25 -$55 (n=15), 2025-26 -$43 (n=31)
+    #    9-10%: 2024-25 -$76 (n=30), 2025-26 +$23 (n=37) — borderline but included
+    # 12%+ is strongly positive in both seasons; <9% is mixed.
+    # This is NOT a global donut — only applies when 15 <= predicted < 18.
+    # Disabled by default — set midRangeDonutLow/High to enable.
+    # ------------------------------------------------------------------ #
+    midRangeDonutLow: float = 0.0
+    midRangeDonutHigh: float = 0.0
+
+    # ------------------------------------------------------------------ #
+    # High-range low-edge donut (18-22 predicted, 7-9% edge)
+    # The 7-9% edge band within the 18-22 predicted bucket showed
+    # consistently negative ROI across BOTH seasons:
+    #   7-8%: 2024-25 -$101 (n=38), 2025-26 -$185 (n=51) — combined -$286
+    #   8-9%: 2024-25  -$59 (n=51), 2025-26 -$105 (n=46) — combined -$164
+    # In this bucket the model needs stronger conviction (10%+) to be reliable.
+    # This is NOT a global donut — only applies when 18 <= predicted < 22.
+    # Disabled by default — set highRangeDonutLow/High to enable.
+    # ------------------------------------------------------------------ #
+    highRangeDonutLow: float = 0.0
+    highRangeDonutHigh: float = 0.0
+
+    def passes(self, predicted: float, propLine: float, edge: float = None,
+               pos: float = None) -> tuple[bool, str]:
         """
         Returns (passes: bool, reason: str).
         reason is an empty string when the prop passes.
@@ -81,6 +122,18 @@ class FilterSet:
             if self.donutLow <= edge < self.donutHigh:
                 return False, "edgeDonutHole"
 
+        if self.blockGuardHighScorer and pos is not None:
+            if (pos in (1.0, 1.5, 4.0, 4.5) and
+                    self.guardHighScorerMinPred <= predicted < self.guardHighScorerMaxPred):
+                return False, "pgPfHighScorer"
+
+        if edge is not None and self.midRangeDonutHigh > self.midRangeDonutLow:
+            if 15.0 <= predicted < 18.0 and self.midRangeDonutLow <= edge < self.midRangeDonutHigh:
+                return False, "midRangeEdgeDonut"
+
+        if edge is not None and self.highRangeDonutHigh > self.highRangeDonutLow:
+            if 18.0 <= predicted < 22.0 and self.highRangeDonutLow <= edge < self.highRangeDonutHigh:
+                return False, "highRangeEdgeDonut"
 
         return True, ""
 
@@ -121,4 +174,13 @@ class FilterSet:
     @classmethod
     def under22(cls):
         return cls(name="under22", maxPredicted=22.0)
+
+    @classmethod
+    def pgPfHighScorerBlock(cls) -> "FilterSet":
+        """
+        Blocks PG (pos=1/1.5) and PF (pos=4/4.5) props when the model
+        predicts 18-22 pts. Both positions showed consistently negative ROI
+        in this bucket across both seasons; SG/SF/C are unaffected.
+        """
+        return cls(name="pgPfHighScorerBlock", blockGuardHighScorer=True)
 

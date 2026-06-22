@@ -293,11 +293,14 @@ class Pipeline:
         for idx, (periodStart, periodEnd) in enumerate(periods, start=1):
             print(f"  period {idx}: {periodStart} → {periodEnd}")
 
-        fs =FilterSet(
-            name="edgeDonut_under22",
-            #donutLow=0.08,
-            #donutHigh=0.11,
+        fs = FilterSet(
+            name="pgPfBlock_midDonut_highDonut",
             maxPredicted=22.0,
+            blockGuardHighScorer=True,
+            midRangeDonutLow=0.09,
+            midRangeDonutHigh=0.12,
+            highRangeDonutLow=0.07,
+            highRangeDonutHigh=0.09,
         )
 
         currentBank = bankroll

@@ -400,10 +400,15 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
         statusDF, oppPosCache, posStr, oppTeamID, date
     )
 
-    # Player vs opp stats`
+    # Player vs opp stats
+    # For high scorers (avgPts10 >= 15) with no head-to-head history (n < 2),
+    # fall back to position-vs-opponent average instead of 0.0.
+    # For low scorers the position average overestimates their role, so keep 0.0.
     vsOppResult = _ptsVsOpponenet(playerID, oppTeamID, date, cache)
     ptsVsOppAvg = vsOppResult[0]
     ptsVsOppN = vsOppResult[1]
+    if ptsVsOppN < 2 and last10avg >= 15.0 and oppPtsAllowedToPos > 0.0:
+        ptsVsOppAvg = oppPtsAllowedToPos
     ptsVsOppTrend = (ptsVsOppAvg - last10avg) if ptsVsOppN >= 2 else 0.0
 
     # Situational flags

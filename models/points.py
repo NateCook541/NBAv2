@@ -339,7 +339,7 @@ class PointsBundle:
                 "target_mode": targetMode,
                 "points_bundle_version": POINTS_BUNDLE_VERSION,
                 "prediction_clip_k": float(PREDICTION_CLIP_K),
-                "bias_correction": {"global_bias": 0.0, "bucket_bias": {}},
+                "bias_correction": biasMeta,
                 "recency_weights": bool(USE_RECENCY_WEIGHTS),
         }
 
