@@ -16,7 +16,7 @@ featureOrder = [
     "home_pts_avg", "away_pts_avg", "home_away_diff",
         
     # ewm stats and standard dev stats
-    "formPts5", "formMin5", "minStd10", "ptsStd10", "over20_rate",
+    "formPts5", "formMin5", "minStd10", "ptsStd10", "over20_rate", "pts_cv",
 
     # Simple trend stats
     "pts_trend", "min_trend", "usage_rate",
@@ -32,14 +32,17 @@ featureOrder = [
     # Player vs opp stats
     "pts_vs_opp_avg", "pts_vs_opp_trend", "pts_vs_opps_n",
     
+    # Player def stats
+    "team_def_rtg", "rating_diff",
+
     # Location and rest stats
-    "is_home", "rest_days", "back_to_back", 
+    "is_home", "rest_days", "back_to_back", "games_last_7",
     
     # Pos stats
     "pos", "pos_injury_opportunity",
 
     # Situational flags
-    "streak_score", "last_game_outlier",
+    "streak_score", "last_game_outlier", "role_stability",
 
     # Minutes prediction
     "mins_prediction",
@@ -51,7 +54,7 @@ featureOrder = [
 def _rollingStats(playerID, date, conn):
     # Query the db for players rolling stats and create a pandas df to return of results
     query = """
-        SELECT pgl.points, pgl.minutes, pgl.fg_pct, pgl.is_home, pgl.rest_days
+        SELECT pgl.points, pgl.minutes, pgl.fg_pct, pgl.is_home, pgl.rest_days, pgl.game_date
         FROM Player_game_logs pgl
         JOIN Games g ON pgl.game_id = g.game_id
         WHERE pgl.player_id = ? AND g.game_date < ?
@@ -336,6 +339,7 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
     # Get injury (status) and oppnenet features
     injuryFeatures = _injuryContext(statusDF, cache, teamGameTotals, teamID, date)
     oppFeatures = _oppContext(teamCache, oppTeamID, date)
+    teamFeatures = _oppContext(teamCache, teamID, date)
     playerStatus = _playerStatusContext(statusDF, playerID, date)
 
     # Read the actual target-game context when available. Fallback to latest prior row.
@@ -396,15 +400,20 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
         statusDF, oppPosCache, posStr, oppTeamID, date
     )
 
-    # Player vs opp stats`
+    # Player vs opp stats
+    # For high scorers (avgPts10 >= 15) with no head-to-head history (n < 2),
+    # fall back to position-vs-opponent average instead of 0.0.
+    # For low scorers the position average overestimates their role, so keep 0.0.
     vsOppResult = _ptsVsOpponenet(playerID, oppTeamID, date, cache)
     ptsVsOppAvg = vsOppResult[0]
     ptsVsOppN = vsOppResult[1]
+    if ptsVsOppN < 2 and last10avg >= 15.0 and oppPtsAllowedToPos > 0.0:
+        ptsVsOppAvg = oppPtsAllowedToPos
     ptsVsOppTrend = (ptsVsOppAvg - last10avg) if ptsVsOppN >= 2 else 0.0
 
     # Situational flags
     oppCombinedPace = (
-        float(oppFeatures["pace"]) + float(oppFeatures["pace"])
+        float(teamFeatures["pace"]) + float(oppFeatures["pace"])
     ) / 2
     
     streakScore = _streakScore(rolling, last10avg)
@@ -413,6 +422,7 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
         float(oppFeatures["def_rtg"]) * float(oppFeatures["pace"]) / 100.0
     )
 
+    gamesLast7 = len(rolling[rolling["game_date"] >= (datetime.strptime(date, "%Y-%m-%d") - timedelta(days=7)).strftime("%Y-%m-%d")]) if "game_date" in rolling.columns else 0
 
     # Full feature vertex
     features = pd.DataFrame([{
@@ -432,6 +442,9 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
         "minStd10":              minStd10,
         "ptsStd10":              ptsStd10,
         "over20_rate":           over20_rate,
+        "pts_cv":                ptsStd10 / max(last10avg, 1.0),
+        "mins_cv":               minStd10 / max(float(baseline["minutes"]), 1.0),
+        "recent_scoring_ratio":  float(rolling.head(3)["points"].mean()) / max(last10avg, 1.0),
         "pts_trend":             ptsTrend,
         "min_trend":             minTrend,
         "usage_rate":            usageRate,
@@ -455,13 +468,17 @@ def buildFeatures(playerID, date, teamID, oppTeamID,
         "pts_vs_opp_avg": ptsVsOppAvg,
         "pts_vs_opp_trend": ptsVsOppTrend,
         "pts_vs_opps_n": float(ptsVsOppN),
+        "team_def_rtg": teamFeatures["def_rtg"],
+        "rating_diff": teamFeatures["def_rtg"] - oppFeatures["def_rtg"],
         "is_home":               isHome,
         "rest_days":             restDays,
         "back_to_back":          isB2B,
+        "games_last_7":          gamesLast7,
         "pos":                   pos,
         "pos_injury_opportunity":posInjuryOpp,
         "streak_score": float(streakScore),
         "last_game_outlier": float(lastGameOutlier),
+        "role_stability": float(rolling.head(5)["minutes"].std() or 0.0) / max(float(rolling["minutes"].std() or 1.0), 1.0),
         "mins_prediction":       predictedMins,
     }])
 

@@ -1,7 +1,9 @@
+import joblib
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from xgboost import XGBRegressor
+from pathlib import Path
 
 from config import (
     POINTS_MODEL_PARAMS, POINTS_TARGET_MODE, PREDICTION_CLIP_K,
@@ -103,7 +105,41 @@ def evaluateModel(model, XTest, yTest, targetMode="absolute", clipK=0.0, biasMet
 
     print("\nWorst predictions:")
     print(debug.sort_values("abs_error", ascending=False).head(20).to_string(index=False))
+    
+    # TEMP
+    print("\nMAE by avgPts10 bucket:")
+    buckets = [(0,12,"<12"), (12,15,"12-15"), (15,18,"15-18"), 
+           (18,22,"18-22"), (22,99,"22+")]
+    for lo, hi, label in buckets:
+        mask = (XTest["avgPts10"] >= lo) & (XTest["avgPts10"] < hi)
+        if mask.sum() < 10:
+            continue
+        bucketPred = predictions[mask]
+        bucketActual = yTest[mask].to_numpy()
+        mae = float(np.mean(np.abs(bucketActual - bucketPred)))
+        baseline_mae = float(np.mean(np.abs(
+            bucketActual - XTest.loc[mask, "avgPts10"].to_numpy()
+        )))
+        print(f"  {label:<8} n={mask.sum():>5}  MAE={mae:.3f}  "
+            f"baseline={baseline_mae:.3f}  delta={baseline_mae-mae:+.3f}")
+
+        resid = bucketActual - bucketPred
+        print(f"resid mean={resid.mean():+.3f}  "
+            f"p10={np.percentile(resid,10):.1f}  "
+            f"p90={np.percentile(resid,90):.1f}")
+
     _printDirectionalDiagnostics(debug)
+    
+    # Feature Importance
+    if hasattr(model, "feature_importances_"):
+        importance = pd.Series(
+            model.feature_importances_,
+            index=XTest.columns
+        ).sort_values(ascending=False)
+
+        print("\nTop 30 Feature Importances:")
+        print(importance.to_string())
+   
     return predictions
 
 

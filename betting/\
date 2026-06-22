@@ -16,8 +16,6 @@ from config import (
     MAX_LINE_DIFF,
     OVER_MIN_DISAGREEMENT,
     DEFAULT_KELLY_FRAC,
-    MIN_AVGPTS_CAL,
-    MIN_AVGMIN_CAL
 )
 from features.builder import buildFeatures
 from features.cache import preloadCaches
@@ -42,9 +40,7 @@ class BetRecord:
     bankroll: float
     betSide: str = "over"
     betOdds: float = 0.0
-    # NOTE: These are for debugging the calibrator/model layer. Could be removed in a future build
-    avgPts10: float = 0.0
-    last1Pts: float = 0.0
+
 
 @dataclass
 class SkipCounters:
@@ -52,7 +48,6 @@ class SkipCounters:
     noOppMatch: int = 0
     noActuals: int = 0
     noFeatures: int = 0
-    noRollingHistory: int = 0
     noLine: int = 0
     noOppMatchByMonth: Counter = field(default_factory=Counter, repr=False)
     filteredOut: int = 0
@@ -87,9 +82,9 @@ def _kellyFractional(edge, usOdds, fraction=DEFAULT_KELLY_FRAC):
 
 def _normalize(name):
     base = "".join(
-            c for c in unicodedata.normalize("NFD", name)
-            if unicodedata.category(c) != "Mn"
-            ).lower().strip()
+        c for c in unicodedata.normalize("NFD", name)
+        if unicodedata.category(c) != "Mn"
+    ).lower().strip()
     cleaned = base.replace(".", " ").replace("'", "").replace("-", " ")
     tokens = [t for t in cleaned.split() if t]
     merged = []
@@ -118,80 +113,36 @@ def _loadProps(conn, startDate=None, endDate=None):
         query += " AND game_date <= ?"
         params.append(endDate)
     query += " ORDER BY game_date"
-    df = pd.read_sql_query(query, conn, params=params)
-    return _deduplicateProps(df)
-
-
-def _deduplicateProps(df):
-    """
-    When multiple props exist for the same player on the same date
-    (DraftKings alternate lines), keep the single row whose line is
-    closest to the group median.  For even-sized groups where the true
-    median falls between two rows, the lower line is kept — a
-    conservative choice that is harder for the model to beat.
-
-    Rows are selected by choosing the prop_id with the minimum absolute
-    distance to the group median line, breaking ties by taking the
-    lower line (min prop_id among tied rows).
-    """
-    dup_mask = df.duplicated(subset=["game_date", "player_name"], keep=False)
-    n_dups = dup_mask.sum()
-    if n_dups == 0:
-        return df
-
-    clean = df[~dup_mask].copy()
-    dupes = df[dup_mask].copy()
-
-    def _pick_median_row(group):
-        median_line = group["line"].median()
-        group = group.copy()
-        group["_dist"] = (group["line"] - median_line).abs()
-        min_dist = group["_dist"].min()
-        candidates = group[group["_dist"] == min_dist]
-        return candidates.loc[[candidates["line"].idxmin()]]
-
-    deduped = (
-        dupes
-        .groupby(["game_date", "player_name"], group_keys=False)[df.columns.tolist()]
-        .apply(_pick_median_row)
-        .drop(columns=["_dist"], errors="ignore")
-        .reset_index(drop=True)
-    )
-
-    n_removed = n_dups - len(deduped)
-    print(f"[Props] Deduplicated {n_dups} rows → kept {len(deduped)} "
-          f"(removed {n_removed} alternate lines)")
-
-    return pd.concat([clean, deduped], ignore_index=True).sort_values("game_date").reset_index(drop=True)
+    return pd.read_sql_query(query, conn, params=params)
 
 
 def _loadActuals(conn):
     df = pd.read_sql_query(
-            """
+        """
         SELECT pgl.player_id, g.game_date, pgl.points
         FROM Player_game_logs pgl
         JOIN Games g ON pgl.game_id = g.game_id
         """,
         conn,
-        )
+    )
     return df.set_index(["player_id", "game_date"])["points"].to_dict()
 
 def _loadPlayerMap(conn):
     df = pd.read_sql_query(
-            "SELECT player_id, name FROM Players", conn
-            )
+        "SELECT player_id, name FROM Players", conn
+    )
 
     df["name_norm"] = df["name"].apply(_normalize)
     df = df.sort_values("player_id").drop_duplicates(
-            subset="name_norm", keep="last"
-            )
+        subset="name_norm", keep="last"
+    )
 
     return df.set_index("name_norm")["player_id"].to_dict()
 
 
 def _loadOppMap(conn):
     df = pd.read_sql_query(
-            """
+        """
         SELECT pgl.player_id, g.game_date,
                g.home_team_id, g.away_team_id,
                pgl.is_home, pgl.rest_days
@@ -199,7 +150,7 @@ def _loadOppMap(conn):
         JOIN Games g ON pgl.game_id = g.game_id
         """,
         conn,
-        )
+    )
     result = {}
 
     for _, row in df.iterrows():
@@ -211,38 +162,38 @@ def _loadOppMap(conn):
             oppTeamID = row.home_team_id
 
         result[(int(row.player_id), row.game_date)] = {
-                "team_id":     teamID,
-                "opp_team_id": oppTeamID,
-                "is_home":     int(row.is_home),
-                "rest_days":   int(row.rest_days) if pd.notna(row.rest_days) else 0,
-                }
+            "team_id":     teamID,
+            "opp_team_id": oppTeamID,
+            "is_home":     int(row.is_home),
+            "rest_days":   int(row.rest_days) if pd.notna(row.rest_days) else 0,
+        }
 
     return result
 
 
 def _loadScheduleMap(conn):
     df = pd.read_sql_query(
-            """
+        """
         SELECT game_id, game_date, home_team_id, away_team_id
         FROM Games
         """,
         conn,
-        )
+    )
     result = {}
 
     for _, row in df.iterrows():
         result[(row.game_date, int(row.home_team_id))] = {
-                "team_id": int(row.home_team_id),
-                "opp_team_id": int(row.away_team_id),
-                "is_home": 1,
-                "game_id": row.game_id,
-                }
+            "team_id": int(row.home_team_id),
+            "opp_team_id": int(row.away_team_id),
+            "is_home": 1,
+            "game_id": row.game_id,
+        }
         result[(row.game_date, int(row.away_team_id))] = {
-                "team_id": int(row.away_team_id),
-                "opp_team_id": int(row.home_team_id),
-                "is_home": 0,
-                "game_id": row.game_id,
-                }
+            "team_id": int(row.away_team_id),
+            "opp_team_id": int(row.home_team_id),
+            "is_home": 0,
+            "game_id": row.game_id,
+        }
 
     return result
 
@@ -260,7 +211,7 @@ class BacktestEngine:
         self.filterSet = filterSet if filterSet is not None else FilterSet.baseline()
 
     def run(self, startDate=None, endDate=None, edgeThresh=DEFAULT_EDGE_THRESH, bankroll=DEFAULT_BANKROLL):
-        # Load data from db
+       # Load data from db
 
         conn = sqlite3.connect(str(self.dbPath))
         props = _loadProps(conn, startDate, endDate)
@@ -277,14 +228,14 @@ class BacktestEngine:
         conn.close()
 
         print(
-                f"[BacktestEngine] {len(props)} props loaded \n"
-                f"edge thresh={edgeThresh} | max edge={self.edgeCap:.0%} | "
-                f"bankroll=${bankroll:.0f}"
-                )
+            f"[BacktestEngine] {len(props)} props loaded \n"
+            f"edge thresh={edgeThresh} | max edge={self.edgeCap:.0%} | "
+            f"bankroll=${bankroll:.0f}"
+        )
         print(
-                f"[BacktestEngine] prop date range: "
-                f"{props['game_date'].min()} -> {props['game_date'].max()}"
-                )
+            f"[BacktestEngine] prop date range: "
+            f"{props['game_date'].min()} -> {props['game_date'].max()}"
+        )
 
         # Main loop
 
@@ -294,16 +245,16 @@ class BacktestEngine:
 
         for _, prop in props.iterrows():
             record, currentBank, skips = self._evaluateProp(
-                    prop = prop,
-                    actuals = actuals,
-                    playerMap = playerMap,
-                    oppMap = oppMap,
-                    scheduleMap = scheduleMap,
-                    caches = caches,
-                    edgeThresh = edgeThresh,
-                    currentBank = currentBank,
-                    skips = skips
-                    )
+                prop = prop,
+                actuals = actuals,
+                playerMap = playerMap,
+                oppMap = oppMap,
+                scheduleMap = scheduleMap,
+                caches = caches,
+                edgeThresh = edgeThresh,
+                currentBank = currentBank,
+                skips = skips
+            )
             if record is not None:
                 records.append(record)
 
@@ -320,27 +271,27 @@ class BacktestEngine:
     def summarizeResults(resultsDF, startingBank, finalBank):
         if resultsDF.empty:
             return {
-                    "props": 0,
-                    "bets": 0,
-                    "wins": 0,
-                    "losses": 0,
-                    "win_rate": 0.0,
-                    "total_pnl": 0.0,
-                    "roi": 0.0,
-                    "final_bank": float(finalBank),
-                    }
+                "props": 0,
+                "bets": 0,
+                "wins": 0,
+                "losses": 0,
+                "win_rate": 0.0,
+                "total_pnl": 0.0,
+                "roi": 0.0,
+                "final_bank": float(finalBank),
+            }
         bets = resultsDF[resultsDF["bet"]].copy()
         if bets.empty:
             return {
-                    "props": int(len(resultsDF)),
-                    "bets": 0,
-                    "wins": 0,
-                    "losses": 0,
-                    "win_rate": 0.0,
-                    "total_pnl": 0.0,
-                    "roi": 0.0,
-                    "final_bank": float(finalBank),
-                    }
+                "props": int(len(resultsDF)),
+                "bets": 0,
+                "wins": 0,
+                "losses": 0,
+                "win_rate": 0.0,
+                "total_pnl": 0.0,
+                "roi": 0.0,
+                "final_bank": float(finalBank),
+            }
         wins = int((bets["pnl"] > 0).sum())
         losses = int((bets["pnl"] < 0).sum())
         totalPnl = float(bets["pnl"].sum())
@@ -427,12 +378,10 @@ class BacktestEngine:
         edge = myProb - fairOver
         
         # Filters
-        pos = float(features["pos"].iloc[0]) if "pos" in features.columns else None
         passed, filterReason = self.filterSet.passes(
             predicted = predicted,
             propLine = prop.line,
-            edge = edge,
-            pos = pos,
+            edge = edge
         )
         if not passed:
             skips.filteredOut += 1
@@ -457,8 +406,6 @@ class BacktestEngine:
                 pnl = 0.0,
                 bankroll = round(currentBank, 2),
                 betOdds = prop.over_odds,
-                avgPts10 = float(features["avgPts10"].iloc[0]),
-                last1Pts = float(features["last1Pts"].iloc[0]),
             ), currentBank, skips
 
         # Bet sizing
@@ -467,8 +414,6 @@ class BacktestEngine:
         # This is to reduce noise for working on improvments
         stake = _kellyFractional(edge, prop.over_odds) * currentBank
         stake = round(min(stake, currentBank * 0.10), 2) # Hard cap at 10% of current bankroll
-    
-        #stake = FLAT_STAKE
 
         won = actualPts > prop.line
         pnl = stake * _payoutMultiplier(prop.over_odds) if won else -stake
@@ -490,7 +435,4 @@ class BacktestEngine:
                 pnl = round(pnl, 2),
                 bankroll = round(currentBank, 2),
                 betOdds = prop.over_odds,
-                avgPts10 = float(features["avgPts10"].iloc[0]),
-                last1Pts = float(features["last1Pts"].iloc[0]),
             ), currentBank, skips
-

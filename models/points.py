@@ -10,7 +10,10 @@ from config import (
     MIN_AVGPTS_CAL, MIN_AVGMIN_CAL,
     POINTS_TARGET_MODE, PREDICTION_CLIP_K,
     USE_RECENCY_WEIGHTS, RECENCY_WEIGHT_MIN, RECENCY_WEIGHT_MAX,
+    BIAS_SHRINK_K
 )
+
+POINTS_BUNDLE_VERSION = 2
 
 
 # Helpers
@@ -71,6 +74,42 @@ def _applyBiasCorrection(predictions, X, biasMeta):
     corrected[midMask] += float(bucketBias.get("12to20", 0.0))
     corrected[highMask] += float(bucketBias.get("gte20", 0.0))
     return corrected
+
+def _computeBiasMeta(rawPredictions, actuals, X, shrinkK=BIAS_SHRINK_K):
+    raw = np.asarray(rawPredictions, dtype=float)
+    actual = np.asarray(actuals, dtype=float)
+    residuals = actual - raw
+
+    globalBias = float(residuals.mean())
+
+    avg = X["avgPts10"].to_numpy(dtype=float)
+    lowMask = avg < 12
+    midMask = (avg >= 12) & (avg < 20)
+    highMask = avg >= 20
+
+    def _shrunk(mask):
+        n = int(mask.sum())
+        if n == 0:
+            return 0.0, 0
+        bucketMean = float(residuals[mask].mean())
+        weight = n / (n + shrinkK)
+        return weight * bucketMean + (1 - weight) * globalBias, n
+
+    lt12Bias, lt12N = _shrunk(lowMask)
+    midBias, midN = _shrunk(midMask)
+    highBias, highN = _shrunk(highMask)
+
+    print(
+        f"[PointsBundle] Bias shrink (k={shrinkK}): "
+        f"lt12 n={lt12N} -> {lt12Bias:+.3f}  "
+        f"12to20 n={midN} -> {midBias:+.3f}  "
+        f"gte20 n={highN} -> {highBias:+.3f}"
+    )
+
+    return {
+        "global_bias": globalBias,
+        "bucket_bias": {"lt12": lt12Bias, "12to20": midBias, "gte20": highBias},
+    } 
 
 
 # Public bundle class
@@ -166,11 +205,15 @@ class PointsBundle:
         Trains from a pre-built feature matrix (X, y, dates)
 
         Steps
-        1. Filter out rows where avgPts10 == 0
-        2. Chronological train / calibration split
-        3. Apply prop player filter to calibration split only 
-        4. Fit XGBoost on training split
-        5. Return bundle with cak split attached for calibrator fitting
+        1. Drop rows with no scoring history (avgPts10 == 0).
+        2. Chronological train / cal split (80/20 by default).
+        3. Split cal further: first half → bias estimation, second half → calibrator fitting
+        4. Apply prop player filter to both cal halves independently.
+        5. Fit XGBoost on training split.
+        6. Compute bias from the bias-estimation half (raw predictions only).
+        7. Apply full inference pipeline to calibrator half → these are the
+            predictions the Calibrator class will fit its t-dist + Platt on.
+        8. Attach cal predictions + actuals to bundle for calibrator fitting
         """
         
         # 1. Remove rows with no scoring history
@@ -182,23 +225,49 @@ class PointsBundle:
 
         # 2. Chrono split
         
-        XTrain, XCal, yTrain, yCal, trainDates, calDates = (
+        XTrain, XHoldout, yTrain, yHoldout, trainDates, holdoutDates = (
                 _splitChronologically(X, y, dates)
         )
-        # 3. Filter cal split to prop-relevant players only
 
-        XCalFiltered, yCalFiltered, calDatesFiltered = (
-            _applyPropPlayerFilter(XCal, yCal, calDates, minAvgPtsCal)
+        # Split holdout in half from chrono split data
+        # First half is sent to bias estiamtion
+        # Second half is sent for fitting
+
+        splitIdx = max(1, len(XHoldout) // 2)
+        XBias = XHoldout.iloc[:splitIdx].reset_index(drop=True)
+        yBias = yHoldout.iloc[:splitIdx].reset_index(drop=True)
+        XCal = XHoldout.iloc[splitIdx:].reset_index(drop=True)
+        yCal = yHoldout.iloc[splitIdx:].reset_index(drop=True)
+        calDates = holdoutDates.iloc[splitIdx:].reset_index(drop=True)
+
+        # 4. Prop player filter on both holdout halves
+
+        XBias, yBias, _ = _applyPropPlayerFilter(
+                XBias, yBias,
+                holdoutDates.iloc[:splitIdx].reset_index(drop=True),
+                minAvgPtsCal=MIN_AVGPTS_CAL
         )
-        if XCalFiltered.empty:
-            raise ValueError("Calibration split is empty after filtering; lower thresholds or use more data.")
+        XCal, yCal, calDates = _applyPropPlayerFilter(
+                XCal, yCal, calDates,
+                minAvgPtsCal=MIN_AVGPTS_CAL
+        )
+
+        if XBias.empty:
+            raise ValueError(
+                    "Bias estimation split is empty after filtering"
+                    "Lower MIN_AVGPTS_CAL or use more data"
+            )
+        if XCal.empty:
+            raise ValueError(
+                    "Calibration estimation split is empty after filtering"
+                    "Lower MIN_AVGPTS_CAL or use more data"
+            )
         print(
-            f"[PointsBundle] Cal set after prop filter: "
-            f"{len(yCalFiltered)} rows"
-            f"mean actual: {yCalFiltered.mean():.1f}"
+                f"[PointsBundle] Cal set after prop filter: "
+                f"{len(yCal)} rows mean actual: {yCal.mean():.1f}"
         )
 
-        # 4. Fit the model
+        # 5. Fit the model
 
         model = XGBRegressor(**POINTS_MODEL_PARAMS)
         targetMode = str(POINTS_TARGET_MODE).lower().strip()
@@ -217,55 +286,58 @@ class PointsBundle:
             model.fit(XTrain, yTrainTarget)
 
 
-        # 5. Evaluate and gather prediction on filtered cal set
+        # 6. Compute bias from the bias half
 
         if targetMode == "residual":
-            rawCalPred = model.predict(XCalFiltered) + XCalFiltered["avgPts10"].to_numpy(dtype=float)
+            rawBiasPred = model.predict(XBias) + XBias["avgPts10"].to_numpy(dtype=float)
         else:
-            rawCalPred = model.predict(XCalFiltered)
+            rawBiasPred = model.predict(XBias)
 
-        globalBias = float((yCalFiltered.to_numpy(dtype=float) - rawCalPred).mean())
-        avgCal = XCalFiltered["avgPts10"].to_numpy(dtype=float)
-        residualCal = yCalFiltered.to_numpy(dtype=float) - rawCalPred
-        bucketBias = {
-            "lt12": float(residualCal[avgCal < 12].mean()) if np.any(avgCal < 12) else 0.0,
-            "12to20": float(residualCal[(avgCal >= 12) & (avgCal < 20)].mean()) if np.any((avgCal >= 12) & (avgCal < 20)) else 0.0,
-            "gte20": float(residualCal[avgCal >= 20].mean()) if np.any(avgCal >= 20) else 0.0,
-        }
-        biasMeta = {"global_bias": globalBias, "bucket_bias": bucketBias}
+        biasMeta = _computeBiasMeta(rawBiasPred, yBias, XBias) 
+
+        print(
+            f"[PointsBundle] Bias meta: "
+            f"global={biasMeta['global_bias']:+.3f}  "
+            f"buckets={biasMeta['bucket_bias']}"
+        )
+ 
+        # 7. Apply full inference pipeline to calibrator half
+        
+        if targetMode == "residual":
+            rawCalPred = model.predict(XCal) + XCal["avgPts10"].to_numpy(dtype=float)
+        else:
+            rawCalPred = model.predict(XCal)
+ 
+        calPredictions = _applyBiasCorrection(rawCalPred, XCal, biasMeta)
+        calPredictions = _applyPredictionClip(calPredictions, XCal, PREDICTION_CLIP_K)
+ 
+        print(
+            f"[PointsBundle] Train rows: {len(XTrain)}  "
+            f"Cal rows (filtered): {len(XCal)}"
+        )
+        print(
+            f"[PointsBundle] Cal mean actual: {yCal.mean():.2f}  "
+            f"mean predicted: {calPredictions.mean():.2f}"
+        )
 
         if runMetrics:
             from models.evaluate import evaluateModel
             predictions = evaluateModel(
-                model,
-                XCalFiltered,
-                yCalFiltered,
+                model, XCal, yCal,
                 targetMode=targetMode,
                 clipK=PREDICTION_CLIP_K,
                 biasMeta=biasMeta,
             )
-        else:
-            predictions = rawCalPred
-            predictions = _applyBiasCorrection(predictions, XCalFiltered, biasMeta)
-            predictions = _applyPredictionClip(predictions, XCalFiltered, PREDICTION_CLIP_K)
-
-        print(
-            f"[PointsBundle] Train rows: {len(XTrain)}"
-            f"Cal rows (filtered): {len(XCalFiltered)}"
-        )
-        print(
-            f"[PointsBundle] Cal mean actual: {yCalFiltered.mean():.2f}"
-            f"mean predicted: {predictions.mean():.2f}"
-        )
 
         meta = {
                 "train_start_date": trainDates.iloc[0],
                 "train_last_date": trainDates.iloc[-1],
-                "calibration_start_date": calDatesFiltered.iloc[0],
-                "calibration_end_date": calDatesFiltered.iloc[-1],
+                "calibration_start_date": calDates.iloc[0],
+                "calibration_end_date": calDates.iloc[-1],
                 "train_rows": int(len(XTrain)),
-                "calibration_rows": int(len(XCalFiltered)),
+                "calibration_rows": int(len(XCal)),
                 "target_mode": targetMode,
+                "points_bundle_version": POINTS_BUNDLE_VERSION,
                 "prediction_clip_k": float(PREDICTION_CLIP_K),
                 "bias_correction": biasMeta,
                 "recency_weights": bool(USE_RECENCY_WEIGHTS),
@@ -274,9 +346,9 @@ class PointsBundle:
         bundle = cls(
                 model = model,
                 meta = meta,
-                calPredictions = predictions,
-                calActuals = yCalFiltered,
-                calDates = calDatesFiltered
+                calPredictions = calPredictions,
+                calActuals = yCal,
+                calDates = calDates
         )
 
         if save:
@@ -290,6 +362,8 @@ class PointsBundle:
 
     # Needed to check if safe for the backtest testing
     def isSafeFor(self, backtestStartDate):
+        if int(self.meta.get("points_bundle_version", 0)) < POINTS_BUNDLE_VERSION:
+            return False
         end = self.meta.get("train_end_date")
         if not end:
             last = self.meta.get("train_last_date", "")

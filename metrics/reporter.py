@@ -82,7 +82,7 @@ class Reporter:
         
         cls._out(f"No features : {skips.noFeatures}")
         cls._out(f"Line filtered : {skips.noLine}")
-
+        cls._out(f"No rolling history: {skips.noRollingHistory}")
 
 
     @classmethod
@@ -118,7 +118,7 @@ class Reporter:
             f"Return : "
             f"{((finalBank - startingBank) / startingBank):.1%}"
         )
- 
+
         # Win rate by predicted score bucket
         bets["predBucket"] = pd.cut(
             bets["predicted"],
@@ -135,7 +135,7 @@ class Reporter:
         cls._out(predSummary.to_string(float_format=lambda x: f"{x:.4f}"))
  
         # Top / Worst bets
-        cols = ["date", "player", "line", "predicted", "actual", "edge", "pnl"]
+        cols = ["date", "player", "line", "predicted", "actual", "predDiff", "edge", "pnl"]
         cls._out("\nTop 5 bets by edge:")
         cls._out(
             bets.sort_values("edge", ascending=False)[cols]
@@ -172,3 +172,234 @@ class Reporter:
 
         cls._out("\nEdge distribution of bets placed:")
         cls._out(bets["edge"].describe().to_string())
+
+
+    @classmethod
+    def edgeBucketReport(cls, bets):
+        if bets.empty:
+            cls._out("no bets placed")
+            return
+
+        bets = bets.copy()
+        bets["edgeBucket"] = pd.cut(
+            bets["edge"],
+            bins=[0, 0.05, 0.08, 0.11, 0.15, 0.20, 1.0],
+            labels=["0-5%", "5-8%", "8-11%", "11-15%", "15-20%", "20%+"],
+        )
+        summary = bets.groupby("edgeBucket", observed=True).agg(
+            bets    = ("pnl", "count"),
+            winRate = ("pnl", lambda x: (x > 0).mean()),
+            avgEdge = ("edge", "mean"),
+            totalPnl= ("pnl", "sum"),
+            roi     = ("pnl", lambda x: x.sum() / (x.count() * bets["stake"].mean())
+                        if x.count() > 0 else 0.0),
+        )
+        cls._out(summary.to_string(float_format=lambda x: f"{x:.4f}"))
+ 
+        winRates = summary["winRate"].dropna().values
+        if len(winRates) >= 3:
+            drops = [(i, winRates[i], winRates[i + 1])
+                     for i in range(len(winRates) - 1)
+                     if winRates[i + 1] < winRates[i] - 0.05]
+            if drops:
+                cls._out(
+                    "\n  ⚠  Non-monotonic edge→win-rate detected "
+                    "(possible edge signal over-fit):"
+                )
+                for idx, hi, lo in drops:
+                    cls._out(
+                        f"     bucket[{idx}]={hi:.2%} → bucket[{idx+1}]={lo:.2%}"
+                    )
+            
+            cls.calibrationAccuracy(bets)
+            cls.marginBucketReport(bets)
+    
+    @classmethod
+    def walkForwardSummary(cls, foldResults, filterName = "default", baselinePnl = None):
+        if not foldResults:
+            cls._out(" (no fold results)")
+            return
+ 
+        cls._out(f"\n{'='*60}")
+        cls._out(f"WALK-FORWARD SUMMARY  [filter={filterName}]")
+        cls._out(f"{'='*60}")
+ 
+        foldDF = pd.DataFrame(foldResults)
+        cls._out(foldDF.to_string(
+            index=False,
+            float_format=lambda x: f"{x:.4f}",
+        ))
+ 
+        totalPnl   = foldDF["total_pnl"].sum()
+        totalBets  = foldDF["bets"].sum()
+        profFolds  = (foldDF["total_pnl"] > 0).sum()
+        totalFolds = len(foldDF)
+ 
+        cls._out(f"\nTotal P&L across folds : ${totalPnl:.2f}")
+        cls._out(f"Total bets            : {int(totalBets)}")
+        cls._out(
+            f"Profitable folds       : {profFolds}/{totalFolds} "
+            f"({profFolds/totalFolds:.0%})"
+        )
+ 
+        if baselinePnl is not None:
+            delta = totalPnl - baselinePnl
+            cls._out(
+                f"vs baseline (no filter): ${delta:+.2f}  "
+                f"({'better' if delta >= 0 else 'WORSE — filter may be over-fit'})"
+            )
+    
+    @classmethod
+    def monthlyPnl(cls, bets: pd.DataFrame):
+        if bets.empty:
+            cls._out("  (no bets)")
+            return
+ 
+        bets = bets.copy()
+        bets["month"] = pd.to_datetime(bets["date"]).dt.to_period("M")
+        monthly = bets.groupby("month").agg(
+            bets    = ("pnl", "count"),
+            wins    = ("pnl", lambda x: (x > 0).sum()),
+            winRate = ("pnl", lambda x: (x > 0).mean()),
+            pnl     = ("pnl", "sum"),
+        )
+        monthly["cumPnl"] = monthly["pnl"].cumsum()
+ 
+        cls._out(monthly.to_string(float_format=lambda x: f"{x:.2f}"))
+ 
+        # Summary flag: what fraction of months were profitable?
+        profMonths = (monthly["pnl"] > 0).sum()
+        totalMonths = len(monthly)
+        cls._out(
+            f"\n  Profitable months: {profMonths}/{totalMonths} "
+            f"({profMonths/totalMonths:.0%})"
+        )
+
+    @staticmethod
+    def filterSweepTable(rows: list[dict]) -> None:
+        """
+        Prints a compact table comparing all FilterSets side by side.
+        The baseline row is always shown first.
+        """
+        if not rows:
+            print("  [FilterSweep] No data.")
+            return
+ 
+        print(f"\n{'='*60}")
+        print("FILTER COMPARISON TABLE")
+        print(f"{'='*60}")
+        print(
+            f"  {'Filter':<20} {'P&L':>8}  {'Bets':>6}  "
+            f"{'Avg WR':>7}  {'Prof folds':>11}"
+        )
+        print(
+            f"  {'-'*20} {'-'*8}  {'-'*6}  {'-'*7}  {'-'*11}"
+        )
+ 
+        baselinePnl = None
+        for row in rows:
+            if row.get("filter") == "baseline":
+                baselinePnl = row["total_pnl"]
+                break
+ 
+        for row in rows:
+            name  = row.get("filter", "?")
+            pnl   = row.get("total_pnl", 0.0)
+            bets  = row.get("total_bets", 0)
+            wr    = row.get("avg_win_rate", 0.0)
+            pf    = row.get("prof_folds", "?")
+ 
+            # Mark filters worse than baseline
+            flag = ""
+            if baselinePnl is not None and name != "baseline":
+                flag = " ✓" if pnl > baselinePnl else " ✗"
+ 
+            print(
+                f"  {name:<20} {pnl:>+8.2f}  {bets:>6}  "
+                f"{wr:>7.1%}  {pf:>11}{flag}"
+            )
+ 
+        print(f"{'='*60}")
+        if baselinePnl is not None:
+            print(
+                "  ✓ = better than baseline  "
+                "✗ = worse than baseline  "
+                "(baseline = no optional filters)"
+            )
+
+    @classmethod
+    def calibrationAccuracy(cls, bets: pd.DataFrame) -> None:
+        """
+        For each edge bucket shows mean predicted probability vs actual win rate.
+        The gap between them is the calibration error — if myProb is consistently
+        higher than actual WR, the calibrator is inflating edges.
+        """
+        if bets.empty or "myProb" not in bets.columns:
+            return
+
+        bets = bets.copy()
+        bets["edgeBucket"] = pd.cut(
+            bets["edge"],
+            bins=[0, 0.05, 0.08, 0.11, 0.15, 0.20, 1.0],
+            labels=["0-5%", "5-8%", "8-11%", "11-15%", "15-20%", "20%+"],
+        )
+
+        cls._out("\nCalibration accuracy by edge bucket:")
+        cls._out(
+            f"  {'Bucket':<10} {'Bets':>5}  {'myProb':>8}  "
+            f"{'bookProb':>9}  {'ActualWR':>9}  {'CalGap':>8}"
+        )
+        cls._out(
+            f"  {'-'*10} {'-'*5}  {'-'*8}  {'-'*9}  {'-'*9}  {'-'*8}"
+        )
+
+        for bucket, group in bets.groupby("edgeBucket", observed=True):
+            if group.empty:
+                continue
+            myProb   = float(group["myProb"].mean())
+            bookProb = float(group["bookProb"].mean())
+            actualWR = float((group["pnl"] > 0).mean())
+            calGap   = actualWR - myProb   # negative = calibrator over-confident
+            flag     = "  ⚠" if calGap < -0.05 else ""
+
+            cls._out(
+                f"  {str(bucket):<10} {len(group):>5}  {myProb:>8.3f}  "
+                f"{bookProb:>9.3f}  {actualWR:>9.3f}  {calGap:>+8.3f}{flag}"
+            )
+
+        # Overall
+        overall_myProb = float(bets["myProb"].mean())
+        overall_wr     = float((bets["pnl"] > 0).mean())
+        cls._out(
+            f"\n  Overall: myProb={overall_myProb:.3f}  "
+            f"actualWR={overall_wr:.3f}  "
+            f"gap={overall_wr - overall_myProb:+.3f}"
+        )
+
+    @classmethod
+    def marginBucketReport(cls, bets: pd.DataFrame) -> None:
+        """
+        Shows whether the model's point margin over the book line is behaving
+        monotonically before odds/calibration are considered.
+        """
+        if bets.empty or "predDiff" not in bets.columns:
+            return
+
+        bets = bets.copy()
+        bets["marginBucket"] = pd.cut(
+            bets["predDiff"],
+            bins=[-99, 1, 2, 3, 4, 5, 99],
+            labels=["<=1", "1-2", "2-3", "3-4", "4-5", "5+"],
+        )
+        summary = bets.groupby("marginBucket", observed=True).agg(
+            bets=("pnl", "count"),
+            winRate=("pnl", lambda x: (x > 0).mean()),
+            avgPredDiff=("predDiff", "mean"),
+            avgRawProb=("rawProb", "mean"),
+            avgMyProb=("myProb", "mean"),
+            totalPnl=("pnl", "sum"),
+        )
+
+        cls._out("\nWin rate by predicted-line margin:")
+        cls._out(summary.to_string(float_format=lambda x: f"{x:.4f}"))
+

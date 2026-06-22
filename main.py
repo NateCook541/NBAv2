@@ -33,6 +33,11 @@ def main():
     parser.add_argument("--bankroll", type=float, default=1000.0)
     parser.add_argument("--start-date", type=str, default=None)
     parser.add_argument("--end-date", type=str, default=None)
+    parser.add_argument("--retrain-every-months", type=int, default=0)
+    parser.add_argument("--retrain-minutes", action="store_true")
+    
+    # Backtest testing args
+    parser.add_argument("--backtest-fold-test", action="store_true")
 
     # Shared args
     parser.add_argument("--db",  default="NBA.db")
@@ -47,17 +52,29 @@ def main():
 
     if args.train:
         pipeline.train(endDate=args.train_end_date, 
-                       runMetrics=args.metrics
-    )
+                       runMetrics=args.metrics,
+        )
 
     if args.backtest:
         pipeline.backtest(
                 startDate = args.start_date, 
                 endDate = args.end_date, 
                 edgeThresh = args.edge_thresh, 
-                bankroll = args.bankroll
+                bankroll = args.bankroll,
+                retrainEveryMonths = (
+                    args.retrain_every_months
+                    if args.retrain_every_months > 0
+                    else None
+                ),
+                retrainMinutes = args.retrain_minutes,
         )
     
+    if args.backtest_fold_test:
+        pipeline.walkForwardOverThresholds(
+                 startDate = args.start_date,
+                 endDate = args.end_date 
+        )
+
     if args.pull_props:
         from betting.oddsCollector import pullHistoricalProps
         pullHistoricalProps(args.pull_props[0], args.pull_props[1], dbPath=args.db)
