@@ -29,6 +29,7 @@ def main():
 
     # Backtest args
     parser.add_argument("--backtest", action="store_true")
+    parser.add_argument("--backtest-unders", action="store_true")
     parser.add_argument("--edge-thresh", type=float, default=0.03)
     parser.add_argument("--bankroll", type=float, default=1000.0)
     parser.add_argument("--start-date", type=str, default=None)
@@ -69,6 +70,19 @@ def main():
                 retrainMinutes = args.retrain_minutes,
         )
     
+    if args.backtest_unders:
+        pipeline.backtestUnders(
+            startDate=args.start_date,
+            endDate=args.end_date,
+            bankroll=args.bankroll,
+            retrainEveryMonths=(
+                args.retrain_every_months
+                if args.retrain_every_months > 0
+                else 1
+            ),
+            retrainMinutes=args.retrain_minutes,
+        )
+
     if args.backtest_fold_test:
         pipeline.walkForwardOverThresholds(
                  startDate = args.start_date,

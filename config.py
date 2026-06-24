@@ -8,6 +8,7 @@ FEATURE_CACHE_PATH = MODELS_DIR / "feature_cache.parquet"
 MODEL_PATH = MODELS_DIR / "nba_model.joblib"
 MINUTES_PATH = MODELS_DIR / "nba_minutes_model.joblib"
 CALIBRATOR_PATH = MODELS_DIR / "nba_calibrator.joblib"
+UNDER_CALIBRATOR_PATH = MODELS_DIR / "nba_under_calibrator.joblib"
 
 MINUTES_META_PATH = MODELS_DIR / "nba_minutes_model_meta.joblib"
 MODEL_META_PATH = MODELS_DIR / "nba_model_meta.joblib"

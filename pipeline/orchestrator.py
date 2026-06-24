@@ -354,8 +354,120 @@ class Pipeline:
         return combined
 
 
+    # Under backtest
+
+
+    def _fitUnderCalibrator(self, points, endDate=None, save=False):
+        """
+        Fits an UnderCalibrator using the holdout split already computed
+        by PointsBundle.train(). No re-splitting or extra model calls needed.
+        """
+        from betting.under_calibrator import UnderCalibrator
+        from config import UNDER_CALIBRATOR_PATH
+
+        return UnderCalibrator.fit(
+            predictions=points.calPredictions,
+            actuals=points.calActuals,
+            savePath=UNDER_CALIBRATOR_PATH if save else None,
+            metadata={
+                "train_end_date": endDate,
+                "calibration_start_date": points.meta.get("calibration_start_date"),
+                "calibration_end_date": points.meta.get("calibration_end_date"),
+                "calibration_rows": points.meta.get("calibration_rows"),
+            },
+        )
+
+    def backtestUnders(self, startDate=None, endDate=None,
+                       bankroll=DEFAULT_BANKROLL,
+                       retrainEveryMonths=1,
+                       retrainMinutes=False):
+        """
+        Periodic-retrain backtest for under bets.
+
+        Mirrors _backtestWithPeriodicRetraining but uses UnderCalibrator
+        and UnderBacktestEngine. The over backtest is completely unaffected.
+        Start with baseline filters (no filters active) — add under-specific
+        filters only after diagnosing results.
+        """
+        import pandas as pd
+        from betting.under_backtest import UnderBacktestEngine
+        from betting.filters import UnderFilterSet
+        from metrics.reporter import Reporter
+
+        print("\n" + "=" * 55)
+        print("UNDER BACKTEST: Start")
+        print("=" * 55)
+
+        periods = self._splitPropDatesByMonths(
+            startDate=startDate,
+            endDate=endDate,
+            months=retrainEveryMonths,
+        )
+
+        print(
+            f"[UnderBacktest] Periodic retraining every {retrainEveryMonths} "
+            f"month(s) across {len(periods)} test periods"
+        )
+        for idx, (periodStart, periodEnd) in enumerate(periods, start=1):
+            print(f"  period {idx}: {periodStart} → {periodEnd}")
+
+        fs = UnderFilterSet.production()
+
+        currentBank = bankroll
+        allResults  = []
+
+        for idx, (periodStart, periodEnd) in enumerate(periods, start=1):
+            print(f"\n{'='*60}")
+            print(f"UNDER BACKTEST PERIOD {idx}/{len(periods)}: {periodStart} → {periodEnd}")
+            print(f"{'='*60}")
+
+            points, minutes, _ = self.train(
+                endDate=periodStart,
+                save=False,
+                forceRetrain=retrainMinutes,
+                useCachedFeatures=not retrainMinutes,
+            )
+
+            underCalibrator = self._fitUnderCalibrator(points, endDate=periodStart)
+
+            engine = UnderBacktestEngine(
+                pointsBundle=points,
+                minutesBundle=minutes,
+                underCalibrator=underCalibrator,
+                dbPath=self.dbPath,
+                filterSet=fs,
+            )
+
+            results = engine.run(
+                startDate=periodStart,
+                endDate=periodEnd,
+                bankroll=currentBank,
+            )
+
+            if not results.empty:
+                results = results.copy()
+                results["retrain_period"] = idx
+                results["model_train_end"] = periodStart
+                currentBank = float(results["bankroll"].iloc[-1])
+                allResults.append(results)
+
+        combined = pd.concat(allResults, ignore_index=True) if allResults else pd.DataFrame()
+        combined.to_csv("backtest_unders_results.csv", index=False)
+
+        print(f"\n{'='*52}")
+        print("UNDER BACKTEST SUMMARY")
+        print(f"{'='*52}")
+        Reporter.backtestSummary(combined, bankroll, currentBank)
+
+        print("\n" + "=" * 55)
+        print("UNDER BACKTEST: Complete")
+        print("=" * 55)
+
+        return combined
+
+
     # Walk forward fold test
-    
+
 
     def walkForwardOverThresholds(self, startDate = None, endDate = None, nFolds = 5, 
                                   edgeThresh = DEFAULT_EDGE_THRESH, 
