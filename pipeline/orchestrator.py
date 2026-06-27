@@ -8,6 +8,7 @@ from config import (
     MODEL_PATH, CALIBRATOR_PATH, MINUTES_PATH,
     DEFAULT_EDGE_THRESH,
     DEFAULT_BANKROLL, DEFAULT_KELLY_FRAC,
+    DEFAULT_UNDER_KELLY_FRAC, DEFAULT_DAILY_CAP, DEFAULT_MAX_STAKE_ABS,
 )
 from features.cache import FeatureCache, preloadCaches
 from models.minutes import MinutesBundle
@@ -380,7 +381,10 @@ class Pipeline:
     def backtestUnders(self, startDate=None, endDate=None,
                        bankroll=DEFAULT_BANKROLL,
                        retrainEveryMonths=1,
-                       retrainMinutes=False):
+                       retrainMinutes=False,
+                       kellyFrac=DEFAULT_UNDER_KELLY_FRAC,
+                       maxDailyExposure=DEFAULT_DAILY_CAP,
+                       maxStakeAbs=DEFAULT_MAX_STAKE_ABS):
         """
         Periodic-retrain backtest for under bets.
 
@@ -436,6 +440,9 @@ class Pipeline:
                 underCalibrator=underCalibrator,
                 dbPath=self.dbPath,
                 filterSet=fs,
+                kellyFrac=kellyFrac,
+                maxDailyExposure=maxDailyExposure,
+                maxStakeAbs=maxStakeAbs,
             )
 
             results = engine.run(

@@ -4,7 +4,8 @@ from pathlib import Path
 import pandas as pd
 
 from config import (
-    DB_PATH, DEFAULT_EDGE_THRESH, MAX_BET_EDGE, DEFAULT_BANKROLL, DEFAULT_KELLY_FRAC, FLAT_STAKE
+    DB_PATH, DEFAULT_EDGE_THRESH, MAX_BET_EDGE, DEFAULT_BANKROLL,
+    DEFAULT_UNDER_KELLY_FRAC, DEFAULT_DAILY_CAP, DEFAULT_MAX_STAKE_ABS, FLAT_STAKE,
 )
 from features.builder import buildFeatures
 from features.cache import preloadCaches
@@ -27,16 +28,28 @@ class UnderBacktestEngine:
     and debugged independently. They share all DB-loading helpers and the
     BetRecord / SkipCounters data structures, but diverge at the probability,
     edge, filter, and outcome calculation steps.
+
+    Daily selection: all props for a given date are scored first, then sorted
+    by edge descending. Stakes are allocated greedily from the top until the
+    daily exposure cap is exhausted. This ensures the highest-edge bets are
+    always funded before the cap is hit, rather than whichever props happened
+    to appear first in the database.
     """
 
     def __init__(self, pointsBundle, minutesBundle, underCalibrator,
-                 dbPath=DB_PATH, filterSet=None):
-        self.points     = pointsBundle
-        self.minutes    = minutesBundle
-        self.calibrator = underCalibrator        # UnderCalibrator instance
-        self.dbPath     = Path(dbPath)
-        self.edgeCap    = MAX_BET_EDGE
-        self.filterSet  = filterSet if filterSet is not None else UnderFilterSet.baseline()
+                 dbPath=DB_PATH, filterSet=None,
+                 kellyFrac=DEFAULT_UNDER_KELLY_FRAC,
+                 maxDailyExposure=DEFAULT_DAILY_CAP,
+                 maxStakeAbs=DEFAULT_MAX_STAKE_ABS):
+        self.points           = pointsBundle
+        self.minutes          = minutesBundle
+        self.calibrator       = underCalibrator        # UnderCalibrator instance
+        self.dbPath           = Path(dbPath)
+        self.edgeCap          = MAX_BET_EDGE
+        self.filterSet        = filterSet if filterSet is not None else UnderFilterSet.baseline()
+        self.kellyFrac        = kellyFrac
+        self.maxDailyExposure = maxDailyExposure
+        self.maxStakeAbs      = maxStakeAbs   # fraction of starting bankroll, fixed for the run
 
     def run(self, startDate=None, endDate=None,
             edgeThresh=DEFAULT_EDGE_THRESH, bankroll=DEFAULT_BANKROLL):
@@ -54,6 +67,8 @@ class UnderBacktestEngine:
         caches      = preloadCaches(conn)
         conn.close()
 
+        absStakeCap = bankroll * self.maxStakeAbs   # fixed dollar cap for the entire run
+
         print(
             f"[UnderBacktestEngine] {len(props)} props loaded\n"
             f"edge thresh={edgeThresh} | max edge={self.edgeCap:.0%} | "
@@ -63,26 +78,109 @@ class UnderBacktestEngine:
             f"[UnderBacktestEngine] prop date range: "
             f"{props['game_date'].min()} -> {props['game_date'].max()}"
         )
+        print(
+            f"[UnderBacktestEngine] kelly_frac={self.kellyFrac:.0%} | "
+            f"max_daily_exposure={self.maxDailyExposure:.0%} | "
+            f"max_stake=${absStakeCap:.2f} (={self.maxStakeAbs:.0%} of starting bank)"
+        )
 
-        # Main loop
-        records = []
+        records     = []
         currentBank = bankroll
-        skips = SkipCounters()
+        skips       = SkipCounters()
 
-        for _, prop in props.iterrows():
-            record, currentBank, skips = self._evaluateProp(
-                prop=prop,
-                actuals=actuals,
-                playerMap=playerMap,
-                oppMap=oppMap,
-                scheduleMap=scheduleMap,
-                caches=caches,
-                edgeThresh=edgeThresh,
-                currentBank=currentBank,
-                skips=skips,
-            )
-            if record is not None:
-                records.append(record)
+        # Two-pass per-day loop: score all → sort by edge → settle
+        for date, dayProps in props.groupby("game_date", sort=True):
+            # Pass 1: score every prop, collect candidates that pass filters + edge thresh
+            candidates = []
+            nobet      = []   # passed filters but edge too low/high — record as no-bet
+
+            for _, prop in dayProps.iterrows():
+                result = self._scoreProp(
+                    prop=prop,
+                    actuals=actuals,
+                    playerMap=playerMap,
+                    oppMap=oppMap,
+                    caches=caches,
+                    edgeThresh=edgeThresh,
+                    skips=skips,
+                )
+                if result is None:
+                    continue   # skipped (no match / no features) — skips already updated
+                scored, skips = result
+                if scored["bettable"]:
+                    candidates.append(scored)
+                else:
+                    nobet.append(scored)
+
+            # Pass 2: sort candidates by edge descending, allocate stakes greedily
+            candidates.sort(key=lambda c: c["edge"], reverse=True)
+
+            dailyCap    = currentBank * self.maxDailyExposure
+            dailyStaked = 0.0
+
+            for scored in candidates:
+                rawStake = (
+                    _kellyFractional(scored["edge"], scored["under_odds"], fraction=self.kellyFrac)
+                    * currentBank
+                )
+                rawStake = min(rawStake, absStakeCap)   # hard cap vs starting bankroll
+
+                remaining = dailyCap - dailyStaked
+                if remaining <= 0.0:
+                    # Daily cap hit — record as no-bet and move on
+                    nobet.append(scored)
+                    continue
+
+                stake = round(min(rawStake, remaining), 2)
+                dailyStaked += stake
+
+                won = scored["actual"] < scored["line"]
+                pnl = stake * _payoutMultiplier(scored["under_odds"]) if won else -stake
+                currentBank += pnl
+
+                records.append(BetRecord(
+                    date=scored["date"],
+                    player=scored["player"],
+                    line=scored["line"],
+                    predicted=scored["predicted"],
+                    actual=scored["actual"],
+                    predDiff=scored["predDiff"],
+                    rawProb=scored["rawProb"],
+                    myProb=scored["myProb"],
+                    bookProb=scored["bookProb"],
+                    edge=scored["edge"],
+                    bet=True,
+                    stake=round(stake, 2),
+                    pnl=round(pnl, 2),
+                    bankroll=round(currentBank, 2),
+                    betSide="under",
+                    betOdds=scored["under_odds"],
+                    avgPts10=scored["avgPts10"],
+                    last1Pts=scored["last1Pts"],
+                ))
+
+            # Emit no-bet records (below edge thresh or daily-cap overflow)
+            for scored in nobet:
+                records.append(BetRecord(
+                    date=scored["date"],
+                    player=scored["player"],
+                    line=scored["line"],
+                    predicted=scored["predicted"],
+                    actual=scored["actual"],
+                    predDiff=scored["predDiff"],
+                    rawProb=scored["rawProb"],
+                    myProb=scored["myProb"],
+                    bookProb=scored["bookProb"],
+                    edge=scored["edge"],
+                    bet=False,
+                    stake=0.0,
+                    pnl=0.0,
+                    bankroll=round(currentBank, 2),
+                    betSide="under",
+                    betOdds=scored["under_odds"],
+                    avgPts10=scored["avgPts10"],
+                    last1Pts=scored["last1Pts"],
+                ))
 
         resultsDF = pd.DataFrame([vars(r) for r in records])
 
@@ -107,9 +205,9 @@ class UnderBacktestEngine:
                 "win_rate": 0.0, "total_pnl": 0.0, "roi": 0.0,
                 "final_bank": float(finalBank),
             }
-        wins      = int((bets["pnl"] > 0).sum())
-        losses    = int((bets["pnl"] < 0).sum())
-        totalPnl  = float(bets["pnl"].sum())
+        wins       = int((bets["pnl"] > 0).sum())
+        losses     = int((bets["pnl"] < 0).sum())
+        totalPnl   = float(bets["pnl"].sum())
         totalStake = float(bets["stake"].sum())
         return {
             "props":      int(len(resultsDF)),
@@ -122,33 +220,35 @@ class UnderBacktestEngine:
             "final_bank": float(finalBank),
         }
 
-    # Single prop evaluation
+    # Pass 1: score a single prop — no bankroll mutation
 
-    def _evaluateProp(self, prop, actuals, playerMap, oppMap, scheduleMap,
-                      caches, edgeThresh, currentBank, skips):
+    def _scoreProp(self, prop, actuals, playerMap, oppMap, caches, edgeThresh, skips):
+        """
+        Evaluate a prop through lookups, feature building, and calibration.
+        Returns a scored dict (bettable=True/False) or None if the prop must
+        be skipped entirely (no player match, no features, etc.).
+
+        Does NOT mutate currentBank — that happens in run().
+        """
         nameNorm = _normalize(prop.player_name)
         date     = prop.game_date
 
-        # Player lookup
         playerID = playerMap.get(nameNorm)
         if playerID is None:
             skips.noPlayerMatch += 1
-            return None, currentBank, skips
+            return None
 
-        # Game context
         ctx = oppMap.get((playerID, date))
         if ctx is None:
             skips.noOppMatch += 1
             skips.noOppMatchByMonth[str(date)[:7]] += 1
-            return None, currentBank, skips
+            return None
 
-        # Actuals
         actualPts = actuals.get((playerID, date))
         if actualPts is None:
             skips.noActuals += 1
-            return None, currentBank, skips
+            return None
 
-        # Feature building
         features = buildFeatures(
             playerID=playerID,
             date=date,
@@ -166,20 +266,18 @@ class UnderBacktestEngine:
         )
         if features is None:
             skips.noFeatures += 1
-            return None, currentBank, skips
+            return None
 
-        # Prediction (shared PointsBundle — same output as over engine)
         predicted = self.points.predict(features)
 
-        # Under probabilities
-        rawProb  = self.calibrator.rawProbUnder(predicted, prop.line)
-        myProb   = self.calibrator.probUnder(predicted, prop.line)
+        rawProb      = self.calibrator.rawProbUnder(predicted, prop.line)
+        myProb       = self.calibrator.probUnder(predicted, prop.line)
         _, fairUnder = _removeVig(prop.over_odds, prop.under_odds)
-        edge = myProb - fairUnder
+        edge         = myProb - fairUnder
 
-        # Filters
         pos      = float(features["pos"].iloc[0]) if "pos" in features.columns else None
         predDiff = round(prop.line - predicted, 2)
+
         passed, filterReason = self.filterSet.passes(
             predicted=predicted,
             propLine=prop.line,
@@ -191,57 +289,24 @@ class UnderBacktestEngine:
         if not passed:
             skips.filteredOut += 1
             skips.filterReasons[filterReason] += 1
-            return None, currentBank, skips
+            return None
 
-        # No-bet record
-        if edge <= edgeThresh or edge > self.edgeCap:
-            return BetRecord(
-                date=date,
-                player=prop.player_name,
-                line=prop.line,
-                predicted=round(predicted, 1),
-                actual=actualPts,
-                predDiff=round(prop.line - predicted, 2),  # positive = book above model
-                rawProb=round(rawProb, 3),
-                myProb=round(myProb, 3),
-                bookProb=round(fairUnder, 3),
-                edge=round(edge, 3),
-                bet=False,
-                stake=0.0,
-                pnl=0.0,
-                bankroll=round(currentBank, 2),
-                betSide="under",
-                betOdds=prop.under_odds,
-                avgPts10=float(features["avgPts10"].iloc[0]),
-                last1Pts=float(features["last1Pts"].iloc[0]),
-            ), currentBank, skips
+        bettable = edgeThresh < edge <= self.edgeCap
 
-        # Bet sizing
-        stake = _kellyFractional(edge, prop.under_odds) * currentBank
-        stake = round(min(stake, currentBank * 0.10), 2)
-        #stake = FLAT_STAKE
-
-        won = actualPts < prop.line
-        pnl = stake * _payoutMultiplier(prop.under_odds) if won else -stake
-        currentBank += pnl
-
-        return BetRecord(
-            date=date,
-            player=prop.player_name,
-            line=prop.line,
-            predicted=round(predicted, 1),
-            actual=actualPts,
-            predDiff=round(prop.line - predicted, 2),  # positive = book above model
-            rawProb=round(rawProb, 3),
-            myProb=round(myProb, 3),
-            bookProb=round(fairUnder, 3),
-            edge=round(edge, 3),
-            bet=True,
-            stake=round(stake, 2),
-            pnl=round(pnl, 2),
-            bankroll=round(currentBank, 2),
-            betSide="under",
-            betOdds=prop.under_odds,
-            avgPts10=float(features["avgPts10"].iloc[0]),
-            last1Pts=float(features["last1Pts"].iloc[0]),
-        ), currentBank, skips
+        scored = {
+            "date":       date,
+            "player":     prop.player_name,
+            "line":       prop.line,
+            "predicted":  round(predicted, 1),
+            "actual":     actualPts,
+            "predDiff":   predDiff,
+            "rawProb":    round(rawProb, 3),
+            "myProb":     round(myProb, 3),
+            "bookProb":   round(fairUnder, 3),
+            "edge":       round(edge, 3),
+            "under_odds": prop.under_odds,
+            "avgPts10":   float(features["avgPts10"].iloc[0]),
+            "last1Pts":   float(features["last1Pts"].iloc[0]),
+            "bettable":   bettable,
+        }
+        return scored, skips

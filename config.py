@@ -122,6 +122,9 @@ DEFAULT_EDGE_THRESH = 0.10
 MAX_BET_EDGE = 0.15
 DEFAULT_BANKROLL = 1000
 DEFAULT_KELLY_FRAC = 0.25
+DEFAULT_UNDER_KELLY_FRAC = 0.20   # lower fraction for unders — reduces variance at high bankrolls
+DEFAULT_DAILY_CAP = 0.15          # max fraction of bankroll to stake across all bets on one date
+DEFAULT_MAX_STAKE_ABS = 0.05      # max single bet as fraction of STARTING bankroll (prevents stake explosion at high bankrolls)
 FLAT_STAKE = 10
 
 # Used to filter out really far out line preds as this is likely injury effects that scraper didn't catch
