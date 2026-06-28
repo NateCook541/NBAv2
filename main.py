@@ -61,16 +61,16 @@ def main():
 
     if args.backtest:
         pipeline.backtest(
-                startDate = args.start_date, 
-                endDate = args.end_date, 
-                edgeThresh = args.edge_thresh, 
-                bankroll = args.bankroll,
-                retrainEveryMonths = (
-                    args.retrain_every_months
-                    if args.retrain_every_months > 0
-                    else None
-                ),
-                retrainMinutes = args.retrain_minutes,
+            startDate=args.start_date,
+            endDate=args.end_date,
+            edgeThresh=args.edge_thresh,
+            bankroll=args.bankroll,
+            retrainEveryMonths=(
+                args.retrain_every_months
+                if args.retrain_every_months > 0
+                else None
+            ),
+            retrainMinutes=args.retrain_minutes,
         )
     
     if args.backtest_unders:

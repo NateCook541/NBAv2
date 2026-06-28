@@ -254,11 +254,11 @@ class Pipeline:
         fs = FilterSet.edgeDonutHole() 
         
         engine = BacktestEngine(
-                pointsBundle = points,
-                minutesBundle = minutes,
-                calibrator = calibrator,
-                dbPath = self.dbPath,
-                filterSet = fs
+                pointsBundle=points,
+                minutesBundle=minutes,
+                calibrator=calibrator,
+                dbPath=self.dbPath,
+                filterSet=fs,
         )
 
         results = engine.run(
