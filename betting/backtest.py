@@ -339,6 +339,122 @@ class BacktestEngine:
             "final_bank": float(finalBank),
         }
 
+    def scoreAllProps(self, startDate, endDate, edgeThresh):
+        """
+        Score all props for the period without settling any bets.
+        Returns (candidatesByDate, skips) where candidatesByDate is
+        {date: [scored_dict, ...]} containing only bettable candidates.
+        Used by the combined backtest.
+        """
+        conn      = sqlite3.connect(str(self.dbPath))
+        props     = _loadProps(conn, startDate, endDate)
+        actuals   = _loadActuals(conn)
+        playerMap = _loadPlayerMap(conn)
+        oppMap    = _loadOppMap(conn)
+        caches    = preloadCaches(conn)
+        conn.close()
+
+        candidatesByDate = {}
+        skips            = SkipCounters()
+
+        for date, dayProps in props.groupby("game_date", sort=True):
+            for _, prop in dayProps.iterrows():
+                result = self._scoreProp(
+                    prop=prop, actuals=actuals, playerMap=playerMap,
+                    oppMap=oppMap, caches=caches,
+                    edgeThresh=edgeThresh, skips=skips,
+                )
+                if result is None:
+                    continue
+                scored, skips = result
+                if scored["bettable"]:
+                    candidatesByDate.setdefault(date, []).append(scored)
+
+        return candidatesByDate, skips
+
+    def _scoreProp(self, prop, actuals, playerMap, oppMap, caches, edgeThresh, skips):
+        """
+        Pure scoring — no bankroll mutation. Returns (scored_dict, skips) or None.
+        scored_dict has bettable=True when edge is within [edgeThresh, edgeCap].
+        Used by scoreAllProps() for the combined backtest.
+        """
+        nameNorm = _normalize(prop.player_name)
+        date     = prop.game_date
+
+        playerID = playerMap.get(nameNorm)
+        if playerID is None:
+            skips.noPlayerMatch += 1
+            return None
+
+        ctx = oppMap.get((playerID, date))
+        if ctx is None:
+            skips.noOppMatch += 1
+            skips.noOppMatchByMonth[str(date)[:7]] += 1
+            return None
+
+        actualPts = actuals.get((playerID, date))
+        if actualPts is None:
+            skips.noActuals += 1
+            return None
+
+        features = buildFeatures(
+            playerID=playerID,
+            date=date,
+            teamID=ctx["team_id"],
+            oppTeamID=ctx["opp_team_id"],
+            cache=caches.playerLogCache,
+            posCache=caches.posCache,
+            teamCache=caches.teamCache,
+            statusDF=caches.statusDF,
+            oppPosCache=caches.oppPosCache,
+            teamGameTotals=caches.teamGameTotals,
+            minutesModel=self.minutes,
+            currentIsHome=ctx["is_home"],
+            currentRestDays=ctx["rest_days"],
+        )
+        if features is None:
+            skips.noFeatures += 1
+            return None
+
+        predicted = self.points.predict(features)
+
+        rawProb     = self.calibrator.rawProbOver(predicted, prop.line)
+        myProb      = self.calibrator.probOver(predicted, prop.line)
+        fairOver, _ = _removeVig(prop.over_odds, prop.under_odds)
+        edge        = myProb - fairOver
+
+        pos = float(features["pos"].iloc[0]) if "pos" in features.columns else None
+        passed, filterReason = self.filterSet.passes(
+            predicted=predicted,
+            propLine=prop.line,
+            edge=edge,
+            pos=pos,
+        )
+        if not passed:
+            skips.filteredOut += 1
+            skips.filterReasons[filterReason] += 1
+            return None
+
+        bettable = edgeThresh < edge <= self.edgeCap
+
+        scored = {
+            "date":      date,
+            "player":    prop.player_name,
+            "line":      prop.line,
+            "predicted": round(predicted, 1),
+            "actual":    actualPts,
+            "predDiff":  round(predicted - prop.line, 2),
+            "rawProb":   round(rawProb, 3),
+            "myProb":    round(myProb, 3),
+            "bookProb":  round(fairOver, 3),
+            "edge":      round(edge, 3),
+            "over_odds": prop.over_odds,
+            "avgPts10":  float(features["avgPts10"].iloc[0]),
+            "last1Pts":  float(features["last1Pts"].iloc[0]),
+            "bettable":  bettable,
+        }
+        return scored, skips
+
     def _evaluateProp(self, prop, actuals, playerMap, oppMap, scheduleMap, caches,
                       edgeThresh, currentBank, skips):
         nameNorm = _normalize(prop.player_name)

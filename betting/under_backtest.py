@@ -220,6 +220,41 @@ class UnderBacktestEngine:
             "final_bank": float(finalBank),
         }
 
+    def scoreAllProps(self, startDate, endDate, edgeThresh, bankroll):
+        """
+        Score all props for the period without settling any bets.
+        Returns (candidatesByDate, skips, absStakeCap) where candidatesByDate
+        is {date: [scored_dict, ...]} containing only bettable candidates.
+        Used by the combined backtest to merge over/under candidates before
+        conflict resolution and shared-bankroll settlement.
+        """
+        conn = sqlite3.connect(str(self.dbPath))
+        props     = _loadProps(conn, startDate, endDate)
+        actuals   = _loadActuals(conn)
+        playerMap = _loadPlayerMap(conn)
+        oppMap    = _loadOppMap(conn)
+        caches    = preloadCaches(conn)
+        conn.close()
+
+        absStakeCap      = bankroll * self.maxStakeAbs
+        candidatesByDate = {}
+        skips            = SkipCounters()
+
+        for date, dayProps in props.groupby("game_date", sort=True):
+            for _, prop in dayProps.iterrows():
+                result = self._scoreProp(
+                    prop=prop, actuals=actuals, playerMap=playerMap,
+                    oppMap=oppMap, caches=caches,
+                    edgeThresh=edgeThresh, skips=skips,
+                )
+                if result is None:
+                    continue
+                scored, skips = result
+                if scored["bettable"]:
+                    candidatesByDate.setdefault(date, []).append(scored)
+
+        return candidatesByDate, skips, absStakeCap
+
     # Pass 1: score a single prop — no bankroll mutation
 
     def _scoreProp(self, prop, actuals, playerMap, oppMap, caches, edgeThresh, skips):

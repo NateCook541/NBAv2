@@ -473,6 +473,214 @@ class Pipeline:
         return combined
 
 
+    # Combined over + under backtest
+
+
+    def backtestCombined(self, startDate=None, endDate=None,
+                         bankroll=DEFAULT_BANKROLL,
+                         retrainEveryMonths=1,
+                         retrainMinutes=False,
+                         overEdgeThresh=0.10,
+                         underEdgeThresh=DEFAULT_EDGE_THRESH,
+                         kellyFrac=DEFAULT_UNDER_KELLY_FRAC,
+                         maxDailyExposure=DEFAULT_DAILY_CAP,
+                         maxStakeAbs=DEFAULT_MAX_STAKE_ABS):
+        """
+        Combined over + under backtest on a single shared bankroll.
+
+        Per period:
+          1. Train once, fit both calibrators.
+          2. Score all over candidates (overEdgeThresh) and under candidates
+             (underEdgeThresh) independently through their own engines/filters.
+          3. Merge by date. For any player that appears on both sides, keep only
+             the higher-edge side (conflict resolution).
+          4. Each side gets its own daily cap (maxDailyExposure * currentBank).
+             Within each side, candidates are sorted by edge descending and
+             stakes allocated greedily until that side's cap is exhausted.
+             Both sides draw from the same shared bankroll so P&L is unified,
+             but neither side can starve the other of its daily budget.
+          5. Only placed bets (stake > 0) are written to the CSV and summary.
+          6. Track over/under records separately for split reporting.
+        """
+        import pandas as pd
+        from betting.backtest import BacktestEngine, BetRecord, _kellyFractional, _payoutMultiplier
+        from betting.under_backtest import UnderBacktestEngine
+        from betting.filters import FilterSet, UnderFilterSet
+        from metrics.reporter import Reporter
+
+        print("\n" + "=" * 55)
+        print("COMBINED BACKTEST: Start")
+        print("=" * 55)
+
+        periods = self._splitPropDatesByMonths(
+            startDate=startDate,
+            endDate=endDate,
+            months=retrainEveryMonths,
+        )
+
+        print(
+            f"[CombinedBacktest] {len(periods)} periods | "
+            f"over_thresh={overEdgeThresh:.0%} | under_thresh={underEdgeThresh:.0%}"
+        )
+        print(
+            f"[CombinedBacktest] kelly_frac={kellyFrac:.0%} | "
+            f"max_daily_exposure={maxDailyExposure:.0%} per side | "
+            f"max_stake_abs={maxStakeAbs:.0%}"
+        )
+        for idx, (ps, pe) in enumerate(periods, start=1):
+            print(f"  period {idx}: {ps} → {pe}")
+
+        overFs = FilterSet(
+            name="pgPfBlock_midDonut_highDonut",
+            maxPredicted=22.0,
+            blockGuardHighScorer=True,
+            midRangeDonutLow=0.09,
+            midRangeDonutHigh=0.12,
+            highRangeDonutLow=0.07,
+            highRangeDonutHigh=0.09,
+        )
+        underFs = UnderFilterSet.production()
+
+        currentBank = bankroll
+        allOverRecords   = []
+        allUnderRecords  = []
+
+        for idx, (periodStart, periodEnd) in enumerate(periods, start=1):
+            print(f"\n{'='*60}")
+            print(f"COMBINED PERIOD {idx}/{len(periods)}: {periodStart} → {periodEnd}")
+            print(f"{'='*60}")
+
+            points, minutes, calibrator = self.train(
+                endDate=periodStart,
+                save=False,
+                forceRetrain=retrainMinutes,
+                useCachedFeatures=not retrainMinutes,
+            )
+            underCalibrator = self._fitUnderCalibrator(points, endDate=periodStart)
+
+            absStakeCap = currentBank * maxStakeAbs  # scales with current bankroll each period
+
+            overEngine = BacktestEngine(
+                pointsBundle=points,
+                minutesBundle=minutes,
+                calibrator=calibrator,
+                dbPath=self.dbPath,
+                filterSet=overFs,
+            )
+            underEngine = UnderBacktestEngine(
+                pointsBundle=points,
+                minutesBundle=minutes,
+                underCalibrator=underCalibrator,
+                dbPath=self.dbPath,
+                filterSet=underFs,
+                kellyFrac=kellyFrac,
+                maxDailyExposure=maxDailyExposure,
+                maxStakeAbs=maxStakeAbs,
+            )
+
+            overCandidates, _  = overEngine.scoreAllProps(periodStart, periodEnd, overEdgeThresh)
+            underCandidates, _, _ = underEngine.scoreAllProps(periodStart, periodEnd, underEdgeThresh, currentBank)
+
+            overCount   = sum(len(v) for v in overCandidates.values())
+            underCount  = sum(len(v) for v in underCandidates.values())
+            print(f"[CombinedBacktest] Period {idx}: {overCount} over candidates, {underCount} under candidates")
+
+            # Collect all dates across both sides
+            allDates = sorted(set(overCandidates) | set(underCandidates))
+
+            for date in allDates:
+                overDay  = overCandidates.get(date, [])
+                underDay = underCandidates.get(date, [])
+
+                # Conflict resolution: same player → keep higher edge side
+                overByPlayer    = {c["player"]: c for c in overDay}
+                underByPlayer   = {c["player"]: c for c in underDay}
+                conflictPlayers = set(overByPlayer) & set(underByPlayer)
+
+                resolvedOver  = []
+                resolvedUnder = []
+
+                for player in conflictPlayers:
+                    oc = overByPlayer[player]
+                    uc = underByPlayer[player]
+                    if oc["edge"] >= uc["edge"]:
+                        resolvedOver.append(oc)
+                    else:
+                        resolvedUnder.append(uc)
+
+                for player, c in overByPlayer.items():
+                    if player not in conflictPlayers:
+                        resolvedOver.append(c)
+                for player, c in underByPlayer.items():
+                    if player not in conflictPlayers:
+                        resolvedUnder.append(c)
+
+                # Each side sorted by edge descending, settled against its own cap
+                resolvedOver.sort(key=lambda c: c["edge"],  reverse=True)
+                resolvedUnder.sort(key=lambda c: c["edge"], reverse=True)
+
+                dailyCap = currentBank * maxDailyExposure
+
+                for side, candidates, records in [
+                    ("over",  resolvedOver,  allOverRecords),
+                    ("under", resolvedUnder, allUnderRecords),
+                ]:
+                    sideStaked = 0.0
+                    for c in candidates:
+                        odds = c["over_odds"]  if side == "over"  else c["under_odds"]
+                        won  = c["actual"] > c["line"] if side == "over" else c["actual"] < c["line"]
+
+                        rawStake = _kellyFractional(c["edge"], odds, fraction=kellyFrac) * currentBank
+                        rawStake = min(rawStake, absStakeCap)
+
+                        remaining = dailyCap - sideStaked
+                        if remaining <= 0.0:
+                            break
+
+                        stake = round(min(rawStake, remaining), 2)
+                        sideStaked += stake
+
+                        pnl = stake * _payoutMultiplier(odds) if won else -stake
+                        currentBank += pnl
+
+                        records.append(BetRecord(
+                            date=c["date"],
+                            player=c["player"],
+                            line=c["line"],
+                            predicted=c["predicted"],
+                            actual=c["actual"],
+                            predDiff=c["predDiff"],
+                            rawProb=c["rawProb"],
+                            myProb=c["myProb"],
+                            bookProb=c["bookProb"],
+                            edge=c["edge"],
+                            bet=True,
+                            stake=round(stake, 2),
+                            pnl=round(pnl, 2),
+                            bankroll=round(currentBank, 2),
+                            betSide=side,
+                            betOdds=odds,
+                            avgPts10=c["avgPts10"],
+                            last1Pts=c["last1Pts"],
+                        ))
+
+        overDF  = pd.DataFrame([vars(r) for r in allOverRecords])  if allOverRecords  else pd.DataFrame()
+        underDF = pd.DataFrame([vars(r) for r in allUnderRecords]) if allUnderRecords else pd.DataFrame()
+        parts = [df for df in [overDF, underDF] if not df.empty]
+        combinedDF = pd.concat(parts, ignore_index=True).sort_values("date") if parts else pd.DataFrame()
+
+        if not combinedDF.empty:
+            combinedDF.to_csv("backtest_combined_results.csv", index=False)
+
+        Reporter.combinedBacktestSummary(overDF, underDF, combinedDF, bankroll, currentBank)
+
+        print("\n" + "=" * 55)
+        print("COMBINED BACKTEST: Complete")
+        print("=" * 55)
+
+        return combinedDF
+
+
     # Walk forward fold test
 
 

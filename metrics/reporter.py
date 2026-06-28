@@ -377,6 +377,71 @@ class Reporter:
         )
 
     @classmethod
+    def combinedBacktestSummary(cls, overDF, underDF, combinedDF,
+                                startingBank, finalBank):
+        """
+        Three-section summary for the combined over+under backtest:
+        overs section, unders section, combined totals.
+        """
+        def _section(df, label):
+            cls._out(f"\n{'='*52}")
+            cls._out(f"{label}")
+            cls._out(f"{'='*52}")
+            if df.empty:
+                cls._out("  No bets.")
+                return
+            bets = df[df["stake"] > 0].copy() if "stake" in df.columns else df.copy()
+            if bets.empty:
+                cls._out("  No bets placed.")
+                return
+            wins       = int((bets["pnl"] > 0).sum())
+            losses     = int((bets["pnl"] < 0).sum())
+            totalPnl   = float(bets["pnl"].sum())
+            totalStake = float(bets["stake"].sum())
+            winRate    = wins / len(bets)
+            roi        = totalPnl / totalStake if totalStake > 0 else 0.0
+            cls._out(f"Bets       : {len(bets)}")
+            cls._out(f"Win / Loss : {wins}W / {losses}L ({winRate:.2%})")
+            cls._out(f"Total P&L  : ${totalPnl:.2f}")
+            cls._out(f"ROI        : {roi:.1%}")
+
+        _section(overDF,  "COMBINED BACKTEST — OVERS")
+        _section(underDF, "COMBINED BACKTEST — UNDERS")
+
+        cls._out(f"\n{'='*52}")
+        cls._out("COMBINED BACKTEST — TOTALS")
+        cls._out(f"{'='*52}")
+        if combinedDF.empty:
+            cls._out("  No results.")
+            return
+
+        allBets = combinedDF[combinedDF["stake"] > 0].copy() if "stake" in combinedDF.columns else combinedDF.copy()
+        if allBets.empty:
+            cls._out("  No bets placed.")
+            return
+
+        totalWins  = int((allBets["pnl"] > 0).sum())
+        totalLoss  = int((allBets["pnl"] < 0).sum())
+        totalPnl   = float(allBets["pnl"].sum())
+        totalStake = float(allBets["stake"].sum())
+        winRate    = totalWins / len(allBets)
+        roi        = totalPnl / totalStake if totalStake > 0 else 0.0
+
+        cls._out(f"Total bets : {len(allBets)}")
+        cls._out(f"Win / Loss : {totalWins}W / {totalLoss}L ({winRate:.2%})")
+        cls._out(f"Total P&L  : ${totalPnl:.2f}")
+        cls._out(f"ROI        : {roi:.1%}")
+        cls._out(f"Starting bank : ${startingBank:.2f}")
+        cls._out(f"Final bank    : ${finalBank:.2f}")
+        cls._out(
+            f"Return        : "
+            f"{((finalBank - startingBank) / startingBank):.1%}"
+        )
+
+        cls._out("\nMonthly P&L (combined):")
+        cls.monthlyPnl(allBets)
+
+    @classmethod
     def marginBucketReport(cls, bets: pd.DataFrame) -> None:
         """
         Shows whether the model's point margin over the book line is behaving
