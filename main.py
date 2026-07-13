@@ -29,12 +29,19 @@ def main():
 
     # Backtest args
     parser.add_argument("--backtest", action="store_true")
+    parser.add_argument("--backtest-unders", action="store_true")
+    parser.add_argument("--backtest-combined", action="store_true")
+    parser.add_argument("--over-edge-thresh", type=float, default=0.10)
+    parser.add_argument("--under-edge-thresh", type=float, default=0.05)
     parser.add_argument("--edge-thresh", type=float, default=0.03)
     parser.add_argument("--bankroll", type=float, default=1000.0)
     parser.add_argument("--start-date", type=str, default=None)
     parser.add_argument("--end-date", type=str, default=None)
     parser.add_argument("--retrain-every-months", type=int, default=0)
     parser.add_argument("--retrain-minutes", action="store_true")
+    parser.add_argument("--under-kelly-frac", type=float, default=None)
+    parser.add_argument("--under-daily-cap", type=float, default=None)
+    parser.add_argument("--under-max-stake", type=float, default=None)
     
     # Backtest testing args
     parser.add_argument("--backtest-fold-test", action="store_true")
@@ -57,18 +64,60 @@ def main():
 
     if args.backtest:
         pipeline.backtest(
-                startDate = args.start_date, 
-                endDate = args.end_date, 
-                edgeThresh = args.edge_thresh, 
-                bankroll = args.bankroll,
-                retrainEveryMonths = (
-                    args.retrain_every_months
-                    if args.retrain_every_months > 0
-                    else None
-                ),
-                retrainMinutes = args.retrain_minutes,
+            startDate=args.start_date,
+            endDate=args.end_date,
+            edgeThresh=args.edge_thresh,
+            bankroll=args.bankroll,
+            retrainEveryMonths=(
+                args.retrain_every_months
+                if args.retrain_every_months > 0
+                else None
+            ),
+            retrainMinutes=args.retrain_minutes,
         )
     
+    if args.backtest_unders:
+        kwargs = dict(
+            startDate=args.start_date,
+            endDate=args.end_date,
+            bankroll=args.bankroll,
+            retrainEveryMonths=(
+                args.retrain_every_months
+                if args.retrain_every_months > 0
+                else 1
+            ),
+            retrainMinutes=args.retrain_minutes,
+        )
+        if args.under_kelly_frac is not None:
+            kwargs["kellyFrac"] = args.under_kelly_frac
+        if args.under_daily_cap is not None:
+            kwargs["maxDailyExposure"] = args.under_daily_cap
+        if args.under_max_stake is not None:
+            kwargs["maxStakeAbs"] = args.under_max_stake
+        pipeline.backtestUnders(**kwargs)
+
+    if args.backtest_combined:
+        kwargs = dict(
+            startDate=args.start_date,
+            endDate=args.end_date,
+            bankroll=args.bankroll,
+            overEdgeThresh=args.over_edge_thresh,
+            underEdgeThresh=args.under_edge_thresh,
+            retrainEveryMonths=(
+                args.retrain_every_months
+                if args.retrain_every_months > 0
+                else 1
+            ),
+            retrainMinutes=args.retrain_minutes,
+        )
+        if args.under_kelly_frac is not None:
+            kwargs["kellyFrac"] = args.under_kelly_frac
+        if args.under_daily_cap is not None:
+            kwargs["maxDailyExposure"] = args.under_daily_cap
+        if args.under_max_stake is not None:
+            kwargs["maxStakeAbs"] = args.under_max_stake
+        pipeline.backtestCombined(**kwargs)
+
     if args.backtest_fold_test:
         pipeline.walkForwardOverThresholds(
                  startDate = args.start_date,

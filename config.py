@@ -8,6 +8,7 @@ FEATURE_CACHE_PATH = MODELS_DIR / "feature_cache.parquet"
 MODEL_PATH = MODELS_DIR / "nba_model.joblib"
 MINUTES_PATH = MODELS_DIR / "nba_minutes_model.joblib"
 CALIBRATOR_PATH = MODELS_DIR / "nba_calibrator.joblib"
+UNDER_CALIBRATOR_PATH = MODELS_DIR / "nba_under_calibrator.joblib"
 
 MINUTES_META_PATH = MODELS_DIR / "nba_minutes_model_meta.joblib"
 MODEL_META_PATH = MODELS_DIR / "nba_model_meta.joblib"
@@ -117,10 +118,13 @@ PLATT_DAMPING = 0.5
 
 # Betting
 
-DEFAULT_EDGE_THRESH = 0.10
+DEFAULT_EDGE_THRESH = 0.05
 MAX_BET_EDGE = 0.15
 DEFAULT_BANKROLL = 1000
-DEFAULT_KELLY_FRAC = 0.25
+DEFAULT_KELLY_FRAC = 0.25         # over Kelly fraction
+DEFAULT_UNDER_KELLY_FRAC = 0.20   # under Kelly fraction (lower — reduces variance at high bankrolls)
+DEFAULT_DAILY_CAP = 0.15          # max fraction of bankroll to stake across all bets on one date
+DEFAULT_MAX_STAKE_ABS = 0.05      # max single bet as fraction of STARTING bankroll (prevents stake explosion at high bankrolls)
 FLAT_STAKE = 10
 
 # Used to filter out really far out line preds as this is likely injury effects that scraper didn't catch
