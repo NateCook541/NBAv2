@@ -42,6 +42,10 @@ def main():
     parser.add_argument("--under-kelly-frac", type=float, default=None)
     parser.add_argument("--under-daily-cap", type=float, default=None)
     parser.add_argument("--under-max-stake", type=float, default=None)
+    parser.add_argument("--holdout-train-end", type=str, default=None,
+                        help="Combined backtest: train ONCE through this date "
+                             "(exclusive) and run the whole range with no "
+                             "periodic retraining. True out-of-sample holdout.")
     
     # Backtest testing args
     parser.add_argument("--backtest-fold-test", action="store_true")
@@ -116,6 +120,8 @@ def main():
             kwargs["maxDailyExposure"] = args.under_daily_cap
         if args.under_max_stake is not None:
             kwargs["maxStakeAbs"] = args.under_max_stake
+        if args.holdout_train_end is not None:
+            kwargs["singleTrainEndDate"] = args.holdout_train_end
         pipeline.backtestCombined(**kwargs)
 
     if args.backtest_fold_test:

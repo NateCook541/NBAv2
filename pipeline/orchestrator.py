@@ -484,11 +484,18 @@ class Pipeline:
                          underEdgeThresh=DEFAULT_EDGE_THRESH,
                          kellyFrac=DEFAULT_UNDER_KELLY_FRAC,
                          maxDailyExposure=DEFAULT_DAILY_CAP,
-                         maxStakeAbs=DEFAULT_MAX_STAKE_ABS):
+                         maxStakeAbs=DEFAULT_MAX_STAKE_ABS,
+                         singleTrainEndDate=None):
         """
         Combined over + under backtest on a single shared bankroll.
 
-        Per period:
+        If singleTrainEndDate is set, the model+calibrators are trained ONCE
+        (through that date, exclusive) and reused across the entire test range
+        with NO periodic retraining. This gives a true out-of-sample holdout:
+        e.g. train on 2024-25, then bet all of 2025-26 with a frozen model.
+        The retrainEveryMonths splitting is bypassed in that mode.
+
+        Per period (periodic-retrain mode):
           1. Train once, fit both calibrators.
           2. Score all over candidates (overEdgeThresh) and under candidates
              (underEdgeThresh) independently through their own engines/filters.
@@ -512,11 +519,20 @@ class Pipeline:
         print("COMBINED BACKTEST: Start")
         print("=" * 55)
 
-        periods = self._splitPropDatesByMonths(
-            startDate=startDate,
-            endDate=endDate,
-            months=retrainEveryMonths,
-        )
+        if singleTrainEndDate is not None:
+            # One frozen model across the whole range — true OOS holdout.
+            propDates = self._propDates(startDate=startDate, endDate=endDate)
+            periods = [(propDates[0], propDates[-1])]
+            print(
+                f"[CombinedBacktest] SINGLE-TRAIN holdout mode: train once through "
+                f"{singleTrainEndDate} (exclusive), no periodic retraining."
+            )
+        else:
+            periods = self._splitPropDatesByMonths(
+                startDate=startDate,
+                endDate=endDate,
+                months=retrainEveryMonths,
+            )
 
         print(
             f"[CombinedBacktest] {len(periods)} periods | "
@@ -550,13 +566,14 @@ class Pipeline:
             print(f"COMBINED PERIOD {idx}/{len(periods)}: {periodStart} → {periodEnd}")
             print(f"{'='*60}")
 
+            trainEnd = singleTrainEndDate if singleTrainEndDate is not None else periodStart
             points, minutes, calibrator = self.train(
-                endDate=periodStart,
+                endDate=trainEnd,
                 save=False,
                 forceRetrain=retrainMinutes,
                 useCachedFeatures=not retrainMinutes,
             )
-            underCalibrator = self._fitUnderCalibrator(points, endDate=periodStart)
+            underCalibrator = self._fitUnderCalibrator(points, endDate=trainEnd)
 
             absStakeCap = currentBank * maxStakeAbs  # scales with current bankroll each period
 
@@ -669,8 +686,13 @@ class Pipeline:
         parts = [df for df in [overDF, underDF] if not df.empty]
         combinedDF = pd.concat(parts, ignore_index=True).sort_values("date") if parts else pd.DataFrame()
 
+        outPath = (
+            "backtest_combined_holdout_results.csv"
+            if singleTrainEndDate is not None
+            else "backtest_combined_results.csv"
+        )
         if not combinedDF.empty:
-            combinedDF.to_csv("backtest_combined_results.csv", index=False)
+            combinedDF.to_csv(outPath, index=False)
 
         Reporter.combinedBacktestSummary(overDF, underDF, combinedDF, bankroll, currentBank)
 
