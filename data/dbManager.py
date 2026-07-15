@@ -106,6 +106,7 @@ dbSchema = {
             open_line       REAL    NOT NULL,
             open_side_odds  INTEGER,
             predicted       REAL,
+            pred_diff       REAL,
             my_prob         REAL,
             fair_open       REAL,
             edge            REAL,
@@ -295,10 +296,10 @@ class DBManager:
         sql = """
             INSERT OR IGNORE INTO CLVLedger
                 (game_date, player_name, player_id, side, open_line,
-                 open_side_odds, predicted, my_prob, fair_open, edge, recorded_at)
+                 open_side_odds, predicted, pred_diff, my_prob, fair_open, edge, recorded_at)
             VALUES
                 (:game_date, :player_name, :player_id, :side, :open_line,
-                 :open_side_odds, :predicted, :my_prob, :fair_open, :edge, :recorded_at)
+                 :open_side_odds, :predicted, :pred_diff, :my_prob, :fair_open, :edge, :recorded_at)
         """
 
         with self._connect() as conn:
