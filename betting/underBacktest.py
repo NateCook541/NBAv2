@@ -24,16 +24,10 @@ class UnderBacktestEngine:
     Backtests under bets using the same PointsBundle predictions as the over
     engine, but with a separate UnderCalibrator and UnderFilterSet.
 
-    Kept deliberately parallel to BacktestEngine so the two can be developed
-    and debugged independently. They share all DB-loading helpers and the
-    BetRecord / SkipCounters data structures, but diverge at the probability,
-    edge, filter, and outcome calculation steps.
-
     Daily selection: all props for a given date are scored first, then sorted
     by edge descending. Stakes are allocated greedily from the top until the
-    daily exposure cap is exhausted. This ensures the highest-edge bets are
-    always funded before the cap is hit, rather than whichever props happened
-    to appear first in the database.
+    daily exposure cap is exhausted. This ensures the highest edge bets are
+    always funded before the cap is hit
     """
 
     def __init__(self, pointsBundle, minutesBundle, underCalibrator,
@@ -41,15 +35,15 @@ class UnderBacktestEngine:
                  kellyFrac=DEFAULT_UNDER_KELLY_FRAC,
                  maxDailyExposure=DEFAULT_DAILY_CAP,
                  maxStakeAbs=DEFAULT_MAX_STAKE_ABS):
-        self.points           = pointsBundle
-        self.minutes          = minutesBundle
-        self.calibrator       = underCalibrator        # UnderCalibrator instance
-        self.dbPath           = Path(dbPath)
-        self.edgeCap          = MAX_BET_EDGE
-        self.filterSet        = filterSet if filterSet is not None else UnderFilterSet.baseline()
-        self.kellyFrac        = kellyFrac
+        self.points = pointsBundle
+        self.minutes = minutesBundle
+        self.calibrator = underCalibrator
+        self.dbPath = Path(dbPath)
+        self.edgeCap = MAX_BET_EDGE
+        self.filterSet = filterSet if filterSet is not None else UnderFilterSet.baseline()
+        self.kellyFrac = kellyFrac
         self.maxDailyExposure = maxDailyExposure
-        self.maxStakeAbs      = maxStakeAbs   # fraction of starting bankroll, fixed for the run
+        self.maxStakeAbs = maxStakeAbs # fraction of starting bankroll, fixed for the run
 
     def run(self, startDate=None, endDate=None,
             edgeThresh=DEFAULT_EDGE_THRESH, bankroll=DEFAULT_BANKROLL):
@@ -60,11 +54,11 @@ class UnderBacktestEngine:
         if props.empty:
             raise ValueError("No props found for the requested timeframe")
 
-        actuals     = _loadActuals(conn)
-        playerMap   = _loadPlayerMap(conn)
-        oppMap      = _loadOppMap(conn)
+        actuals = _loadActuals(conn)
+        playerMap = _loadPlayerMap(conn)
+        oppMap = _loadOppMap(conn)
         scheduleMap = _loadScheduleMap(conn)
-        caches      = preloadCaches(conn)
+        caches = preloadCaches(conn)
         conn.close()
 
         absStakeCap = bankroll * self.maxStakeAbs   # fixed dollar cap for the entire run
@@ -88,11 +82,11 @@ class UnderBacktestEngine:
         currentBank = bankroll
         skips       = SkipCounters()
 
-        # Two-pass per-day loop: score all → sort by edge → settle
+        # Two pass per day loop: score all -> sort by edge -> settle
         for date, dayProps in props.groupby("game_date", sort=True):
             # Pass 1: score every prop, collect candidates that pass filters + edge thresh
             candidates = []
-            nobet      = []   # passed filters but edge too low/high — record as no-bet
+            nobet = [] # passed filters but edge too low/high. Record as no-bet
 
             for _, prop in dayProps.iterrows():
                 result = self._scoreProp(
@@ -159,7 +153,7 @@ class UnderBacktestEngine:
                     last1Pts=scored["last1Pts"],
                 ))
 
-            # Emit no-bet records (below edge thresh or daily-cap overflow)
+            # Emit no-bet records (below edge thresh or daily cap overflow)
             for scored in nobet:
                 records.append(BetRecord(
                     date=scored["date"],
@@ -205,9 +199,9 @@ class UnderBacktestEngine:
                 "win_rate": 0.0, "total_pnl": 0.0, "roi": 0.0,
                 "final_bank": float(finalBank),
             }
-        wins       = int((bets["pnl"] > 0).sum())
-        losses     = int((bets["pnl"] < 0).sum())
-        totalPnl   = float(bets["pnl"].sum())
+        wins = int((bets["pnl"] > 0).sum())
+        losses = int((bets["pnl"] < 0).sum())
+        totalPnl = float(bets["pnl"].sum())
         totalStake = float(bets["stake"].sum())
         return {
             "props":      int(len(resultsDF)),
@@ -222,23 +216,23 @@ class UnderBacktestEngine:
 
     def scoreAllProps(self, startDate, endDate, edgeThresh, bankroll):
         """
-        Score all props for the period without settling any bets.
+        Score all props for the period without settling any bets
         Returns (candidatesByDate, skips, absStakeCap) where candidatesByDate
         is {date: [scored_dict, ...]} containing only bettable candidates.
         Used by the combined backtest to merge over/under candidates before
-        conflict resolution and shared-bankroll settlement.
+        conflict resolution and shared bankroll settlement.
         """
         conn = sqlite3.connect(str(self.dbPath))
-        props     = _loadProps(conn, startDate, endDate)
-        actuals   = _loadActuals(conn)
+        props = _loadProps(conn, startDate, endDate)
+        actuals = _loadActuals(conn)
         playerMap = _loadPlayerMap(conn)
-        oppMap    = _loadOppMap(conn)
-        caches    = preloadCaches(conn)
+        oppMap = _loadOppMap(conn)
+        caches = preloadCaches(conn)
         conn.close()
 
-        absStakeCap      = bankroll * self.maxStakeAbs
+        absStakeCap = bankroll * self.maxStakeAbs
         candidatesByDate = {}
-        skips            = SkipCounters()
+        skips = SkipCounters()
 
         for date, dayProps in props.groupby("game_date", sort=True):
             for _, prop in dayProps.iterrows():
@@ -261,9 +255,9 @@ class UnderBacktestEngine:
         """
         Evaluate a prop through lookups, feature building, and calibration.
         Returns a scored dict (bettable=True/False) or None if the prop must
-        be skipped entirely (no player match, no features, etc.).
+        be skipped entirely (no player match, no features, etc)
 
-        Does NOT mutate currentBank — that happens in run().
+        Does not mutate currentBank — that happens in run()
         """
         nameNorm = _normalize(prop.player_name)
         date     = prop.game_date
@@ -305,12 +299,12 @@ class UnderBacktestEngine:
 
         predicted = self.points.predict(features)
 
-        rawProb      = self.calibrator.rawProbUnder(predicted, prop.line)
-        myProb       = self.calibrator.probUnder(predicted, prop.line)
+        rawProb = self.calibrator.rawProbUnder(predicted, prop.line)
+        myProb = self.calibrator.probUnder(predicted, prop.line)
         _, fairUnder = _removeVig(prop.over_odds, prop.under_odds)
-        edge         = myProb - fairUnder
+        edge = myProb - fairUnder
 
-        pos      = float(features["pos"].iloc[0]) if "pos" in features.columns else None
+        pos = float(features["pos"].iloc[0]) if "pos" in features.columns else None
         predDiff = round(prop.line - predicted, 2)
 
         passed, filterReason = self.filterSet.passes(
@@ -345,3 +339,4 @@ class UnderBacktestEngine:
             "bettable":   bettable,
         }
         return scored, skips
+

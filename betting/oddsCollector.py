@@ -48,10 +48,9 @@ def _getHistoricalProps(eventID, date):
 
 
 # LIVE ODDS HELPERS
-# Mirror the historical fetchers but hit the current-odds endpoints (no `date`
-# param). Response shape is identical, so _parseProps / _normalizeName are reused.
 
-# Fetch event ids for all upcoming/live NBA games (current schedule).
+
+# Fetch event ids for all upcoming/live NBA games (current schedule)
 def _getLiveEvents():
     url = f"{BASE_URL}/sports/basketball_nba/events"
     resp = requests.get(url, params={"apiKey": API_KEY})
@@ -60,7 +59,7 @@ def _getLiveEvents():
     print(f"Live events fetched | requests remaining: {remaining}")
     return resp.json()
 
-# Get current player points props for a single event.
+# Get current player points props for a single event
 def _getLiveProps(eventID):
     url = f"{BASE_URL}/sports/basketball_nba/events/{eventID}/odds"
     resp = requests.get(url, params={
@@ -77,6 +76,7 @@ def _getLiveProps(eventID):
 
 
 # PARSING
+
 
 # Flatted the nested Odds API response into a list of flat dict for upsertProps
 def _deriveGameDate(eventData, fallbackDate):
@@ -216,9 +216,9 @@ def pullHistoricalProps(startDate, endDate, dbPath="NBA.db", dryRun=False):
     print(f"\nDone. Total props stored: {totalRows}")
 
 
-# Snapshot today's live DK player-points props into PropSnapshots, stamped with
-# snapshot_type ('open' or 'close') for CLV tracking. Reuses the historical
-# parser. Credit cost ~= 1 events call + 1 per game.
+# Snapshot today's live dk player points props into PropSnapshots, stamped with
+# snapshot_type (open or close) for CLV tracking. Reuses the historical parser.
+# Credit cost ~= 1 events call + 1 per game.
 def snapshotLiveProps(dbPath="NBA.db", snapshotType="open", dryRun=False):
     if snapshotType not in ("open", "close"):
         raise ValueError("snapshotType must be 'open' or 'close'")
@@ -256,3 +256,4 @@ def snapshotLiveProps(dbPath="NBA.db", snapshotType="open", dryRun=False):
         print("No props found in live snapshot.")
 
     return allRows
+

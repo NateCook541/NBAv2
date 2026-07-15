@@ -28,23 +28,13 @@ def main():
     parser.add_argument("--pull-props", nargs=2, metavar=("START_DATE", "END_DATE"))
 
     # Live / CLV validation args
-    parser.add_argument("--freshness", nargs="?", const="__today__",
-                        metavar="DATE",
-                        help="Check DB freshness for live scoring on DATE (today if omitted).")
-    parser.add_argument("--snapshot-open", action="store_true",
-                        help="Snapshot today's live DK props as the 'open' line.")
-    parser.add_argument("--snapshot-close", action="store_true",
-                        help="Snapshot today's live DK props as the 'close' line (near tip).")
-    parser.add_argument("--snapshot-dry-run", action="store_true",
-                        help="With --snapshot-open/close: estimate API credits only.")
-    parser.add_argument("--score-live", nargs="?", const="__today__",
-                        metavar="DATE",
-                        help="Score the open snapshot for DATE and record CLV candidates.")
-    parser.add_argument("--compute-clv", nargs="?", const="__today__",
-                        metavar="DATE",
-                        help="Compute CLV for DATE against the close snapshot.")
-    parser.add_argument("--clv-report", nargs="*", metavar=("START", "END"),
-                        help="Aggregate CLV ledger (optional START END date range).")
+    parser.add_argument("--freshness", nargs="?", const="__today__", metavar="DATE")
+    parser.add_argument("--snapshot-open", action="store_true")
+    parser.add_argument("--snapshot-close", action="store_true")
+    parser.add_argument("--snapshot-dry-run", action="store_true")
+    parser.add_argument("--score-live", nargs="?", const="__today__", metavar="DATE")
+    parser.add_argument("--compute-clv", nargs="?", const="__today__", metavar="DATE")
+    parser.add_argument("--clv-report", nargs="*", metavar=("START", "END"))
 
     # Backtest args
     parser.add_argument("--backtest", action="store_true")
@@ -61,10 +51,7 @@ def main():
     parser.add_argument("--under-kelly-frac", type=float, default=None)
     parser.add_argument("--under-daily-cap", type=float, default=None)
     parser.add_argument("--under-max-stake", type=float, default=None)
-    parser.add_argument("--holdout-train-end", type=str, default=None,
-                        help="Combined backtest: train ONCE through this date "
-                             "(exclusive) and run the whole range with no "
-                             "periodic retraining. True out-of-sample holdout.")
+    parser.add_argument("--holdout-train-end", type=str, default=None)
     
     # Backtest testing args
     parser.add_argument("--backtest-fold-test", action="store_true")
@@ -175,17 +162,17 @@ def main():
                           dryRun=args.snapshot_dry_run)
 
     if args.score_live is not None:
-        from betting.live_scorer import scoreLiveDay
+        from betting.liveScorer import scoreLiveDay
         scoreLiveDay(dbPath=args.db, date=_resolveDate(args.score_live),
                      overThresh=args.over_edge_thresh,
                      underThresh=args.under_edge_thresh)
 
     if args.compute_clv is not None:
-        from betting.live_scorer import computeCLV
+        from betting.liveScorer import computeCLV
         computeCLV(dbPath=args.db, date=_resolveDate(args.compute_clv))
 
     if args.clv_report is not None:
-        from betting.live_scorer import clvReport
+        from betting.liveScorer import clvReport
         start = args.clv_report[0] if len(args.clv_report) >= 1 else None
         end = args.clv_report[1] if len(args.clv_report) >= 2 else None
         clvReport(dbPath=args.db, startDate=start, endDate=end)

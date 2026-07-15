@@ -1,15 +1,15 @@
 """
-Single-day live scorer + CLV computation.
+Single day live scorer + CLV computation
 
-scoreLiveDay: for a given date, score today's OPEN prop snapshot with the same
-math the backtest uses (via scoreOnce), sourcing opp/home/rest PREGAME from the
+scoreLiveDay: for a given date, score todays OPEN prop snapshot with the same
+math the backtest uses, sourcing opp/home/rest PREGAME from the
 Games schedule (never from played logs). Records bettable candidates to CLVLedger
-with the open line/odds — no settlement, no bankroll.
+with the open line/odds
 
 computeCLV: after a CLOSE snapshot is captured, fills close line/odds and CLV
-metrics (clv_prob primary, clv_points, beat_close) per candidate.
+metrics (clv_prob primary, clv_points, beat_close) per candidate
 
-settleCLV (deferred): after games finish, fills actual_points/won.
+settleCLV (deferred): after games finish, fills actual_points/won
 """
 
 import sqlite3
@@ -38,7 +38,7 @@ def _loadPlayerTeams(conn):
 
 
 def _deriveRestDays(playerLogCache, playerID, date):
-    """Days since the player's last game strictly before `date`. None if no
+    """Days since the player's last game strictly before date. None if no
     prior game (rookies / first game) — caller decides a default."""
     logs = playerLogCache.get(playerID)
     if logs is None or logs.empty:
@@ -52,7 +52,7 @@ def _deriveRestDays(playerLogCache, playerID, date):
 
 
 def _loadSnapshot(conn, date, snapshotType):
-    """Load a live snapshot for `date`, both odds present, dedup alternate lines."""
+    """Load a live snapshot for date, both odds present, dedup alternate lines."""
     df = pd.read_sql_query(
         """
         SELECT game_date, player_name, line, over_odds, under_odds
@@ -71,8 +71,8 @@ def _loadSnapshot(conn, date, snapshotType):
 def scoreLiveDay(dbPath="NBA.db", date=None, overThresh=DEFAULT_EDGE_THRESH,
                  underThresh=DEFAULT_EDGE_THRESH, record=True):
     """
-    Score today's OPEN snapshot and record bettable candidates to CLVLedger.
-    Returns the list of candidate dicts. Logs unmatched players.
+    Score todays OPEN snapshot and record bettable candidates to CLVLedger
+    Returns the list of candidate dicts and logs unmatched players
     """
     if date is None:
         date = datetime.now().strftime("%Y-%m-%d")
@@ -83,11 +83,10 @@ def scoreLiveDay(dbPath="NBA.db", date=None, overThresh=DEFAULT_EDGE_THRESH,
     underCal = UnderCalibrator.loadIfExists()
 
     if points is None or overCal is None:
-        raise RuntimeError("Points model / over-calibrator not found — run --train.")
+        raise RuntimeError("Points model / over calibrator not found")
     if underCal is None:
         raise RuntimeError(
-            "Under-calibrator not found (nba_under_calibrator.joblib). "
-            "Run --train (it now persists the under-calibrator)."
+            "Under calibrator not found"
         )
 
     overFilter = FilterSet.production()
@@ -126,11 +125,11 @@ def scoreLiveDay(dbPath="NBA.db", date=None, overThresh=DEFAULT_EDGE_THRESH,
 
         rest = _deriveRestDays(caches.playerLogCache, pid, date)
         ctx = {
-            "player_id":   pid,
-            "team_id":     sched["team_id"],
+            "player_id": pid,
+            "team_id": sched["team_id"],
             "opp_team_id": sched["opp_team_id"],
-            "is_home":     sched["is_home"],
-            "rest_days":   rest if rest is not None else 2,  # neutral default
+            "is_home": sched["is_home"],
+            "rest_days": rest if rest is not None else 2,  # neutral default
         }
 
         over = scoreOnce(prop, ctx, caches, points, minutes, overCal,
@@ -141,7 +140,7 @@ def scoreLiveDay(dbPath="NBA.db", date=None, overThresh=DEFAULT_EDGE_THRESH,
             misses["noFeatures"] += 1
             continue
 
-        # keep bettable side(s); if both, keep higher edge (combined-backtest rule)
+        # keep bettable sides if both, keep higher edge (combined backtest rule)
         picks = [s for s in (over, under) if s["bettable"]]
         if not picks:
             continue
@@ -183,10 +182,10 @@ def _fairForSide(overOdds, underOdds, side):
 
 def computeCLV(dbPath="NBA.db", date=None):
     """
-    Match each open candidate to the CLOSE snapshot and compute CLV.
+    Match each open candidate to the CLOSE snapshot and compute CLV
 
-    clv_prob   = fair_close - fair_open  (>0 means market moved toward us)
-    clv_points = (close-open) for over, (open-close) for under
+    clv_prob = fair_close - fair_open (>0 means market moved toward us)
+    clv_points = (close-open) for over (open-close) for under
     beat_close = 1 if clv_prob > 0
     """
     if date is None:
@@ -232,15 +231,15 @@ def computeCLV(dbPath="NBA.db", date=None):
             else (row.open_line - best.line)
 
         updates.append({
-            "game_date":       row.game_date,
-            "player_name":     row.player_name,
-            "side":            row.side,
-            "close_line":      float(best.line),
+            "game_date": row.game_date,
+            "player_name": row.player_name,
+            "side": row.side,
+            "close_line": float(best.line),
             "close_side_odds": int(closeSideOdds),
-            "fair_close":      round(float(fairClose), 4),
-            "clv_prob":        round(float(clvProb), 4),
-            "clv_points":      round(float(clvPoints), 2),
-            "beat_close":      1 if clvProb > 0 else 0,
+            "fair_close": round(float(fairClose), 4),
+            "clv_prob": round(float(clvProb), 4),
+            "clv_points": round(float(clvPoints), 2),
+            "beat_close": 1 if clvProb > 0 else 0,
         })
 
     if updates:
@@ -258,8 +257,8 @@ def computeCLV(dbPath="NBA.db", date=None):
 
 
 def clvReport(dbPath="NBA.db", startDate=None, endDate=None):
-    """Aggregate CLV across the ledger: beat-close rate, mean clv_prob/points,
-    broken down by side."""
+    """Aggregate CLV across the ledger
+    beat close_rate, mean clv_prob/points, broken down by side"""
     conn = sqlite3.connect(str(dbPath))
     q = "SELECT * FROM CLVLedger WHERE clv_prob IS NOT NULL"
     params = []
@@ -295,3 +294,4 @@ def clvReport(dbPath="NBA.db", startDate=None, endDate=None):
         print(f"  settled n={len(settled)} win-rate {wr:.1%} "
               f"(secondary confirmation)")
     print("=" * 60)
+

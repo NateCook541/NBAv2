@@ -1,14 +1,11 @@
 """
-Data-freshness check for live scoring.
+Data freshness check for live scoring
 
-Before scoring a live slate, the DB must be current: last night's game logs
-loaded (so rolling features like avgPts10/last1Pts are accurate), today's
-schedule present (to source opp/home/rest pregame), and the day-before injury
-report present (features read scrape_date == dayBefore).
+Before scoring a live slate the DB must be current with last nights 
+game logs loaded and today's schedule present
 
-checkFreshness() is read-only. It returns a FreshnessReport with an `ok` flag
-(False when a hard blocker is present) plus warnings, and prints a summary.
-The live workflow gates on `report.ok`.
+checkFreshness() is read-only and returns a FreshnessReport with a binary ok flag
+The live workflow gates on report.ok
 """
 
 import sqlite3
@@ -29,15 +26,15 @@ class FreshnessReport:
 
     def summary(self):
         lines = ["=" * 60, "Data-freshness check", "=" * 60]
-        lines.append(f"max log date   : {self.maxLogDate}")
-        lines.append(f"games today    : {self.scheduleCount}")
+        lines.append(f"max log date : {self.maxLogDate}")
+        lines.append(f"games today : {self.scheduleCount}")
         lines.append(f"max status date: {self.maxStatusDate}")
         lines.append(f"max teams date : {self.maxTeamsDate}")
         lines.append("-" * 60)
         for b in self.blockers:
-            lines.append(f"BLOCKER: {b}")
+            lines.append(f"BLOCKER : {b}")
         for w in self.warnings:
-            lines.append(f"WARN   : {w}")
+            lines.append(f"WARN : {w}")
         if not self.blockers and not self.warnings:
             lines.append("All checks clean.")
         lines.append("-" * 60)
@@ -58,15 +55,15 @@ def _scalar(conn, query, params=()):
 
 def checkFreshness(dbPath, date, quiet=False):
     """
-    Verify NBA.db is fresh enough to score the slate on `date` (YYYY-MM-DD).
-
+    Verify the db is fresh enough to score the slate on given date
+    
     Hard blockers (set ok=False):
-      1. Last night's logs not loaded (max log date < yesterday).
-      2. No schedule rows for today (can't source opp/home/rest).
+      1. Last night's logs not loaded.
+      2. No schedule rows for today
 
     Warnings (ok stays True):
-      3. Injury Status stale — day-before report missing (features read it).
-      4. Teams (off/def rtg, pace) stale.
+      3. Injury Status stale — day-before report missing (This might need to be moved due to importance of injurys)
+      4. Teams (off/def rtg, pace) stale
     """
     conn = sqlite3.connect(str(dbPath))
     try:
@@ -101,7 +98,7 @@ def checkFreshness(dbPath, date, quiet=False):
                 f"— run --scrape to ingest the published schedule."
             )
 
-        # 3. Injury Status — the day-before row is the one features read
+        # 3. Injury Status - the day-before row is the one features read
         report.maxStatusDate = _scalar(conn, "SELECT MAX(scrape_date) FROM Status")
         if report.maxStatusDate is None or report.maxStatusDate < yesterday:
             report.warnings.append(
@@ -124,3 +121,4 @@ def checkFreshness(dbPath, date, quiet=False):
         return report
     finally:
         conn.close()
+

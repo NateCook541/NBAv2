@@ -17,7 +17,7 @@ def _buildUnderPlattData(predictions, actuals, lines, sigmaLeft, sigmaRight):
     """
     Builds (rawUnderProb, underHit) pairs across all given lines.
     rawUnderProb = 1 - P(actual > line)
-    underHit     = 1 if actual < line (strict under)
+    underHit = 1 if actual < line (strict under)
     """
     actuals = np.asarray(actuals)
     rawProbsAll, hitsAll = [], []
@@ -34,30 +34,33 @@ def _buildUnderPlattData(predictions, actuals, lines, sigmaLeft, sigmaRight):
 
 class UnderCalibrator:
     """
-    Calibrates P(actual < line) for under bets.
+    Calibrates P(actual < line) for under bets
 
-    Architecture mirrors Calibrator (over side) but is fit and stored
-    independently. The two calibrators share the same PointsBundle
-    predictions and the same split-normal distribution parameters, but
-    their Platt layers are trained on opposite hit labels.
+    Architecture mirrors the over calibrator but is fit and stored independently 
 
-    Only probUnder() should be called by the backtest layer.
+    The two calibrators share the same PointsBundle
+    predictions and the same split normal distribution parameters, but
+    their Platt layers are trained on opposite hit labels
+
+    Only probUnder() should be called by the backtest layer
     """
 
     def __init__(self, platt, sigmaLeft, sigmaRight, residualStd, meta, plattDamping):
-        self.platt       = platt          # dict: {"low": LR, "mid": LR, "high": LR, "global": LR}
-        self.sigmaLeft   = sigmaLeft
-        self.sigmaRight  = sigmaRight
+        self.platt = platt
+        self.sigmaLeft = sigmaLeft
+        self.sigmaRight = sigmaRight
         self.residualStd = residualStd
-        self.meta        = meta
+        self.meta = meta
         self.plattDamping = PLATT_DAMPING if plattDamping is None else plattDamping
 
-    # --- Core probability methods ---
+
+    # Core probability methods
+
 
     def probUnder(self, predicted, line):
         """
-        Returns calibrated P(actual < line).
-        Only method the under backtest layer should call.
+        Returns calibrated P(actual < line)
+        Only method the under backtest layer should call
         """
         raw = 1.0 - _probOverSplitNormal(predicted, line, self.sigmaLeft, self.sigmaRight)
         if predicted < 15.0:
@@ -70,14 +73,14 @@ class UnderCalibrator:
         return raw + self.plattDamping * (calibrated - raw)
 
     def rawProbUnder(self, predicted, line):
-        """Uncalibrated under probability (for debugging)."""
+        """Uncalibrated under probability (for debugging)"""
         return 1.0 - _probOverSplitNormal(predicted, line, self.sigmaLeft, self.sigmaRight)
 
     @property
     def profitableEdgeCap(self):
         return float(self.meta.get("profitable_edge_cap", 0.20))
 
-    # --- Persistence ---
+    # Persistence
 
     def save(self, path=UNDER_CALIBRATOR_PATH):
         bundle = {
@@ -151,7 +154,7 @@ class UnderCalibrator:
             predRate = float(np.mean(predictions < line))
             print(f"  {line:>6}  {actRate:>18.3f}  {predRate:>14.3f}")
 
-        # 3. Fit split-normal sigmas (same distribution as over calibrator)
+        # 3. Fit split normal sigmas (same distribution as over calibrator)
         sigmaLeft, sigmaRight = _fitSplitSigma(predictions, actuals)
 
         # 4. Build Platt training data with under hit labels
@@ -249,7 +252,7 @@ class UnderCalibrator:
             instance.save(savePath)
         return instance
 
-    # --- Backtest safety ---
+    # Backtest safety
 
     def isSafeFor(self, backtestStartDate):
         if int(self.meta.get("under_calibrator_algorithm_version", 0)) < UNDER_CALIBRATOR_ALGORITHM_VERSION:
