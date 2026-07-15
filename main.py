@@ -27,6 +27,25 @@ def main():
     # Props args
     parser.add_argument("--pull-props", nargs=2, metavar=("START_DATE", "END_DATE"))
 
+    # Live / CLV validation args
+    parser.add_argument("--freshness", nargs="?", const="__today__",
+                        metavar="DATE",
+                        help="Check DB freshness for live scoring on DATE (today if omitted).")
+    parser.add_argument("--snapshot-open", action="store_true",
+                        help="Snapshot today's live DK props as the 'open' line.")
+    parser.add_argument("--snapshot-close", action="store_true",
+                        help="Snapshot today's live DK props as the 'close' line (near tip).")
+    parser.add_argument("--snapshot-dry-run", action="store_true",
+                        help="With --snapshot-open/close: estimate API credits only.")
+    parser.add_argument("--score-live", nargs="?", const="__today__",
+                        metavar="DATE",
+                        help="Score the open snapshot for DATE and record CLV candidates.")
+    parser.add_argument("--compute-clv", nargs="?", const="__today__",
+                        metavar="DATE",
+                        help="Compute CLV for DATE against the close snapshot.")
+    parser.add_argument("--clv-report", nargs="*", metavar=("START", "END"),
+                        help="Aggregate CLV ledger (optional START END date range).")
+
     # Backtest args
     parser.add_argument("--backtest", action="store_true")
     parser.add_argument("--backtest-unders", action="store_true")
@@ -133,7 +152,44 @@ def main():
     if args.pull_props:
         from betting.oddsCollector import pullHistoricalProps
         pullHistoricalProps(args.pull_props[0], args.pull_props[1], dbPath=args.db)
-        
+
+    # Live / CLV validation workflow
+    def _resolveDate(val):
+        if val == "__today__":
+            from datetime import datetime
+            return datetime.now().strftime("%Y-%m-%d")
+        return val
+
+    if args.freshness is not None:
+        from betting.freshness import checkFreshness
+        checkFreshness(args.db, _resolveDate(args.freshness))
+
+    if args.snapshot_open:
+        from betting.oddsCollector import snapshotLiveProps
+        snapshotLiveProps(dbPath=args.db, snapshotType="open",
+                          dryRun=args.snapshot_dry_run)
+
+    if args.snapshot_close:
+        from betting.oddsCollector import snapshotLiveProps
+        snapshotLiveProps(dbPath=args.db, snapshotType="close",
+                          dryRun=args.snapshot_dry_run)
+
+    if args.score_live is not None:
+        from betting.live_scorer import scoreLiveDay
+        scoreLiveDay(dbPath=args.db, date=_resolveDate(args.score_live),
+                     overThresh=args.over_edge_thresh,
+                     underThresh=args.under_edge_thresh)
+
+    if args.compute_clv is not None:
+        from betting.live_scorer import computeCLV
+        computeCLV(dbPath=args.db, date=_resolveDate(args.compute_clv))
+
+    if args.clv_report is not None:
+        from betting.live_scorer import clvReport
+        start = args.clv_report[0] if len(args.clv_report) >= 1 else None
+        end = args.clv_report[1] if len(args.clv_report) >= 2 else None
+        clvReport(dbPath=args.db, startDate=start, endDate=end)
+
 
     if args.cache_data:
         pipeline.cacheFeatures()

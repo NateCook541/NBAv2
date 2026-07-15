@@ -184,6 +184,27 @@ class FilterSet:
         """
         return cls(name="pgPfHighScorerBlock", blockGuardHighScorer=True)
 
+    @classmethod
+    def production(cls) -> "FilterSet":
+        """
+        The tuned, validated OVER filter set used in the backtest/orchestrator
+        and in live scoring. Single source of truth — do not inline these values
+        elsewhere.
+          - maxPredicted 22.0        (cap high-scorer bets)
+          - PG/PF 18-22 block        (blockGuardHighScorer)
+          - midRangeDonut 9-12%      (15-18 pred + 9-12% edge)
+          - highRangeDonut 7-9%      (18-22 pred + 7-9% edge)
+        """
+        return cls(
+            name="pgPfBlock_midDonut_highDonut",
+            maxPredicted=22.0,
+            blockGuardHighScorer=True,
+            midRangeDonutLow=0.09,
+            midRangeDonutHigh=0.12,
+            highRangeDonutLow=0.07,
+            highRangeDonutHigh=0.09,
+        )
+
 
 @dataclass
 class UnderFilterSet:

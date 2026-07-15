@@ -104,6 +104,87 @@ def _normalize(name):
     return " ".join(merged)
 
 
+def scoreOnce(prop, ctx, caches, points, minutes, calibrator, filterSet,
+              side, edgeThresh, edgeCap):
+    """
+    Settlement-free, side-agnostic scoring for a single prop.
+
+    Shared source of truth for backtest and live scoring. Given an already
+    resolved context (team/opp/home/rest) and loaded bundles, builds features,
+    predicts, calibrates the chosen side, computes edge vs de-vigged fair prob,
+    applies the filter set, and flags `bettable`. NO actuals, NO bankroll.
+
+    ctx keys: player_id, team_id, opp_team_id, is_home, rest_days.
+    side: 'over' or 'under'. `calibrator` and `filterSet` must match the side.
+    Returns a scored dict, or None if features can't be built.
+    """
+    features = buildFeatures(
+        playerID=ctx["player_id"],
+        date=prop.game_date,
+        teamID=ctx["team_id"],
+        oppTeamID=ctx["opp_team_id"],
+        cache=caches.playerLogCache,
+        posCache=caches.posCache,
+        teamCache=caches.teamCache,
+        statusDF=caches.statusDF,
+        oppPosCache=caches.oppPosCache,
+        teamGameTotals=caches.teamGameTotals,
+        minutesModel=minutes,
+        currentIsHome=ctx["is_home"],
+        currentRestDays=ctx["rest_days"],
+    )
+    if features is None:
+        return None
+
+    predicted = points.predict(features)
+    pos = float(features["pos"].iloc[0]) if "pos" in features.columns else None
+
+    if side == "over":
+        rawProb     = calibrator.rawProbOver(predicted, prop.line)
+        myProb      = calibrator.probOver(predicted, prop.line)
+        fair, _     = _removeVig(prop.over_odds, prop.under_odds)
+        edge        = myProb - fair
+        predDiff    = round(predicted - prop.line, 2)
+        sideOdds    = prop.over_odds
+        passed, reason = filterSet.passes(
+            predicted=predicted, propLine=prop.line, edge=edge, pos=pos,
+        )
+    else:
+        rawProb     = calibrator.rawProbUnder(predicted, prop.line)
+        myProb      = calibrator.probUnder(predicted, prop.line)
+        _, fair     = _removeVig(prop.over_odds, prop.under_odds)
+        edge        = myProb - fair
+        predDiff    = round(prop.line - predicted, 2)
+        sideOdds    = prop.under_odds
+        passed, reason = filterSet.passes(
+            predicted=predicted, propLine=prop.line, edge=edge, pos=pos,
+            betOdds=prop.under_odds, predDiff=predDiff,
+        )
+
+    bettable = passed and (edgeThresh < edge <= edgeCap)
+
+    return {
+        "date":       prop.game_date,
+        "player":     prop.player_name,
+        "line":       prop.line,
+        "side":       side,
+        "predicted":  round(predicted, 1),
+        "predDiff":   predDiff,
+        "rawProb":    round(rawProb, 3),
+        "myProb":     round(myProb, 3),
+        "bookProb":   round(fair, 3),
+        "edge":       round(edge, 3),
+        "sideOdds":   sideOdds,
+        "avgPts10":   float(features["avgPts10"].iloc[0]),
+        "last1Pts":   float(features["last1Pts"].iloc[0]),
+        "passed":     passed,
+        "filterReason": reason,
+        "bettable":   bettable,
+        # exact prediction retained for parity checks / stake sizing
+        "_predictedExact": predicted,
+    }
+
+
 def _loadProps(conn, startDate=None, endDate=None):
     query = """
         SELECT prop_id, game_date, player_name, line, over_odds, under_odds

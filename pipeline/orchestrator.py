@@ -208,10 +208,14 @@ class Pipeline:
                 }
         )
         
+        # 5. Under-calibrator (persist for live scoring)
+        print("\n--- Step 5. Under-calibrator ---")
+        self._fitUnderCalibrator(points, endDate=endDate, save=save)
+
         print("\n" + "=" * 55)
         print("TRAIN: Complete")
         print("=" * 55)
-        
+
         return points, minutes, calibrator
 
 
@@ -294,15 +298,7 @@ class Pipeline:
         for idx, (periodStart, periodEnd) in enumerate(periods, start=1):
             print(f"  period {idx}: {periodStart} → {periodEnd}")
 
-        fs = FilterSet(
-            name="pgPfBlock_midDonut_highDonut",
-            maxPredicted=22.0,
-            blockGuardHighScorer=True,
-            midRangeDonutLow=0.09,
-            midRangeDonutHigh=0.12,
-            highRangeDonutLow=0.07,
-            highRangeDonutHigh=0.09,
-        )
+        fs = FilterSet.production()
 
         currentBank = bankroll
         allResults = []
@@ -546,15 +542,7 @@ class Pipeline:
         for idx, (ps, pe) in enumerate(periods, start=1):
             print(f"  period {idx}: {ps} → {pe}")
 
-        overFs = FilterSet(
-            name="pgPfBlock_midDonut_highDonut",
-            maxPredicted=22.0,
-            blockGuardHighScorer=True,
-            midRangeDonutLow=0.09,
-            midRangeDonutHigh=0.12,
-            highRangeDonutLow=0.07,
-            highRangeDonutHigh=0.09,
-        )
+        overFs = FilterSet.production()
         underFs = UnderFilterSet.production()
 
         currentBank = bankroll

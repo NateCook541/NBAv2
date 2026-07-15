@@ -47,6 +47,35 @@ def _getHistoricalProps(eventID, date):
     return resp.json().get("data", [])
 
 
+# LIVE ODDS HELPERS
+# Mirror the historical fetchers but hit the current-odds endpoints (no `date`
+# param). Response shape is identical, so _parseProps / _normalizeName are reused.
+
+# Fetch event ids for all upcoming/live NBA games (current schedule).
+def _getLiveEvents():
+    url = f"{BASE_URL}/sports/basketball_nba/events"
+    resp = requests.get(url, params={"apiKey": API_KEY})
+    resp.raise_for_status()
+    remaining = resp.headers.get("x-requests-remaining", "?")
+    print(f"Live events fetched | requests remaining: {remaining}")
+    return resp.json()
+
+# Get current player points props for a single event.
+def _getLiveProps(eventID):
+    url = f"{BASE_URL}/sports/basketball_nba/events/{eventID}/odds"
+    resp = requests.get(url, params={
+        "apiKey": API_KEY,
+        "regions": "us",
+        "markets": "player_points",
+        "oddsFormat": "american",
+        "bookmakers": "draftkings",
+    })
+    resp.raise_for_status()
+    remaining = resp.headers.get("x-requests-remaining", "?")
+    print(f"Live props fetched for {eventID} | requests remaining: {remaining}")
+    return resp.json()
+
+
 # PARSING
 
 # Flatted the nested Odds API response into a list of flat dict for upsertProps
@@ -185,3 +214,45 @@ def pullHistoricalProps(startDate, endDate, dbPath="NBA.db", dryRun=False):
             print(f"No props found for {date}")
 
     print(f"\nDone. Total props stored: {totalRows}")
+
+
+# Snapshot today's live DK player-points props into PropSnapshots, stamped with
+# snapshot_type ('open' or 'close') for CLV tracking. Reuses the historical
+# parser. Credit cost ~= 1 events call + 1 per game.
+def snapshotLiveProps(dbPath="NBA.db", snapshotType="open", dryRun=False):
+    if snapshotType not in ("open", "close"):
+        raise ValueError("snapshotType must be 'open' or 'close'")
+
+    db = DBManager(dbPath)
+    db.initSchema()
+
+    events = _getLiveEvents()
+    if not events:
+        print("No live NBA events found.")
+        return
+
+    if dryRun:
+        print(f"Dry run: {len(events)} events")
+        print(f"Estimated requests: 1 (events) + {len(events)} (props) = {len(events) + 1}")
+        return
+
+    today = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
+    snapshotTime = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+    allRows = []
+    for event in events:
+        eventID = event["id"]
+        eventData = _getLiveProps(eventID)
+        rows = _parseProps(eventData, today)
+        for r in rows:
+            r["snapshot_type"] = snapshotType
+            r["fetched_at"] = snapshotTime
+        allRows.extend(rows)
+
+    if allRows:
+        db.upsertPropSnapshots(allRows)
+        print(f"Stored {len(allRows)} '{snapshotType}' snapshot rows ({snapshotTime} UTC)")
+    else:
+        print("No props found in live snapshot.")
+
+    return allRows

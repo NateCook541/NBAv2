@@ -79,12 +79,55 @@ dbSchema = {
             fetched_at    TEXT    NOT NULL
         )
     """,
+    # Live prop snapshots for CLV tracking. Separate from Props so an 'open'
+    # (decision-time) and 'close' (near-tip) snapshot of the same prop coexist.
+    "PropSnapshots": """
+        CREATE TABLE IF NOT EXISTS PropSnapshots (
+            snapshot_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+            game_date     TEXT    NOT NULL,
+            player_name   TEXT    NOT NULL,
+            line          REAL    NOT NULL,
+            over_odds     INTEGER,
+            under_odds    INTEGER,
+            bookmaker     TEXT,
+            snapshot_type TEXT    NOT NULL,
+            fetched_at    TEXT    NOT NULL
+        )
+    """,
+    # Candidate bets recorded at decision time (open line) with CLV filled in
+    # after the close snapshot, and actuals filled in (deferred) after games.
+    "CLVLedger": """
+        CREATE TABLE IF NOT EXISTS CLVLedger (
+            bet_id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            game_date       TEXT    NOT NULL,
+            player_name     TEXT    NOT NULL,
+            player_id       INTEGER,
+            side            TEXT    NOT NULL,
+            open_line       REAL    NOT NULL,
+            open_side_odds  INTEGER,
+            predicted       REAL,
+            my_prob         REAL,
+            fair_open       REAL,
+            edge            REAL,
+            recorded_at     TEXT    NOT NULL,
+            close_line      REAL,
+            close_side_odds INTEGER,
+            fair_close      REAL,
+            clv_prob        REAL,
+            clv_points      REAL,
+            beat_close      INTEGER,
+            actual_points   INTEGER,
+            won             INTEGER
+        )
+    """,
 }
 
 extraIndexes = [
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_player_game ON Player_game_logs (player_id, game_id)",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_prop_unique ON Props (game_date, player_name, line, bookmaker)",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_player_name ON Players (name)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_snapshot_unique ON PropSnapshots (game_date, player_name, line, bookmaker, snapshot_type)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_clv_unique ON CLVLedger (game_date, player_name, side)",
 ]
 
 # A small SQLite wrapper for the scrapped NBA data
@@ -226,4 +269,76 @@ class DBManager:
             conn.cursor().executemany(sql, data)
 
         print(f"Upserted {len(data)} prop records")
+
+    # PROP SNAPSHOTS (live CLV tracking)
+
+    def upsertPropSnapshots(self, data):
+        sql = """
+            INSERT OR IGNORE INTO PropSnapshots
+                (game_date, player_name, line, over_odds, under_odds,
+                 bookmaker, snapshot_type, fetched_at)
+            VALUES
+                (:game_date, :player_name, :line, :over_odds, :under_odds,
+                 :bookmaker, :snapshot_type, :fetched_at)
+        """
+
+        with self._connect() as conn:
+            conn.cursor().executemany(sql, data)
+
+        print(f"Upserted {len(data)} prop snapshot records")
+
+    # CLV LEDGER
+
+    def insertCLVCandidates(self, data):
+        """Insert decision-time candidate bets (open line/odds). Idempotent per
+        (game_date, player_name, side)."""
+        sql = """
+            INSERT OR IGNORE INTO CLVLedger
+                (game_date, player_name, player_id, side, open_line,
+                 open_side_odds, predicted, my_prob, fair_open, edge, recorded_at)
+            VALUES
+                (:game_date, :player_name, :player_id, :side, :open_line,
+                 :open_side_odds, :predicted, :my_prob, :fair_open, :edge, :recorded_at)
+        """
+
+        with self._connect() as conn:
+            conn.cursor().executemany(sql, data)
+
+        print(f"Inserted {len(data)} CLV candidate records")
+
+    def updateCLVClose(self, data):
+        """Fill close line/odds + CLV metrics for existing ledger rows."""
+        sql = """
+            UPDATE CLVLedger
+            SET close_line = :close_line,
+                close_side_odds = :close_side_odds,
+                fair_close = :fair_close,
+                clv_prob = :clv_prob,
+                clv_points = :clv_points,
+                beat_close = :beat_close
+            WHERE game_date = :game_date
+              AND player_name = :player_name
+              AND side = :side
+        """
+
+        with self._connect() as conn:
+            conn.cursor().executemany(sql, data)
+
+        print(f"Updated {len(data)} CLV rows with close values")
+
+    def updateCLVSettle(self, data):
+        """Deferred: fill actual_points / won after games complete."""
+        sql = """
+            UPDATE CLVLedger
+            SET actual_points = :actual_points,
+                won = :won
+            WHERE game_date = :game_date
+              AND player_name = :player_name
+              AND side = :side
+        """
+
+        with self._connect() as conn:
+            conn.cursor().executemany(sql, data)
+
+        print(f"Settled {len(data)} CLV rows")
 
