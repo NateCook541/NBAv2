@@ -521,6 +521,7 @@ class BacktestEngine:
         scored = {
             "date":      date,
             "player":    prop.player_name,
+            "player_id": playerID,
             "line":      prop.line,
             "predicted": round(predicted, 1),
             "actual":    actualPts,
@@ -530,6 +531,7 @@ class BacktestEngine:
             "bookProb":  round(fairOver, 3),
             "edge":      round(edge, 3),
             "over_odds": prop.over_odds,
+            "under_odds": prop.under_odds,
             "avgPts10":  float(features["avgPts10"].iloc[0]),
             "last1Pts":  float(features["last1Pts"].iloc[0]),
             "bettable":  bettable,

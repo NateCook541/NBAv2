@@ -539,6 +539,10 @@ class Pipeline:
             f"max_daily_exposure={maxDailyExposure:.0%} per side | "
             f"max_stake_abs={maxStakeAbs:.0%}"
         )
+    
+        clvInsertRows = []
+        clvSettleRows = []
+
         for idx, (ps, pe) in enumerate(periods, start=1):
             print(f"  period {idx}: {ps} → {pe}")
 
@@ -668,6 +672,39 @@ class Pipeline:
                             avgPts10=c["avgPts10"],
                             last1Pts=c["last1Pts"],
                         ))
+
+                        clvInsertRows.append({
+                            "game_date":      c["date"],
+                            "player_name":    c["player"],
+                            "player_id":      c.get("player_id"),
+                            "side":           side,
+                            "open_line":      c["line"],
+                            "open_side_odds": odds,
+                            "predicted":      c["predicted"],
+                            "pred_diff":      c["predDiff"],
+                            "my_prob":        c["myProb"],
+                            "fair_open":      c["bookProb"],
+                            "edge":           c["edge"],
+                            "recorded_at":    c["date"],  # use game date for historical data
+                        })
+
+                        clvSettleRows.append({
+                            "game_date": c["date"],
+                            "player_name": c["player"],
+                            "side": side,
+                            "actual_points": c["actual"],
+                            "won": 1 if won else 0,
+                        })
+
+                if clvInsertRows:
+                    from data.dbManager import DBManager
+                    db = DBManager(str(self.dbPath))
+                    db.insertCLVCandidates(clvInsertRows)
+                    db.updateCLVSettle(clvSettleRows)
+
+                    print(f"[CombinedBacktest] Period {idx}: wrote {len(clvInsertRows)} rows to CLVLedger")
+                    clvInsertRows = []
+                    clvSettlRows = []
 
         overDF  = pd.DataFrame([vars(r) for r in allOverRecords])  if allOverRecords  else pd.DataFrame()
         underDF = pd.DataFrame([vars(r) for r in allUnderRecords]) if allUnderRecords else pd.DataFrame()

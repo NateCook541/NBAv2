@@ -325,6 +325,7 @@ class UnderBacktestEngine:
         scored = {
             "date":       date,
             "player":     prop.player_name,
+            "player_id":  playerID,
             "line":       prop.line,
             "predicted":  round(predicted, 1),
             "actual":     actualPts,
