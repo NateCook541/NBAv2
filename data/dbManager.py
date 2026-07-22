@@ -121,6 +121,30 @@ dbSchema = {
             won             INTEGER
         )
     """,
+    "Results": """
+        CREATE TABLE IF NOT EXISTS Results (
+            game_id TEXT PRIMARY KEY,
+            home_team_id INTEGER,
+            away_team_id INTEGER,
+            home_score INTEGER,
+            away_score INTEGER,
+            winner_id INTEGER
+        )
+    """,
+    # Per-game advanced ratings (off/def rtg, pace) from the NBA stats API.
+    # Kept separate from Teams (which holds season-start snapshots) so both
+    # the player model (season snapshots) and totals model (per-game) work.
+    "Team_game_ratings": """
+        CREATE TABLE IF NOT EXISTS Team_game_ratings (
+            game_id TEXT,
+            team_id INTEGER,
+            off_rtg REAL,
+            def_rtg REAL,
+            pace REAL,
+            possessions REAL,
+            PRIMARY KEY (game_id, team_id)
+        )
+    """,
 }
 
 extraIndexes = [
@@ -175,6 +199,7 @@ class DBManager:
 
     
     # UPSERT METHODS
+
 
     # TEAMS
 
@@ -271,7 +296,7 @@ class DBManager:
 
         print(f"Upserted {len(data)} prop records")
 
-    # PROP SNAPSHOTS (live CLV tracking)
+    # PROP SNAPSHOTS
 
     def upsertPropSnapshots(self, data):
         sql = """
@@ -342,4 +367,27 @@ class DBManager:
             conn.cursor().executemany(sql, data)
 
         print(f"Settled {len(data)} CLV rows")
+
+    def upsertResults(self, data):
+        sql = """
+            INSERT OR REPLACE INTO Results (game_id, home_team_id, away_team_id, home_score, away_score, winner_id)
+            VALUES (:game_id, :home_team_id, :away_team_id, :home_score, :away_score, :winner_id)
+            """
+
+        with self._connect() as conn:
+            conn.cursor().executemany(sql, data)
+
+        print(f"Upserted {len(data)} result records")
+
+    def upsertTeamGameRatings(self, data):
+        sql = """
+            INSERT OR REPLACE INTO Team_game_ratings
+                (game_id, team_id, off_rtg, def_rtg, pace, possessions)
+            VALUES (:game_id, :team_id, :off_rtg, :def_rtg, :pace, :possessions)
+            """
+
+        with self._connect() as conn:
+            conn.cursor().executemany(sql, data)
+
+        print(f"Upserted {len(data)} team game rating records")
 

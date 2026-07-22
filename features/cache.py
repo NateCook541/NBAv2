@@ -35,7 +35,9 @@ class Caches:
     teamCache: dict # team_id -> DataFrame of team stats
     statusDF: pd.DataFrame # Just get the injury status LOL
     oppPosCache: dict # team_id, position -> DataFrame
-    teamGameTotals: dict # game_id, team_id -> total points 
+    teamGameTotals: dict # game_id, team_id -> total points
+    teamGameCache: dict # team_id -> DataFrame of per-game team results (for totals model)
+    h2hCache: dict # (min_team_id, max_team_id) -> DataFrame of head-to-head totals
 
 def preloadCaches(conn):
     print(f"[cache] Loading caches")
@@ -111,16 +113,134 @@ def preloadCaches(conn):
         for key, row in oppPosCache.items()
     }
 
+    # Per-game team results (for the totals / results model)
+    # One row per team per game, from each team's own perspective.
+    teamGameCache, h2hCache = _buildTeamGameCaches(conn)
+
     print("[cache] Cache loading done")
 
     return Caches(
-            playerLogCache = playerLogCache, 
-            posCache = posCache, 
-            teamCache = teamCache, 
-            statusDF = status, 
-            oppPosCache = oppPosCache, 
-            teamGameTotals = teamGameTotals
+            playerLogCache = playerLogCache,
+            posCache = posCache,
+            teamCache = teamCache,
+            statusDF = status,
+            oppPosCache = oppPosCache,
+            teamGameTotals = teamGameTotals,
+            teamGameCache = teamGameCache,
+            h2hCache = h2hCache
     )
+
+
+def _buildTeamGameCaches(conn):
+    """
+    Builds the two caches the totals model needs from Results + Games + Teams.
+
+    teamGameCache: team_id -> DataFrame (one row per game that team played), newest
+        rows appended in date order, with the columns resultsBuilder reads:
+            date, game_id, opp_team_id, pts_scored, pts_allowed, total_pts,
+            pace, off_rtg, def_rtg, rest_days
+    h2hCache: frozen (min_id, max_id) team pair -> DataFrame of shared games
+        with columns date, total_pts.
+
+    off_rtg / def_rtg / pace come from the per-game Team_game_ratings table (NBA
+    stats API) when available, so those are true per-game values. For any game with
+    no rating row (e.g. not yet backfilled) it falls back to the season-start
+    snapshot in the Teams table, so the cache degrades gracefully rather than zeroing.
+    """
+    # Scores joined to schedule for dates, opponent and season.
+    games = pd.read_sql_query("""
+        SELECT
+            r.game_id,
+            g.game_date  AS date,
+            g.season,
+            r.home_team_id,
+            r.away_team_id,
+            r.home_score,
+            r.away_score
+        FROM Results r
+        JOIN Games g ON r.game_id = g.game_id
+        ORDER BY g.game_date, r.game_id
+    """, conn)
+
+    if games.empty:
+        return {}, {}
+
+    # Season-start rating / pace snapshots. One row per (team, season). Used as a
+    # fallback when a game has no per-game rating row.
+    teamStats = pd.read_sql_query("SELECT team_id, off_rtg, def_rtg, pace, date FROM Teams", conn)
+    # date like "2023-10-01" -> season 2024 (season is the calendar year it ends in)
+    teamStats["season"] = teamStats["date"].str[:4].astype(int) + 1
+    seasonLookup = {
+        (int(r.team_id), int(r.season)): (r.off_rtg, r.def_rtg, r.pace)
+        for r in teamStats.itertuples(index=False)
+    }
+
+    # Real per-game ratings, keyed (game_id, team_id).
+    gameRatings = pd.read_sql_query(
+        "SELECT game_id, team_id, off_rtg, def_rtg, pace FROM Team_game_ratings", conn
+    )
+    gameRatingLookup = {
+        (str(r.game_id), int(r.team_id)): (r.off_rtg, r.def_rtg, r.pace)
+        for r in gameRatings.itertuples(index=False)
+    }
+
+    def _ratings(gameID, teamID, season):
+        # Prefer the real per-game row; fall back to the season snapshot; then zeros.
+        perGame = gameRatingLookup.get((str(gameID), int(teamID)))
+        if perGame is not None and all(v is not None for v in perGame):
+            return perGame
+        return seasonLookup.get((int(teamID), int(season)), (0.0, 0.0, 0.0))
+
+    # Explode each game into two team-perspective rows.
+    rows = []
+    for g in games.itertuples(index=False):
+        for teamID, oppID, scored, allowed in (
+            (g.home_team_id, g.away_team_id, g.home_score, g.away_score),
+            (g.away_team_id, g.home_team_id, g.away_score, g.home_score),
+        ):
+            offRtg, defRtg, pace = _ratings(g.game_id, teamID, g.season)
+            rows.append({
+                "team_id":     int(teamID),
+                "opp_team_id": int(oppID),
+                "game_id":     g.game_id,
+                "date":        g.date,
+                "season":      int(g.season),
+                "pts_scored":  int(scored),
+                "pts_allowed": int(allowed),
+                "total_pts":   int(scored) + int(allowed),
+                "off_rtg":     float(offRtg) if offRtg is not None else 0.0,
+                "def_rtg":     float(defRtg) if defRtg is not None else 0.0,
+                "pace":        float(pace) if pace is not None else 0.0,
+            })
+
+    teamGames = pd.DataFrame(rows).sort_values(["team_id", "date"]).reset_index(drop=True)
+
+    # Rest days: gap since that team's previous game. First game of a season -> 20 (same
+    # convention scrapeLogs uses so early-season rows aren't treated as back-to-backs).
+    teamGames["_prev_date"] = teamGames.groupby("team_id")["date"].shift(1)
+    prevDT = pd.to_datetime(teamGames["_prev_date"], errors="coerce")
+    curDT = pd.to_datetime(teamGames["date"], errors="coerce")
+    restDays = (curDT - prevDT).dt.days
+    teamGames["rest_days"] = restDays.fillna(20).clip(upper=20).astype(int)
+    teamGames = teamGames.drop(columns=["_prev_date"])
+
+    teamGameCache = {
+        tid: grp.reset_index(drop=True)
+        for tid, grp in teamGames.groupby("team_id")
+    }
+
+    # Head-to-head totals, keyed by the unordered team pair (dedupe the two perspectives).
+    h2h = games.copy()
+    h2h["total_pts"] = h2h["home_score"] + h2h["away_score"]
+    h2h["pair"] = h2h.apply(
+        lambda r: tuple(sorted((int(r.home_team_id), int(r.away_team_id)))), axis=1
+    )
+    h2hCache = {
+        pair: grp[["date", "total_pts"]].sort_values("date").reset_index(drop=True)
+        for pair, grp in h2h.groupby("pair")
+    }
+
+    return teamGameCache, h2hCache
 
 
 # Feature cache

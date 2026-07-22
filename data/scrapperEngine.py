@@ -57,6 +57,58 @@ NBA_REPORT_TEAM_MAP = {
 # Add docstings fat bum
 
 BREF_BASE = "https://www.basketball-reference.com"
+NBA_STATS_BASE = "https://stats.nba.com/stats"
+
+# NBA stats API franchise teamId -> this project's DB team_id.
+# Franchise IDs are fixed/stable so we key on them instead of tricodes
+# (the DB uses B-Ref tricodes like BRK/CHO/PHO which differ from NBA's BKN/CHA/PHX).
+NBA_TEAM_ID_MAP = {
+    1610612737: 15,  # ATL
+    1610612738: 17,  # BOS
+    1610612751: 30,  # BRK
+    1610612741: 13,  # CHI
+    1610612766: 18,  # CHO
+    1610612739: 12,  # CLE
+    1610612742: 25,  # DAL
+    1610612743: 1,   # DEN
+    1610612765: 10,  # DET
+    1610612744: 23,  # GSW
+    1610612745: 3,   # HOU
+    1610612754: 29,  # IND
+    1610612746: 28,  # LAC
+    1610612747: 9,   # LAL
+    1610612763: 21,  # MEM
+    1610612748: 5,   # MIA
+    1610612749: 24,  # MIL
+    1610612750: 8,   # MIN
+    1610612740: 20,  # NOP
+    1610612752: 4,   # NYK
+    1610612760: 2,   # OKC
+    1610612753: 14,  # ORL
+    1610612755: 16,  # PHI
+    1610612756: 22,  # PHO
+    1610612757: 11,  # POR
+    1610612758: 27,  # SAC
+    1610612759: 6,   # SAS
+    1610612761: 19,  # TOR
+    1610612762: 7,   # UTA
+    1610612764: 26,  # WAS
+}
+
+# Headers stats.nba.com requires or it silently drops the request
+NBA_STATS_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Referer": "https://www.nba.com/",
+    "Origin": "https://www.nba.com",
+    "x-nba-stats-origin": "stats",
+    "x-nba-stats-token": "true",
+    "Connection": "keep-alive",
+}
 
 class ScrapeEngine:
     # db path defaults to NBA.db
@@ -71,7 +123,8 @@ class ScrapeEngine:
             "Charlotte Hornets": "CHO", "Chicago Bulls": "CHI", "Cleveland Cavaliers": "CLE",
             "Dallas Mavericks": "DAL", "Denver Nuggets": "DEN", "Detroit Pistons": "DET",
             "Golden State Warriors": "GSW", "Houston Rockets": "HOU", "Indiana Pacers": "IND",
-            "LA Clippers": "LAC", "Los Angeles Lakers": "LAL", "Memphis Grizzlies": "MEM",
+            "LA Clippers": "LAC", "Los Angeles Clippers": "LAC",   # B-Ref uses both forms
+            "Los Angeles Lakers": "LAL", "Memphis Grizzlies": "MEM",
             "Miami Heat": "MIA", "Milwaukee Bucks": "MIL", "Minnesota Timberwolves": "MIN",
             "New Orleans Pelicans": "NOP", "New York Knicks": "NYK", "Oklahoma City Thunder": "OKC",
             "Orlando Magic": "ORL", "Philadelphia 76ers": "PHI", "Phoenix Suns": "PHO",
@@ -190,6 +243,16 @@ class ScrapeEngine:
         response.encoding = "utf-8"
         response.raise_for_status()
         return response.text
+
+    # Helper to hit the NBA stats API. Returns parsed JSON.
+    # stats.nba.com rate-limits and (from some IPs) blocks entirely, so sleep and
+    # let the caller handle timeouts. sleepSecs is small since we make many calls.
+    def _nbaStatsGet(self, endpoint, params, sleepSecs=0.7):
+        url = f"{NBA_STATS_BASE}/{endpoint}"
+        time.sleep(sleepSecs)
+        response = requests.get(url, headers=NBA_STATS_HEADERS, params=params, timeout=30)
+        response.raise_for_status()
+        return response.json()
 
     # nbainjures has plyer name last-first format so this just flips itto first-last if needed
     def _flipName(self, nbaReportName):
@@ -392,6 +455,113 @@ class ScrapeEngine:
             return []
 
     
+    def scrapeResults(self, season=2026):
+        """
+        Overveiw:
+            Scrapes basketball reference for the final scores of every completed game in
+            a season. Only games that have actually been played (have a score) are returned.
+        Params:
+            season: int of season to scrape
+        Returns:
+            A list containing game_id, home_team_id, away_team_id, home_score, away_score,
+            and winner_id for each completed game in a season.
+        """
+
+        # Same schedule pages scrapeGames uses, just pulling the score columns this time
+        url = f"{BREF_BASE}/leagues/NBA_{season}_games.html"
+        allResults = []
+
+        try:
+            print(f"Opening URL - {url}")
+            html = self._brefGet(url)
+
+            # Parse the initial page to find month links
+            soupInit = BeautifulSoup(html, "html.parser")
+            filterDiv = soupInit.find("div", class_="filter")
+
+            if filterDiv:
+                monthLinks = filterDiv.find_all(
+                    "a", href=re.compile(r"games-.*\.html")
+                )
+                monthURLs = [BREF_BASE + link["href"] for link in monthLinks]
+            else:
+                monthURLs = [url]
+
+            # Go over each month found in the main url HTML source
+            for url in monthURLs:
+                monthLabel = url.split('-')[-1].replace('.html', "").capitalize()
+                print(f"---------Scraping {monthLabel}----------")
+
+                cleanHTML = self._brefGet(url)
+                soup = BeautifulSoup(cleanHTML, "html.parser")
+
+                # Find the schedule table and if no table for that month found skip over and continue
+                table = soup.find("table", {"id": "schedule"})
+                if not table:
+                    print(f"No table found for {monthLabel}")
+                    continue
+
+                rows = table.find("tbody").find_all(
+                        "tr", class_= lambda x: x != "thead"
+                )
+
+                # Go over all rows in that months table
+                for row in rows:
+                    # Capture the score columns. If a game hasn't been played yet these are empty,
+                    # so use them as the "has this game happened" check and skip if so
+                    visitorPtsTD = row.find("td", {"data-stat": "visitor_pts"})
+                    homePtsTD = row.find("td", {"data-stat": "home_pts"})
+                    if not visitorPtsTD or not visitorPtsTD.text.strip():
+                        continue
+                    if not homePtsTD or not homePtsTD.text.strip():
+                        continue
+
+                    visitorPts = int(visitorPtsTD.text.strip())
+                    homePts = int(homePtsTD.text.strip())
+
+                    # game_id matches the value scrapeGames uses so Results joins cleanly to Games
+                    dateTH = row.find("th", {"data-stat": "date_game"})
+                    gameID = dateTH.get("csk") if dateTH else None
+                    if not gameID:
+                        continue
+
+                    # Gets the visitor and home team name and skips if not found
+                    visitorTD = row.find("td", {"data-stat": "visitor_team_name"})
+                    homeTD = row.find("td", {"data-stat": "home_team_name"})
+                    if not visitorTD or not homeTD:
+                        continue
+
+                    # Converts the name to the abbrvation used in the main team map to get the correct ID
+                    homeAbbr = self.fullNameConversion.get(homeTD.text.strip())
+                    awayAbbr = self.fullNameConversion.get(visitorTD.text.strip())
+
+                    homeID = self.teamMap.get(homeAbbr)
+                    awayID = self.teamMap.get(awayAbbr)
+
+                    if homeID is None or awayID is None:
+                        continue
+
+                    homeID = int(homeID)
+                    awayID = int(awayID)
+
+                    allResults.append({
+                        "game_id": gameID,
+                        "home_team_id": homeID,
+                        "away_team_id": awayID,
+                        "home_score": homePts,
+                        "away_score": visitorPts,
+                        "winner_id": homeID if homePts > visitorPts else awayID,
+                    })
+
+                print(f"Results scrapped so far: {len(allResults)}")
+
+            print(f"Total results scrapped {len(allResults)}")
+            return allResults
+
+        except Exception as e:
+            print(f"Error during results scrapping {e}")
+            return []
+
     def scrapeLogs(self, numGames=None):
         """
         Overveiw:
@@ -999,6 +1169,134 @@ class ScrapeEngine:
             except Exception as e:
                 print(f"Error scraping teams for {season}: {e}")
         return teamsOut
+
+    # PER-GAME TEAM RATINGS (NBA stats API) - real off/def rtg + pace per game,
+    # unlike the season-snapshot Teams table. Must run from an IP the NBA API
+    # doesn't block (many datacenter IPs are silently dropped).
+
+    def _scoreboardGameIndex(self, gameDate):
+        """
+        Hits scoreboardv2 for one date and returns a lookup:
+            (db_home_team_id, db_away_team_id) -> nba_game_id
+        Returns {} on any failure so the caller can skip the date gracefully.
+        """
+        try:
+            data = self._nbaStatsGet("scoreboardv2", {
+                "GameDate": gameDate,
+                "LeagueID": "00",
+                "DayOffset": 0,
+            })
+        except Exception as e:
+            print(f"  scoreboard fetch failed for {gameDate}: {e}")
+            return {}
+
+        index = {}
+        for rs in data.get("resultSets", []):
+            if rs.get("name") != "GameHeader":
+                continue
+            idx = {h: i for i, h in enumerate(rs["headers"])}
+            for row in rs["rowSet"]:
+                nbaGameID = row[idx["GAME_ID"]]
+                homeDB = NBA_TEAM_ID_MAP.get(row[idx["HOME_TEAM_ID"]])
+                awayDB = NBA_TEAM_ID_MAP.get(row[idx["VISITOR_TEAM_ID"]])
+                if homeDB is not None and awayDB is not None:
+                    index[(homeDB, awayDB)] = nbaGameID
+        return index
+
+    def _fetchAdvancedRatings(self, nbaGameID, dbGameID):
+        """
+        Hits boxscoreadvancedv3 for one NBA game id and returns two rating rows
+        (home + away) keyed to our DB game_id / team_id. Returns [] on failure.
+        """
+        try:
+            data = self._nbaStatsGet("boxscoreadvancedv3", {
+                "GameID": nbaGameID,
+                "StartPeriod": 0,
+                "EndPeriod": 10,
+                "StartRange": 0,
+                "EndRange": 28800,
+                "RangeType": 0,
+            })
+        except Exception as e:
+            print(f"  advanced fetch failed for {nbaGameID}: {e}")
+            return []
+
+        box = data.get("boxScoreAdvanced")
+        if not box:
+            print(f"  empty advanced payload for {nbaGameID}")
+            return []
+
+        rows = []
+        for side in ("homeTeam", "awayTeam"):
+            team = box.get(side)
+            if not team:
+                continue
+            dbTeamID = NBA_TEAM_ID_MAP.get(team.get("teamId"))
+            if dbTeamID is None:
+                continue
+            stats = team.get("statistics", {})
+            rows.append({
+                "game_id":     dbGameID,
+                "team_id":     dbTeamID,
+                "off_rtg":     stats.get("offensiveRating"),
+                "def_rtg":     stats.get("defensiveRating"),
+                "pace":        stats.get("pace"),
+                "possessions": stats.get("possessions"),
+            })
+        return rows
+
+    def scrapeTeamGameRatings(self, season=None):
+        """
+        Overveiw:
+            Scrapes per-game offensive/defensive rating and pace for every game from
+            the NBA stats API, giving the totals model real per-game ratings instead
+            of the season-constant snapshots in the Teams table.
+        Params:
+            season: optional int. If given, only games from that season (from
+                    games.json) are scraped; otherwise all games are scraped.
+        Returns:
+            A list of dicts (game_id, team_id, off_rtg, def_rtg, pace, possessions),
+            two rows per game.
+        """
+        games = self._loadJson("output/games.json")
+        if season is not None:
+            games = [g for g in games if g.get("season") == season]
+
+        # Only games that have been played (not future scheduled ones)
+        today = datetime.now().strftime("%Y-%m-%d")
+        games = [g for g in games if g["game_date"] <= today]
+
+        if not games:
+            print("No games to scrape ratings for")
+            return []
+
+        # Group games by date so we hit scoreboardv2 once per date, not per game
+        byDate = {}
+        for g in games:
+            byDate.setdefault(g["game_date"], []).append(g)
+
+        print(f"Scraping ratings for {len(games)} games across {len(byDate)} dates")
+
+        allRatings = []
+        for i, (gameDate, dateGames) in enumerate(sorted(byDate.items())):
+            index = self._scoreboardGameIndex(gameDate)
+            if not index:
+                continue
+
+            for g in dateGames:
+                nbaGameID = index.get((g["home_team_id"], g["away_team_id"]))
+                if nbaGameID is None:
+                    print(f"  no NBA game id match for {g['game_id']}")
+                    continue
+
+                rows = self._fetchAdvancedRatings(nbaGameID, g["game_id"])
+                allRatings.extend(rows)
+
+            if (i + 1) % 25 == 0:
+                print(f"  {i + 1}/{len(byDate)} dates done, {len(allRatings)} rating rows")
+
+        print(f"Total team-game rating rows scraped: {len(allRatings)}")
+        return allRatings
 
    # SCRAPE STATUS SECTION (3 functions) - Uses nba injurys package instead of web scrapping for consitent data + historical
 

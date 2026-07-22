@@ -9,6 +9,9 @@ def main():
     parser.add_argument("--backfill-from", type=str, default=None)
     parser.add_argument("--num-games",  type=int, default=None)
     parser.add_argument("--historical-seasons", type=int, nargs="+", default=None)
+    # Per-game team ratings from the NBA stats API. Optional season(s); omit for all.
+    # Must run from an IP the NBA API doesn't block.
+    parser.add_argument("--scrape-ratings", nargs="*", type=int, metavar="SEASON", default=None)
     
     # Train args
     parser.add_argument("--train", action="store_true")
@@ -206,6 +209,9 @@ def main():
     if args.historical_seasons:
         scrapeHistorical(args.historical_seasons, dbPath=args.db, outputDir="output")
 
+    if args.scrape_ratings is not None:
+        scrapeRatings(seasons=args.scrape_ratings, dbPath=args.db)
+
     if args.train_minutes:
         import sqlite3
         from features.cache import preloadCaches
@@ -241,6 +247,10 @@ def _runScrape(engine, db, args):
         with open(f"{outputDir}/games.json", "w") as f:
             json.dump(games, f, indent=2)
 
+        results = engine.scrapeResults()
+
+        teamGameRatings = engine.scrapeTeamGameRatings()
+
         logs = engine.scrapeLogs(numGames=numLogGames)
         
         if backfillFrom:
@@ -256,6 +266,8 @@ def _runScrape(engine, db, args):
     db.upsertTeams(teams)
     db.upsertPlayers(players)
     db.upsertGames(games)
+    db.upsertResults(results)
+    db.upsertTeamGameRatings(teamGameRatings)
     db.upsertLogs(logs)
     db.upsertStatus(status)
 
@@ -285,12 +297,21 @@ def scrapeHistorical(seasons, dbPath="NBA.db", outputDir="output"):
 
         # Games and logs
         allGames = []
+        allResults = []
         for season in seasons:
             games = engine.scrapeGames(season=season)
             allGames.extend(games)
+            results = engine.scrapeResults(season=season)
+            allResults.extend(results)
         with open(f"{outputDir}/games.json", "w") as f:
             json.dump(allGames, f, indent=2)
         db.upsertGames(allGames)
+        db.upsertResults(allResults)
+
+        # Per-game ratings need games.json written first (scrapeTeamGameRatings reads it)
+        for season in seasons:
+            ratings = engine.scrapeTeamGameRatings(season=season)
+            db.upsertTeamGameRatings(ratings)
 
         for season in seasons:
             logs = engine.scrapeLogsHistorical(season=season)
@@ -302,9 +323,39 @@ def scrapeHistorical(seasons, dbPath="NBA.db", outputDir="output"):
             endDate = f"{season}-06-30"
             status = engine.scrapeStatusRange(startDate, endDate)
             db.upsertStatus(status)
-    
+
     finally:
         engine.close()
+
+def scrapeRatings(seasons=None, dbPath="NBA.db"):
+    """
+    Backfills per-game team ratings (off/def rtg, pace) from the NBA stats API.
+
+    seasons: list of ints, or None/empty for all seasons in games.json.
+    Reads games.json, so run a games scrape first if it's stale.
+    The NBA stats API blocks many datacenter IPs, so run this from a machine
+    that can reach stats.nba.com.
+    """
+    from data.scrapperEngine import ScrapeEngine
+    from data.dbManager import DBManager
+
+    db = DBManager(dbPath)
+    db.initSchema()
+
+    # scrapeTeamGameRatings only needs _loadJson + requests, so skip the Selenium
+    # driver setup (and the teams/players lookups it builds) entirely.
+    engine = ScrapeEngine.__new__(ScrapeEngine)
+
+    seasonList = seasons if seasons else [None]  # None -> all seasons
+    total = 0
+    for season in seasonList:
+        label = "all seasons" if season is None else f"season {season}"
+        print(f"\n-------- Scraping ratings: {label} --------")
+        ratings = engine.scrapeTeamGameRatings(season=season)
+        db.upsertTeamGameRatings(ratings)
+        total += len(ratings)
+
+    print(f"\n-------- Ratings scrape complete: {total} rows --------")
 
 if __name__ == "__main__":
     main()

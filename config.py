@@ -13,6 +13,9 @@ UNDER_CALIBRATOR_PATH = MODELS_DIR / "nba_under_calibrator.joblib"
 MINUTES_META_PATH = MODELS_DIR / "nba_minutes_model_meta.joblib"
 MODEL_META_PATH = MODELS_DIR / "nba_model_meta.joblib"
 
+RESULTS_MODEL_PATH = MODELS_DIR / "nba_results_model.joblib"
+RESULTS_META_PATH = MODELS_DIR / "nba_results_model_meta.joblib"
+
 # Scraping
 
 BREF_BASE        = "https://www.basketball-reference.com"
@@ -103,6 +106,27 @@ MINUTES_MODEL_PARAMS = {
     "n_jobs":         -1,
     "random_state":    42,
 }
+
+# Game totals (results) model. Fewer rows than the player model (one row per game),
+# so a shallow, heavily-regularized tree — the useful signal is thin (see
+# resultsBuilder.RESULTS_FEATURES) and deeper trees just overfit noise.
+RESULTS_MODEL_PARAMS = {
+    "n_estimators":    200,
+    "max_depth":       3,
+    "learning_rate":   0.05,
+    "subsample":       0.8,
+    "colsample_bytree":0.8,
+    "min_child_weight":20,
+    "reg_lambda":      3.0,
+    "n_jobs":         -1,
+    "objective":      "reg:absoluteerror",
+    "random_state":    42,
+}
+
+# Totals target behavior (mirrors POINTS_TARGET_MODE):
+# residual: model learns total - naive_total_projection, then adds it back at inference
+# absolute: model learns the raw game total directly
+RESULTS_TARGET_MODE = "residual"
 
 BIAS_SHRINK_K = 500
 
