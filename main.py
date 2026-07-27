@@ -27,6 +27,11 @@ def main():
     # Minutes args
     parser.add_argument("--train-minutes", action="store_true")
 
+    # Results (game totals) model args
+    parser.add_argument("--train-results", action="store_true")
+    parser.add_argument("--cache-results-features", action="store_true")
+    parser.add_argument("--eval-results-calibrator", action="store_true")
+
     # Props args
     parser.add_argument("--pull-props", nargs=2, metavar=("START_DATE", "END_DATE"))
 
@@ -228,6 +233,15 @@ def main():
             endDate = args.train_end_date,
             save = True
         )
+
+    if args.cache_results_features:
+        pipeline.cacheResultsFeatures()
+
+    if args.train_results:
+        pipeline.trainResults(endDate=args.train_end_date)
+
+    if args.eval_results_calibrator:
+        pipeline.evaluateResultsCalibrator()
 
 
 def _runScrape(engine, db, args):

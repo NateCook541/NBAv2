@@ -31,7 +31,12 @@ featureOrder = [
     # Rest / schedule
     "team_rest_days", "opp_rest_days", "rest_diff",
     "team_b2b", "opp_b2b", "both_b2b",
-    "team_games_last7", "opp_games_last7"
+    "team_games_last7", "opp_games_last7",
+
+    # Market line (historical odds archive; NaN when no line exists)
+    "market_total_open", "market_total_close",
+    "line_minus_naive", "open_close_move",
+    "open_minus_naive",
 ]
 
 # The subset the model actually trains on. The full featureOrder above is still built
@@ -47,6 +52,9 @@ RESULTS_FEATURES = [
     "team_pts_avg10", "opp_pts_avg10",
     "team_def_rtg10", "opp_def_rtg10",
     "days_since_last_meeting",
+    # Market line — the signal the whole historical scrape was for. NaN for
+    # live/2024-2026 games (no archive line); XGBoost handles the missingness.
+    "market_total_close", "line_minus_naive", "open_close_move",
 ]
 
 
@@ -169,8 +177,8 @@ def _gamesLast7(teamGameCache, teamID, date):
 def buildTotalsFeatures(gameID, date, teamID, oppTeamID,
                          teamGameCache, statusDF, playerLogCache,
                          teamGameTotals, h2hCache,
-                         oddsDF=None):
- 
+                         oddsCache=None):
+
     teamRolling = _teamBaseline(teamID, date, teamGameCache)
     oppRolling = _teamBaseline(oppTeamID, date, teamGameCache)
     if teamRolling is None or oppRolling is None:
@@ -253,7 +261,30 @@ def buildTotalsFeatures(gameID, date, teamID, oppTeamID,
     bothB2B = 1 if (teamB2B and oppB2B) else 0
     teamGamesLast7 = _gamesLast7(teamGameCache, teamID, date)
     oppGamesLast7 = _gamesLast7(teamGameCache, oppTeamID, date)
- 
+
+    # Market line features (historical odds archive; NaN when no line exists, e.g.
+    # live 2024-2026 games). buildTotalsFeatures is always called from the HOME
+    # team's perspective (see models/results._buildResultsFeatures), so teamID is
+    # the home team and the (date, home, away) key matches the archive directly.
+    marketTotalOpen = float("nan")
+    marketTotalClose = float("nan")
+    if oddsCache:
+        line = oddsCache.get((date, teamID, oppTeamID))
+        if line is not None:
+            if line.get("total_open") is not None:
+                marketTotalOpen = float(line["total_open"])
+            if line.get("total_close") is not None:
+                marketTotalClose = float(line["total_close"])
+    # How far the market disagrees with our own naive projection, and how much the
+    # line moved open->close. NaN-safe (any NaN input yields NaN, handled by XGB).
+    lineMinusNaive = marketTotalClose - naiveTotalProjection
+    openCloseMove = marketTotalClose - marketTotalOpen
+    # Open-time analogue of line_minus_naive: how far the OPENING market disagrees
+    # with our naive projection. Unlike line_minus_naive/open_close_move (which use
+    # the close), this is knowable at open time, so an open-line strategy can use it
+    # without leaking the closing number it's trying to beat.
+    openMinusNaive = marketTotalOpen - naiveTotalProjection
+
     features = pd.DataFrame([{
         "team_pts_avg10":         teamPtsAvg10,
         "opp_pts_avg10":          oppPtsAvg10,
@@ -292,6 +323,11 @@ def buildTotalsFeatures(gameID, date, teamID, oppTeamID,
         "both_b2b":               bothB2B,
         "team_games_last7":       teamGamesLast7,
         "opp_games_last7":        oppGamesLast7,
+        "market_total_open":      marketTotalOpen,
+        "market_total_close":     marketTotalClose,
+        "line_minus_naive":       lineMinusNaive,
+        "open_close_move":        openCloseMove,
+        "open_minus_naive":       openMinusNaive,
     }])
  
     # Make sure the model receives columns in the order it was trained on

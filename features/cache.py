@@ -38,6 +38,7 @@ class Caches:
     teamGameTotals: dict # game_id, team_id -> total points
     teamGameCache: dict # team_id -> DataFrame of per-game team results (for totals model)
     h2hCache: dict # (min_team_id, max_team_id) -> DataFrame of head-to-head totals
+    oddsCache: dict # (game_date, home_team_id, away_team_id) -> {total_open, total_close}
 
 def preloadCaches(conn):
     print(f"[cache] Loading caches")
@@ -117,6 +118,11 @@ def preloadCaches(conn):
     # One row per team per game, from each team's own perspective.
     teamGameCache, h2hCache = _buildTeamGameCaches(conn)
 
+    # Historical market totals (opening/closing lines), keyed for a direct join
+    # to each game. Present only for 2016-2023 (the odds archive); games without
+    # a line simply aren't in the dict and features fall back to NaN.
+    oddsCache = _buildOddsCache(conn)
+
     print("[cache] Cache loading done")
 
     return Caches(
@@ -127,8 +133,29 @@ def preloadCaches(conn):
             oppPosCache = oppPosCache,
             teamGameTotals = teamGameTotals,
             teamGameCache = teamGameCache,
-            h2hCache = h2hCache
+            h2hCache = h2hCache,
+            oddsCache = oddsCache
     )
+
+
+def _buildOddsCache(conn):
+    """(game_date, home_team_id, away_team_id) -> {total_open, total_close}
+    from the Odds_archive table. Only ~2016-2023 games have rows."""
+    try:
+        odds = pd.read_sql_query(
+            """SELECT game_date, home_team_id, away_team_id, total_open, total_close
+               FROM Odds_archive""", conn)
+    except Exception:
+        # Table may not exist in older DBs — degrade to no lines.
+        return {}
+    cache = {}
+    for r in odds.itertuples(index=False):
+        cache[(r.game_date, int(r.home_team_id), int(r.away_team_id))] = {
+            "total_open": r.total_open,
+            "total_close": r.total_close,
+        }
+    print(f"[cache] Loaded {len(cache)} odds-archive lines")
+    return cache
 
 
 def _buildTeamGameCaches(conn):

@@ -130,7 +130,7 @@ RESULTS_TARGET_MODE = "residual"
 
 BIAS_SHRINK_K = 500
 
-# Calibrator
+# Calibrator (player points)
 
 CAL_FIT_LINES   = list(range(10, 40, 3))
 PLATT_FIT_LINES = list(range(10, 46, 3))
@@ -139,6 +139,22 @@ SIGMA_BOUNDS = (3.0, 25.0)
 DF_BOUNDS    = (2.1, 30.0)
 
 PLATT_DAMPING = 0.5
+
+# Totals (game over/under) calibrator
+#
+# The results model predicts in a narrow ~7-point band while real book totals sit
+# right next to the prediction, so this calibrator fits P(actual > line) on lines
+# OFFSET from each prediction (pred + offset) rather than on fixed absolute totals —
+# that concentrates the fit where every real over/under decision actually lives.
+RESULTS_CAL_PATH = MODELS_DIR / "nba_results_calibrator.joblib"
+
+# Offsets (points) applied around each prediction to build the calibration lines.
+RESULTS_CAL_OFFSETS = list(range(-12, 13, 2))    # pred-12 .. pred+12
+
+# Totals residual std is ~19 (MAE 15.25), so sigma lives far higher than the points
+# model. Bounds and initial-guess grid are scaled accordingly.
+RESULTS_SIGMA_BOUNDS = (10.0, 30.0)
+RESULTS_PLATT_DAMPING = 0.5
 
 # Betting
 

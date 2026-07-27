@@ -13,6 +13,7 @@ from config import (
 from features.cache import FeatureCache, preloadCaches
 from models.minutes import MinutesBundle
 from models.points import PointsBundle
+from models.results import ResultsBundle
 from betting.calibrator import Calibrator
 from betting.filters import FilterSet
 
@@ -939,7 +940,148 @@ class Pipeline:
         X, y, dates = self.featureCachePath.buildAndSave(dbPath=self.dbPath)
         print(f"Feature cache ready: {len(X)} rows")
         return X, y, dates
-    
+
+
+# Results (game totals) model
+
+
+    def _loadResultsCaches(self):
+        conn = sqlite3.connect(str(self.dbPath))
+        caches = preloadCaches(conn)
+        conn.close()
+        return caches
+
+    def cacheResultsFeatures(self):
+        """
+        Build the game-totals feature matrix (one row per game) and report it.
+
+        The totals model builds its features straight from the in-memory
+        teamGameCache / h2hCache, so there is no separate parquet cache to warm
+        like the points model. This step exists to build and inspect that matrix
+        independently of fitting — useful after a fresh --scrape-ratings backfill
+        to confirm the per-game rating features are populated before training.
+        """
+        from models.results import _buildResultsFeatures
+        import pandas as pd
+
+        print("\n--- Building results (totals) feature matrix ---")
+        caches = self._loadResultsCaches()
+
+        conn = sqlite3.connect(str(self.dbPath))
+        games = pd.read_sql_query(
+            """
+            SELECT
+                r.game_id,
+                g.game_date,
+                r.home_team_id,
+                r.away_team_id,
+                (r.home_score + r.away_score) AS total_pts
+            FROM Results r
+            JOIN Games g ON r.game_id = g.game_id
+            ORDER BY g.game_date, r.game_id
+            """,
+            conn,
+        )
+        conn.close()
+
+        X, y, dates = _buildResultsFeatures(caches, games)
+        print(
+            f"Results feature matrix ready: {len(X)} rows x {X.shape[1]} features\n"
+            f"Date range: {dates.iloc[0]} → {dates.iloc[-1]}\n"
+            f"Mean total: {y.mean():.1f}"
+        )
+        return X, y, dates
+
+    def trainResults(self, endDate=None, save=True):
+        """
+        Train the game-totals (results) model and fit its P(over) calibrator.
+
+        1. Load the shared caches once.
+        2. Fit ResultsBundle on the pruned RESULTS_FEATURES with the configured
+           target mode; report held-out MAE and feature importances.
+        3. Fit a ResultsCalibrator on the bundle's held-out slice, turning the
+           point prediction into a calibrated P(total > line).
+        """
+        from betting.resultsCalibrator import ResultsCalibrator
+        from config import RESULTS_CAL_PATH
+
+        print("\n" + "=" * 55)
+        print("TRAIN RESULTS: Start")
+        print("=" * 55)
+
+        caches = self._loadResultsCaches()
+
+        print("\n--- Step 1. Totals model ---")
+        bundle = ResultsBundle.train(
+            caches,
+            dbPath=self.dbPath,
+            endDate=endDate,
+            save=save,
+        )
+
+        print("\n--- Feature importance ---")
+        print(bundle.featureImportance().to_string(index=False))
+
+        print("\n--- Step 2. Totals P(over) calibrator ---")
+        calibrator = ResultsCalibrator.fit(
+            predictions=bundle.calPredictions,
+            actuals=bundle.calActuals,
+            savePath=RESULTS_CAL_PATH if save else None,
+            metadata={
+                "train_end_date": endDate,
+                "calibration_start_date": str(bundle.calDates.iloc[0]),
+                "calibration_end_date": str(bundle.calDates.iloc[-1]),
+                "calibration_rows": int(len(bundle.calActuals)),
+            },
+        )
+
+        # Quick reliability read-out on the same held-out slice.
+        brier = calibrator.brierScore(bundle.calPredictions, bundle.calActuals)
+        print(f"\n[ResultsCal] Held-out Brier score: {brier:.4f} "
+              f"(0.25 = coin flip, lower is better)")
+
+        print("\n" + "=" * 55)
+        print("TRAIN RESULTS: Complete")
+        print("=" * 55)
+        return bundle, calibrator
+
+    def evaluateResultsCalibrator(self):
+        """
+        Reload the saved totals model + calibrator and print a reliability table
+        on the held-out slice — diagnoses whether calibrated P(over) matches the
+        realised over rate across offset lines.
+        """
+        from betting.resultsCalibrator import ResultsCalibrator
+        from models.results import _buildResultsFeatures, _splitChronologically
+        import pandas as pd
+
+        print("\n--- Evaluating results (totals) calibrator ---")
+        bundle = ResultsBundle.load()
+        calibrator = ResultsCalibrator.load()
+
+        caches = self._loadResultsCaches()
+        conn = sqlite3.connect(str(self.dbPath))
+        games = pd.read_sql_query(
+            """
+            SELECT r.game_id, g.game_date, r.home_team_id, r.away_team_id,
+                   (r.home_score + r.away_score) AS total_pts
+            FROM Results r JOIN Games g ON r.game_id = g.game_id
+            ORDER BY g.game_date, r.game_id
+            """,
+            conn,
+        )
+        conn.close()
+
+        X, y, dates = _buildResultsFeatures(caches, games)
+        _, XTest, _, yTest, _, _ = _splitChronologically(X, y, dates)
+        preds = bundle.predictBatch(XTest)
+
+        print(f"\nBrier score: {calibrator.brierScore(preds, yTest):.4f}")
+        calDF = calibrator.calibrationCheck(preds, yTest)
+        print("\nReliability (calibrated P(over) vs realised over rate):")
+        print(calDF.to_string(index=False))
+        calibrator.printExamples(predMean=float(preds.mean()))
+
 
 # Refit calibrator
 

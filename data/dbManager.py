@@ -131,6 +131,24 @@ dbSchema = {
             winner_id INTEGER
         )
     """,
+    # Historical opening/closing game TOTALS from the sportsbookreviewsonline
+    # archive (seasons 2007-08 .. 2022-23). No game_id in the source, so this
+    # keys on (game_date, home_team_id, away_team_id) for the join to Games.
+    # actual_total / scores are carried for validation and standalone backtests.
+    "Odds_archive": """
+        CREATE TABLE IF NOT EXISTS Odds_archive (
+            game_date     TEXT    NOT NULL,
+            home_team_id  INTEGER NOT NULL,
+            away_team_id  INTEGER NOT NULL,
+            season        INTEGER,
+            home_score    INTEGER,
+            away_score    INTEGER,
+            total_open    REAL,
+            total_close   REAL,
+            actual_total  INTEGER,
+            PRIMARY KEY (game_date, home_team_id, away_team_id)
+        )
+    """,
     # Per-game advanced ratings (off/def rtg, pace) from the NBA stats API.
     # Kept separate from Teams (which holds season-start snapshots) so both
     # the player model (season snapshots) and totals model (per-game) work.
@@ -378,6 +396,21 @@ class DBManager:
             conn.cursor().executemany(sql, data)
 
         print(f"Upserted {len(data)} result records")
+
+    def upsertOddsArchive(self, data):
+        sql = """
+            INSERT OR REPLACE INTO Odds_archive
+                (game_date, home_team_id, away_team_id, season,
+                 home_score, away_score, total_open, total_close, actual_total)
+            VALUES
+                (:game_date, :home_team_id, :away_team_id, :season,
+                 :home_score, :away_score, :total_open, :total_close, :actual_total)
+            """
+
+        with self._connect() as conn:
+            conn.cursor().executemany(sql, data)
+
+        print(f"Upserted {len(data)} odds archive records")
 
     def upsertTeamGameRatings(self, data):
         sql = """

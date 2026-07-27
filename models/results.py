@@ -13,7 +13,7 @@ from config import (
 
 from features.resultsBuilder import buildTotalsFeatures, featureOrder, RESULTS_FEATURES
 
-RESULTS_BUNDLE_VERSION = 2
+RESULTS_BUNDLE_VERSION = 3   # v3: added market-line features (market_total_close, line_minus_naive, open_close_move)
 
 
 # Helpers
@@ -51,6 +51,7 @@ def _buildResultsFeatures(caches, gamesDF):
                 playerLogCache = caches.playerLogCache,
                 teamGameTotals = caches.teamGameTotals,
                 h2hCache = caches.h2hCache,
+                oddsCache = caches.oddsCache,
         )
 
         if features is None:
@@ -238,6 +239,14 @@ class ResultsBundle:
         }
 
         bundle = cls(model, meta)
+
+        # Expose the held-out slice so a totals calibrator can be fit on it without
+        # re-splitting or re-predicting (mirrors PointsBundle.calPredictions/calActuals).
+        # Transient — not persisted with the model.
+        bundle.calPredictions = np.asarray(testPred, dtype=float)
+        bundle.calActuals = yTest.to_numpy(dtype=float)
+        bundle.calDates = testDates.reset_index(drop=True)
+
         if save:
             bundle.save()
         return bundle
