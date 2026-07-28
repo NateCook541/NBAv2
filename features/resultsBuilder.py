@@ -2,6 +2,8 @@ import sqlite3
 import pandas as pd
 from datetime import datetime, timedelta
 
+from features.geo import travelMiles, tzChange, isHighAltitude
+
 featureOrder = [
     # Team scoring / pace core
     "team_pts_avg10", "opp_pts_avg10",
@@ -33,6 +35,12 @@ featureOrder = [
     "team_b2b", "opp_b2b", "both_b2b",
     "team_games_last7", "opp_games_last7",
 
+    # Travel / altitude / style-clash
+    "pace_diff_abs",        # |team pace - opp pace|; style clash tends to suppress totals
+    "is_altitude_game",     # host is Denver / Utah (thin air)
+    "away_travel_miles",    # great-circle miles the away team travelled from its last game
+    "away_tz_change",       # signed timezone shift for the away team (east = positive)
+
     # Market line (historical odds archive; NaN when no line exists)
     "market_total_open", "market_total_close",
     "line_minus_naive", "open_close_move",
@@ -52,6 +60,10 @@ RESULTS_FEATURES = [
     "team_pts_avg10", "opp_pts_avg10",
     "team_def_rtg10", "opp_def_rtg10",
     "days_since_last_meeting",
+    # Travel / style-clash (added session 3). is_altitude_game was dropped here —
+    # XGBoost gave it 0.0 importance (travel_miles already carries the road-fatigue
+    # signal); it stays in featureOrder as a diagnostic only.
+    "pace_diff_abs", "away_travel_miles", "away_tz_change",
     # Market line — the signal the whole historical scrape was for. NaN for
     # live/2024-2026 games (no archive line); XGBoost handles the missingness.
     "market_total_close", "line_minus_naive", "open_close_move",
@@ -171,6 +183,21 @@ def _gamesLast7(teamGameCache, teamID, date):
     df = teamGameCache[teamID]
     cutoff = (datetime.strptime(date, "%Y-%m-%d") - timedelta(days=7)).strftime("%Y-%m-%d")
     return int(len(df[(df["date"] < date) & (df["date"] >= cutoff)]))
+
+def _lastGameVenue(teamGameCache, teamID, date):
+    """The team_id whose arena hosted this team's most recent prior game, i.e.
+    where they were physically located coming into tonight. Falls back to the
+    team's own home arena (teamID) when there's no prior game (season opener) so a
+    home opener reads as zero travel rather than a spurious long trip.
+    """
+    df = teamGameCache.get(teamID)
+    if df is None or df.empty:
+        return teamID
+    past = df[df["date"] < date]
+    if past.empty:
+        return teamID
+    # teamGameCache rows are date-sorted; the venue is the game's home_team_id.
+    return int(past.iloc[-1]["home_team_id"])
  
  
 # Builds the feature vector for training a game totals model
@@ -262,6 +289,16 @@ def buildTotalsFeatures(gameID, date, teamID, oppTeamID,
     teamGamesLast7 = _gamesLast7(teamGameCache, teamID, date)
     oppGamesLast7 = _gamesLast7(teamGameCache, oppTeamID, date)
 
+    # Travel / altitude / style-clash.
+    # buildTotalsFeatures is always called from the HOME team's perspective, so
+    # teamID hosts tonight (venue = teamID) and oppTeamID is the travelling side.
+    paceDiffAbs = abs(teamPace10 - oppPace10)
+    isAltitudeGame = 1 if isHighAltitude(teamID) else 0
+    # Where the away team last played -> tonight's venue (this arena).
+    awayLastVenue = _lastGameVenue(teamGameCache, oppTeamID, date)
+    awayTravelMiles = travelMiles(awayLastVenue, teamID)
+    awayTzChange = tzChange(awayLastVenue, teamID)
+
     # Market line features (historical odds archive; NaN when no line exists, e.g.
     # live 2024-2026 games). buildTotalsFeatures is always called from the HOME
     # team's perspective (see models/results._buildResultsFeatures), so teamID is
@@ -323,6 +360,10 @@ def buildTotalsFeatures(gameID, date, teamID, oppTeamID,
         "both_b2b":               bothB2B,
         "team_games_last7":       teamGamesLast7,
         "opp_games_last7":        oppGamesLast7,
+        "pace_diff_abs":          paceDiffAbs,
+        "is_altitude_game":       isAltitudeGame,
+        "away_travel_miles":      awayTravelMiles,
+        "away_tz_change":         awayTzChange,
         "market_total_open":      marketTotalOpen,
         "market_total_close":     marketTotalClose,
         "line_minus_naive":       lineMinusNaive,

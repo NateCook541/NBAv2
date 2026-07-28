@@ -229,6 +229,9 @@ def _buildTeamGameCaches(conn):
             rows.append({
                 "team_id":     int(teamID),
                 "opp_team_id": int(oppID),
+                # Venue of this game == the home team's arena. Recorded so the
+                # totals model can trace where a team last played (travel features).
+                "home_team_id": int(g.home_team_id),
                 "game_id":     g.game_id,
                 "date":        g.date,
                 "season":      int(g.season),
