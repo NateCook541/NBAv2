@@ -130,6 +130,13 @@ RESULTS_TARGET_MODE = "residual"
 
 BIAS_SHRINK_K = 500
 
+# NOTE: a bucketed shrinkage bias correction (mirroring the points model) was
+# tested here 2026-07-28 and REVERTED. It fixed the center bias (-1.00 -> -0.36 on
+# the line-having fold) but MAE, residual std, AND Brier all got slightly worse —
+# the totals error is spread-dominated (resid std ~17.6), so a ~1pt center shift is
+# noise-level and helps no downstream metric. See models/results_eval.py A/B via
+# `--eval-results-layers --line-having-split [--no-bias-correct]`.
+
 # Calibrator (player points)
 
 CAL_FIT_LINES   = list(range(10, 40, 3))

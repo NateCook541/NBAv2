@@ -1082,6 +1082,30 @@ class Pipeline:
         print(calDF.to_string(index=False))
         calibrator.printExamples(predMean=float(preds.mean()))
 
+    def evaluateResultsLayers(self, endDate=None, lineHavingSplit=False):
+        """Per-LAYER totals eval: point-estimate MAE / bias (sliced by whether the
+        game has a market line) and, if a saved calibrator exists, calibration
+        reliability + Brier on the held-out slice. Trains a throwaway model for
+        the point-layer numbers; does not save anything. See models/results_eval.py.
+
+        lineHavingSplit: restrict to line-having games and split THOSE, so the test
+        fold contains the market line (the default fold does not — archive ends 2023).
+        """
+        from models.results_eval import evaluateResultsLayers, evaluateCalibrationLayer
+        from betting.resultsCalibrator import ResultsCalibrator
+
+        caches = self._loadResultsCaches()
+        out = evaluateResultsLayers(caches, dbPath=self.dbPath, endDate=endDate,
+                                    lineHavingSplit=lineHavingSplit)
+
+        calibrator = ResultsCalibrator.loadIfExists()
+        if calibrator is not None:
+            evaluateCalibrationLayer(out["held"], calibrator)
+        else:
+            print("\n[eval] No saved results calibrator — skipping Layer 3. "
+                  "Run --train-results first to fit one.")
+        return out
+
 
 # Refit calibrator
 

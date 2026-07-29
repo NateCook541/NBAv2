@@ -31,6 +31,10 @@ def main():
     parser.add_argument("--train-results", action="store_true")
     parser.add_argument("--cache-results-features", action="store_true")
     parser.add_argument("--eval-results-calibrator", action="store_true")
+    parser.add_argument("--eval-results-layers", action="store_true",
+                        help="Per-layer totals eval: MAE/bias sliced by line availability + calibration reliability")
+    parser.add_argument("--line-having-split", action="store_true",
+                        help="With --eval-results-layers: restrict to line-having games and split those, so the test fold contains the market line")
 
     # Props args
     parser.add_argument("--pull-props", nargs=2, metavar=("START_DATE", "END_DATE"))
@@ -242,6 +246,10 @@ def main():
 
     if args.eval_results_calibrator:
         pipeline.evaluateResultsCalibrator()
+
+    if args.eval_results_layers:
+        pipeline.evaluateResultsLayers(endDate=args.train_end_date,
+                                       lineHavingSplit=args.line_having_split)
 
 
 def _runScrape(engine, db, args):
