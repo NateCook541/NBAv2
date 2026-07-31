@@ -33,6 +33,42 @@ def _splitChronologically(X, y, dates, holdoutRatio=HOLDOUT_RATIO):
     )
 
 
+# Line-aware chronological split. A plain chrono split puts the whole line-less
+# 2024-2026 tail in the test fold, so the model's strongest feature
+# (market_total_close) is NaN for every held-out row and the reported MAE can't
+# see it. This reserves the last `holdoutRatio` of the LINE-HAVING games as the
+# test fold and trains on everything else — all earlier line-having games PLUS
+# every line-less game — so no training signal is discarded but the held-out
+# metric is measured on the population where the market feature exists.
+# Rows are assumed already sorted chronologically (as _buildResultsFeatures emits them).
+def _splitLineHavingTail(X, y, dates, holdoutRatio=HOLDOUT_RATIO):
+    if len(X) < 10:
+        raise ValueError("Not enough rows for a line-having split")
+
+    hasLine = np.isfinite(X["market_total_close"].to_numpy(dtype=float))
+    lineIdx = np.flatnonzero(hasLine)
+    if len(lineIdx) < 10:
+        raise ValueError(
+            f"Only {len(lineIdx)} line-having games — cannot reserve a line-having tail"
+        )
+
+    # Chronological tail of the line-having rows becomes the test fold.
+    nTest = max(1, min(int(len(lineIdx) * holdoutRatio), len(lineIdx) - 1))
+    testIdx = lineIdx[-nTest:]
+    testMask = np.zeros(len(X), dtype=bool)
+    testMask[testIdx] = True
+
+    XTrain, XTest = X.loc[~testMask], X.loc[testMask]
+    yTrain, yTest = y.loc[~testMask], y.loc[testMask]
+    trainDates, testDates = dates.loc[~testMask], dates.loc[testMask]
+
+    return (
+            XTrain.reset_index(drop=True), XTest.reset_index(drop=True),
+            yTrain.reset_index(drop=True), yTest.reset_index(drop=True),
+            trainDates.reset_index(drop=True), testDates.reset_index(drop=True),
+    )
+
+
 # Builds the full totals feature matrix from a games dataframe.
 # One row per game (home-team perspective) so each game appears once.
 # Target is the final combined total points of the game.
@@ -154,16 +190,21 @@ class ResultsBundle:
 
 
     @classmethod
-    def train(cls, caches, dbPath=DB_PATH, endDate=None, save=True):
+    def train(cls, caches, dbPath=DB_PATH, endDate=None, save=True,
+              lineHavingSplit=True):
         """
         Trains the game-totals model from the DB.
 
         Steps
         1. Pull every completed game (Results joined to Games) up to endDate.
         2. Build one totals feature row per game (home perspective).
-        3. Chronological train / test split (80/20 by default).
+        3. Train / test split. With lineHavingSplit (default) the held-out fold is
+           the chronological tail of the LINE-HAVING games while training keeps all
+           rows — so the reported MAE reflects the model WITH its market feature
+           instead of the line-less 2024-2026 tail a plain chrono split produces.
+           Pass lineHavingSplit=False for the legacy 80/20 chronological split.
         4. Fit XGBoost on the pruned RESULTS_FEATURES with the residual target
-           (total - naive projection), report MAE on the held-out tail.
+           (total - naive projection), report MAE on the held-out fold.
         """
 
         # 1. Every completed game with its final total, in date order
@@ -191,10 +232,10 @@ class ResultsBundle:
         # 2. Build features
         X, y, dates = _buildResultsFeatures(caches, games)
 
-        # 3. Chrono split
-        XTrain, XTest, yTrain, yTest, trainDates, testDates = (
-                _splitChronologically(X, y, dates)
-        )
+        # 3. Split. Line-having tail by default so the held-out MAE sees the market
+        #    feature; legacy plain-chrono when explicitly requested.
+        splitter = _splitLineHavingTail if lineHavingSplit else _splitChronologically
+        XTrain, XTest, yTrain, yTest, trainDates, testDates = splitter(X, y, dates)
 
         targetMode = str(RESULTS_TARGET_MODE).lower().strip()
         if targetMode not in ("residual", "absolute"):
@@ -235,6 +276,7 @@ class ResultsBundle:
                 "validationRows": int(len(XTest)),
                 "mae": round(float(mae), 3),
                 "target_mode": targetMode,
+                "split_mode": "line-having-tail" if lineHavingSplit else "chronological",
                 "results_bundle_version": RESULTS_BUNDLE_VERSION,
         }
 
