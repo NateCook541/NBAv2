@@ -79,8 +79,6 @@ dbSchema = {
             fetched_at    TEXT    NOT NULL
         )
     """,
-    # Live prop snapshots for CLV tracking. Separate from Props so an 'open'
-    # (decision-time) and 'close' (near-tip) snapshot of the same prop coexist.
     "PropSnapshots": """
         CREATE TABLE IF NOT EXISTS PropSnapshots (
             snapshot_id   INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -94,33 +92,6 @@ dbSchema = {
             fetched_at    TEXT    NOT NULL
         )
     """,
-    # Candidate bets recorded at decision time (open line) with CLV filled in
-    # after the close snapshot, and actuals filled in (deferred) after games.
-    "CLVLedger": """
-        CREATE TABLE IF NOT EXISTS CLVLedger (
-            bet_id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            game_date       TEXT    NOT NULL,
-            player_name     TEXT    NOT NULL,
-            player_id       INTEGER,
-            side            TEXT    NOT NULL,
-            open_line       REAL    NOT NULL,
-            open_side_odds  INTEGER,
-            predicted       REAL,
-            pred_diff       REAL,
-            my_prob         REAL,
-            fair_open       REAL,
-            edge            REAL,
-            recorded_at     TEXT    NOT NULL,
-            close_line      REAL,
-            close_side_odds INTEGER,
-            fair_close      REAL,
-            clv_prob        REAL,
-            clv_points      REAL,
-            beat_close      INTEGER,
-            actual_points   INTEGER,
-            won             INTEGER
-        )
-    """,
     "Results": """
         CREATE TABLE IF NOT EXISTS Results (
             game_id TEXT PRIMARY KEY,
@@ -131,10 +102,6 @@ dbSchema = {
             winner_id INTEGER
         )
     """,
-    # Historical opening/closing game TOTALS from the sportsbookreviewsonline
-    # archive (seasons 2007-08 .. 2022-23). No game_id in the source, so this
-    # keys on (game_date, home_team_id, away_team_id) for the join to Games.
-    # actual_total / scores are carried for validation and standalone backtests.
     "Odds_archive": """
         CREATE TABLE IF NOT EXISTS Odds_archive (
             game_date     TEXT    NOT NULL,
@@ -149,9 +116,6 @@ dbSchema = {
             PRIMARY KEY (game_date, home_team_id, away_team_id)
         )
     """,
-    # Per-game advanced ratings (off/def rtg, pace) from the NBA stats API.
-    # Kept separate from Teams (which holds season-start snapshots) so both
-    # the player model (season snapshots) and totals model (per-game) work.
     "Team_game_ratings": """
         CREATE TABLE IF NOT EXISTS Team_game_ratings (
             game_id TEXT,

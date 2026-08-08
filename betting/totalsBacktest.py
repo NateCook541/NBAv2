@@ -53,9 +53,13 @@ def _fairProbPerSide(vigOdds=TOTALS_VIG_ODDS):
     return over / (over + under)  # = 0.5
 
 
-def _buildRows(caches, conn, seasons=(2016, 2023)):
+def _buildRows(caches, conn, seasons=(2016, 2026)):
     """One feature row per game that has ratings + a closing line, with the
-    market open/close and the actual total, in date order."""
+    market open/close and the actual total, in date order.
+
+    NOTE: seasons is the FULL span to pull (train + bet). The caller decides the
+    train/bet cut by season (see run()). We pull the whole span in one join so
+    the chronological order across seasons is preserved."""
     q = f"""
         SELECT g.game_id, g.game_date, g.home_team_id, g.away_team_id, g.season,
                (r.home_score + r.away_score) AS total_pts,
@@ -110,29 +114,45 @@ def _trainOnSlice(X, meta, trainIdx):
     return model, calibrator
 
 
-def run(edgeThresh=0.03, seasons=(2016, 2023), trainFrac=0.7, useLine="close",
-        flatStake=1.0, dbPath=DB_PATH):
+def run(edgeThresh=0.03, betSeasons=(2026, 2026), trainStartSeason=2016,
+        useLine="close", flatStake=1.0, dbPath=DB_PATH):
     """
+    Walk-forward edge test. Train a fresh model+calibrator on every line-having
+    game from `trainStartSeason` up to (but NOT including) the first bet season,
+    then bet the `betSeasons` games purely out-of-sample.
+
     edgeThresh : min (myProb - fairProb) to place a bet.
-    useLine    : 'close' (default) or 'open' — which line we bet into.
+    betSeasons : (lo, hi) season range whose games we BET (held fully OOS).
+    trainStartSeason : earliest season included in the TRAIN slice.
+    useLine    : 'close' (default) or 'open' — which line we bet into. The 2026
+                 pull stored close only, so open is unavailable there.
     flatStake  : units per bet (flat betting; ROI = pnl / total staked).
     """
     conn = sqlite3.connect(str(dbPath))
     caches = preloadCaches(conn)
-    X, meta = _buildRows(caches, conn, seasons)
+    # Pull the whole span (train seasons + bet seasons) in one date-ordered join.
+    X, meta = _buildRows(caches, conn, (trainStartSeason, betSeasons[1]))
     conn.close()
 
+    seasonArr = meta["season"].to_numpy(int)
+    trainIdx = np.where(seasonArr < betSeasons[0])[0]
+    betIdx = np.where((seasonArr >= betSeasons[0]) & (seasonArr <= betSeasons[1]))[0]
     n = len(X)
-    split = int(n * trainFrac)
-    trainIdx = np.arange(split)
-    betIdx = np.arange(split, n)
-    print(f"[totalsBT] {n} usable games | train {len(trainIdx)} | bet {len(betIdx)} "
+    if len(trainIdx) == 0 or len(betIdx) == 0:
+        print(f"[totalsBT] ABORT: train={len(trainIdx)} bet={len(betIdx)} — "
+              f"need games on both sides of season {betSeasons[0]}.")
+        return pd.DataFrame()
+    print(f"[totalsBT] {n} usable games | train {len(trainIdx)} "
+          f"(seasons {trainStartSeason}-{betSeasons[0]-1}) | bet {len(betIdx)} "
+          f"(seasons {betSeasons[0]}-{betSeasons[1]}) "
           f"| line={useLine} | edge>={edgeThresh:.1%} | vig={TOTALS_VIG_ODDS}")
 
     model, calibrator = _trainOnSlice(X, meta, trainIdx)
 
     base = X["naive_total_projection"].to_numpy(float)
     preds = model.predict(X.iloc[betIdx][RESULTS_FEATURES]) + base[betIdx]
+
+    _maeDiagnostic(meta, betIdx, preds)
 
     fair = _fairProbPerSide()             # 0.5 for symmetric -110
     payout = _payoutMultiplier(TOTALS_VIG_ODDS)   # ~0.909
@@ -188,6 +208,30 @@ def run(edgeThresh=0.03, seasons=(2016, 2023), trainFrac=0.7, useLine="close",
     return _summarize(pd.DataFrame(bets), betIdx, flatStake, useLine)
 
 
+def _maeDiagnostic(meta, betIdx, preds):
+    """Does the model beat the CLOSE as a point predictor on the bet games?
+    Compares |model - actual| vs |close - actual| on every bet game with a close
+    line. If the model's MAE isn't below the close's, there's no predictive edge
+    to convert into a betting edge — see [[totals-no-edge-conclusion]]."""
+    sub = meta.iloc[betIdx].copy()
+    sub["pred"] = preds
+    sub = sub[sub["total_close"].notna()]
+    if sub.empty:
+        return
+    actual = sub["total_pts"].to_numpy(float)
+    close = sub["total_close"].to_numpy(float)
+    pred = sub["pred"].to_numpy(float)
+    modelMAE = np.abs(pred - actual).mean()
+    closeMAE = np.abs(close - actual).mean()
+    print("\n" + "-" * 60)
+    print(f"[totalsBT] PREDICTOR MAE on {len(sub)} bet games (lower = better)")
+    print(f"  model MAE : {modelMAE:.3f}")
+    print(f"  close MAE : {closeMAE:.3f}   (the number to beat)")
+    verdict = "MODEL BEATS CLOSE" if modelMAE < closeMAE else "close wins (no predictor edge)"
+    print(f"  -> {verdict}  (delta {modelMAE - closeMAE:+.3f})")
+    print("-" * 60)
+
+
 def _summarize(df, betIdx, flatStake, useLine):
     print("\n" + "=" * 60)
     if df.empty:
@@ -221,6 +265,15 @@ def _summarize(df, betIdx, flatStake, useLine):
         d = (g["result"] != "push").sum()
         w = (g["result"] == "win").sum()
         print(f"     {s}: {len(g):>4} bets  {w/d if d else 0:.1%} WR  {g['pnl'].sum():+.1f}u")
+    # Per-month sanity (bet games often span a single season -> months are the
+    # meaningful sub-buckets for drift).
+    df = df.copy()
+    df["month"] = df["date"].astype(str).str.slice(0, 7)
+    print("  by month:")
+    for m, g in df.groupby("month"):
+        d = (g["result"] != "push").sum()
+        w = (g["result"] == "win").sum()
+        print(f"     {m}: {len(g):>4} bets  {w/d if d else 0:.1%} WR  {g['pnl'].sum():+.1f}u")
     print("=" * 60)
     return df
 

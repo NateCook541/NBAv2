@@ -38,6 +38,23 @@ def main():
 
     # Props args
     parser.add_argument("--pull-props", nargs=2, metavar=("START_DATE", "END_DATE"))
+    parser.add_argument("--pull-totals", nargs=2, metavar=("START_DATE", "END_DATE"),
+                        help="Backfill game totals lines into Odds_archive for the "
+                             "date window (inclusive). Pair with --totals-dry-run first.")
+    parser.add_argument("--totals-dry-run", action="store_true",
+                        help="Estimate --pull-totals credit cost from the local "
+                             "schedule without spending any credits.")
+    parser.add_argument("--totals-max-credits", type=int, default=None,
+                        metavar="N",
+                        help="Hard credit cap for --pull-totals. Stops before any "
+                             "date whose full slate would exceed N, and prints where "
+                             "to resume. Combine with --totals-dry-run to see how "
+                             "many games N buys.")
+    parser.add_argument("--verify-totals", nargs="?", const="__auto__", metavar="DATE",
+                        help="Cheap end-to-end check (~11 credits): pull ONE game, "
+                             "store it, and prove it joins to Games/Results the way "
+                             "the backtest does. Optional DATE (YYYY-MM-DD), else "
+                             "auto-picks the first post-archive game.")
 
     # Live / CLV validation args
     parser.add_argument("--freshness", nargs="?", const="__today__", metavar="DATE")
@@ -151,6 +168,17 @@ def main():
     if args.pull_props:
         from betting.oddsCollector import pullHistoricalProps
         pullHistoricalProps(args.pull_props[0], args.pull_props[1], dbPath=args.db)
+
+    if args.verify_totals:
+        from betting.totalsCollector import verifyPull
+        verifyDate = None if args.verify_totals == "__auto__" else args.verify_totals
+        verifyPull(dbPath=args.db, date=verifyDate)
+
+    if args.pull_totals:
+        from betting.totalsCollector import pullHistoricalTotals
+        pullHistoricalTotals(args.pull_totals[0], args.pull_totals[1],
+                             dbPath=args.db, dryRun=args.totals_dry_run,
+                             maxCredits=args.totals_max_credits)
 
     # Live / CLV validation workflow
     def _resolveDate(val):
