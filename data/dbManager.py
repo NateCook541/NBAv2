@@ -127,6 +127,103 @@ dbSchema = {
             PRIMARY KEY (game_id, team_id)
         )
     """,
+    "KalshiMarkets": """
+        CREATE TABLE IF NOT EXISTS KalshiMarkets (
+            market_ticker     TEXT    PRIMARY KEY,
+            event_ticker      TEXT    NOT NULL,
+            series_ticker     TEXT    NOT NULL,
+            game_date         TEXT    NOT NULL,
+            est_tip_utc       TEXT,
+            kalshi_player_id  TEXT,
+            player_name       TEXT    NOT NULL,
+            strike            REAL    NOT NULL,
+            result            TEXT,
+            actual_value      REAL,
+            settlement_value  REAL,
+            settled_ts        TEXT
+        )
+    """,
+    "KalshiSnapshots": """
+        CREATE TABLE IF NOT EXISTS KalshiSnapshots (
+            market_ticker  TEXT    NOT NULL,
+            snapshot_ts    TEXT    NOT NULL,
+            snapshot_type  TEXT    NOT NULL,
+            yes_bid        REAL,
+            yes_ask        REAL,
+            yes_bid_size   REAL,
+            yes_ask_size   REAL,
+            last_price     REAL,
+            volume         REAL,
+            open_interest  REAL,
+            PRIMARY KEY (market_ticker, snapshot_ts)
+        )
+    """,
+    "KalshiCandles": """
+        CREATE TABLE IF NOT EXISTS KalshiCandles (
+            market_ticker  TEXT    NOT NULL,
+            end_ts         TEXT    NOT NULL,
+            yes_bid        REAL,
+            yes_ask        REAL,
+            price_close    REAL,
+            price_mean     REAL,
+            volume         REAL,
+            open_interest  REAL,
+            PRIMARY KEY (market_ticker, end_ts)
+        )
+    """,
+    # Every rung the paper trader scored, kept so the market shrink can be refit on live data
+    "KalshiPaperRungs": """
+        CREATE TABLE IF NOT EXISTS KalshiPaperRungs (
+            market_ticker   TEXT    NOT NULL,
+            decision_ts     TEXT    NOT NULL,
+            game_date       TEXT    NOT NULL,
+            player_id       INTEGER NOT NULL,
+            player_name     TEXT,
+            strike          REAL,
+            predicted       REAL,
+            p_model         REAL,
+            shrink_weight   REAL,
+            p_bet           REAL,
+            yes_bid         REAL,
+            yes_ask         REAL,
+            model_train_end TEXT,
+            PRIMARY KEY (market_ticker, decision_ts)
+        )
+    """,
+    # Paper bets. One taker (buys at the ask now) and one maker (resting limit, filled or not
+    # by tip) per player-game, so the two can be compared on the same decisions
+    "KalshiPaperBets": """
+        CREATE TABLE IF NOT EXISTS KalshiPaperBets (
+            bet_id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            game_date       TEXT    NOT NULL,
+            player_id       INTEGER NOT NULL,
+            player_name     TEXT,
+            market_ticker   TEXT    NOT NULL,
+            strike          REAL,
+            order_type      TEXT    NOT NULL,
+            side            TEXT    NOT NULL,
+            price           REAL    NOT NULL,
+            fee             REAL,
+            p_bet           REAL,
+            ev              REAL,
+            stake           REAL,
+            contracts       REAL,
+            yes_bid         REAL,
+            yes_ask         REAL,
+            decision_ts     TEXT    NOT NULL,
+            est_tip_utc     TEXT,
+            lead_hours      REAL,
+            fill_status     TEXT,
+            fill_ts         TEXT,
+            close_bid       REAL,
+            close_ask       REAL,
+            clv             REAL,
+            result          TEXT,
+            payout          REAL,
+            pnl             REAL,
+            UNIQUE (game_date, player_id, order_type)
+        )
+    """,
 }
 
 extraIndexes = [
@@ -134,7 +231,7 @@ extraIndexes = [
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_prop_unique ON Props (game_date, player_name, line, bookmaker)",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_player_name ON Players (name)",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_snapshot_unique ON PropSnapshots (game_date, player_name, line, bookmaker, snapshot_type)",
-    "CREATE UNIQUE INDEX IF NOT EXISTS idx_clv_unique ON CLVLedger (game_date, player_name, side)",
+    "CREATE INDEX IF NOT EXISTS idx_kalshi_game_date ON KalshiMarkets (game_date)",
 ]
 
 # A small SQLite wrapper for the scrapped NBA data
@@ -295,60 +392,139 @@ class DBManager:
 
         print(f"Upserted {len(data)} prop snapshot records")
 
-    # CLV LEDGER
 
-    def insertCLVCandidates(self, data):
-        """Insert decision-time candidate bets (open line/odds). Idempotent per
-        (game_date, player_name, side)."""
+    # KALSHI
+
+    # Market info is mostly static, so on conflict only refresh the tip time (games get rescheduled)
+    # Result fields are left alone here, they get filled by updateKalshiResults
+    def upsertKalshiMarkets(self, data):
         sql = """
-            INSERT OR IGNORE INTO CLVLedger
-                (game_date, player_name, player_id, side, open_line,
-                 open_side_odds, predicted, pred_diff, my_prob, fair_open, edge, recorded_at)
+            INSERT INTO KalshiMarkets
+                (market_ticker, event_ticker, series_ticker, game_date, est_tip_utc,
+                 kalshi_player_id, player_name, strike)
             VALUES
-                (:game_date, :player_name, :player_id, :side, :open_line,
-                 :open_side_odds, :predicted, :pred_diff, :my_prob, :fair_open, :edge, :recorded_at)
+                (:market_ticker, :event_ticker, :series_ticker, :game_date, :est_tip_utc,
+                 :kalshi_player_id, :player_name, :strike)
+            ON CONFLICT(market_ticker) DO UPDATE SET est_tip_utc = excluded.est_tip_utc
         """
 
         with self._connect() as conn:
             conn.cursor().executemany(sql, data)
 
-        print(f"Inserted {len(data)} CLV candidate records")
+        print(f"Upserted {len(data)} kalshi market records")
 
-    def updateCLVClose(self, data):
-        """Fill close line/odds + CLV metrics for existing ledger rows."""
+    def upsertKalshiSnapshots(self, data):
         sql = """
-            UPDATE CLVLedger
-            SET close_line = :close_line,
-                close_side_odds = :close_side_odds,
-                fair_close = :fair_close,
-                clv_prob = :clv_prob,
-                clv_points = :clv_points,
-                beat_close = :beat_close
-            WHERE game_date = :game_date
-              AND player_name = :player_name
-              AND side = :side
+            INSERT OR IGNORE INTO KalshiSnapshots
+                (market_ticker, snapshot_ts, snapshot_type, yes_bid, yes_ask,
+                 yes_bid_size, yes_ask_size, last_price, volume, open_interest)
+            VALUES
+                (:market_ticker, :snapshot_ts, :snapshot_type, :yes_bid, :yes_ask,
+                 :yes_bid_size, :yes_ask_size, :last_price, :volume, :open_interest)
         """
 
         with self._connect() as conn:
             conn.cursor().executemany(sql, data)
 
-        print(f"Updated {len(data)} CLV rows with close values")
+        print(f"Upserted {len(data)} kalshi snapshot records")
 
-    def updateCLVSettle(self, data):
-        """Deferred: fill actual_points / won after games complete."""
+    def updateKalshiResults(self, data):
         sql = """
-            UPDATE CLVLedger
-            SET actual_points = :actual_points,
-                won = :won
-            WHERE game_date = :game_date
-              AND player_name = :player_name
-              AND side = :side
+            UPDATE KalshiMarkets
+            SET result = :result,
+                actual_value = :actual_value,
+                settlement_value = :settlement_value,
+                settled_ts = :settled_ts
+            WHERE market_ticker = :market_ticker
         """
 
         with self._connect() as conn:
             conn.cursor().executemany(sql, data)
 
-        print(f"Settled {len(data)} CLV rows")
+        print(f"Settled {len(data)} kalshi market records")
+
+    # Hourly price history from the archive backfill. yes_bid / yes_ask are the quote at candle close
+    def upsertKalshiCandles(self, data):
+        sql = """
+            INSERT OR IGNORE INTO KalshiCandles
+                (market_ticker, end_ts, yes_bid, yes_ask, price_close, price_mean, volume, open_interest)
+            VALUES
+                (:market_ticker, :end_ts, :yes_bid, :yes_ask, :price_close, :price_mean, :volume, :open_interest)
+        """
+
+        with self._connect() as conn:
+            conn.cursor().executemany(sql, data)
+
+        print(f"Upserted {len(data)} kalshi candle records")
+
+    def getKalshiTickersWithCandles(self):
+        with self._connect() as conn:
+            rows = conn.execute("SELECT DISTINCT market_ticker FROM KalshiCandles").fetchall()
+        return {r[0] for r in rows}
+
+    def insertKalshiPaperRungs(self, data):
+        sql = """
+            INSERT OR IGNORE INTO KalshiPaperRungs
+                (market_ticker, decision_ts, game_date, player_id, player_name, strike, predicted,
+                 p_model, shrink_weight, p_bet, yes_bid, yes_ask, model_train_end)
+            VALUES
+                (:market_ticker, :decision_ts, :game_date, :player_id, :player_name, :strike, :predicted,
+                 :p_model, :shrink_weight, :p_bet, :yes_bid, :yes_ask, :model_train_end)
+        """
+
+        with self._connect() as conn:
+            conn.cursor().executemany(sql, data)
+
+        print(f"Inserted {len(data)} kalshi paper rungs")
+
+    # Ignore on conflict: the first decision for a player-game stands, reruns can't overwrite it
+    def insertKalshiPaperBets(self, data):
+        sql = """
+            INSERT OR IGNORE INTO KalshiPaperBets
+                (game_date, player_id, player_name, market_ticker, strike, order_type, side, price, fee,
+                 p_bet, ev, stake, contracts, yes_bid, yes_ask, decision_ts, est_tip_utc, lead_hours, fill_status)
+            VALUES
+                (:game_date, :player_id, :player_name, :market_ticker, :strike, :order_type, :side, :price, :fee,
+                 :p_bet, :ev, :stake, :contracts, :yes_bid, :yes_ask, :decision_ts, :est_tip_utc, :lead_hours,
+                 :fill_status)
+        """
+
+        with self._connect() as conn:
+            conn.cursor().executemany(sql, data)
+
+        print(f"Inserted {len(data)} kalshi paper bets")
+
+    def updateKalshiPaperBets(self, data):
+        """data: dicts with bet_id plus any of the fill / close / settlement columns"""
+        cols = ["fill_status", "fill_ts", "close_bid", "close_ask", "clv", "result", "payout", "pnl"]
+        with self._connect() as conn:
+            for row in data:
+                sets = [c for c in cols if c in row]
+                conn.execute(
+                    f"UPDATE KalshiPaperBets SET {', '.join(f'{c} = :{c}' for c in sets)} WHERE bet_id = :bet_id",
+                    row,
+                )
+
+        print(f"Updated {len(data)} kalshi paper bets")
+
+    # (game_date, player_id) pairs the paper trader already decided on
+    def getKalshiPaperDecided(self, gameDates):
+        marks = ",".join("?" * len(gameDates))
+        with self._connect() as conn:
+            rows = conn.execute(
+                f"SELECT DISTINCT game_date, player_id FROM KalshiPaperRungs WHERE game_date IN ({marks})",
+                list(gameDates),
+            ).fetchall()
+        return {(r[0], r[1]) for r in rows}
+
+    # Event tickers that still have unsettled markets for games on or before a date
+    def getUnsettledKalshiEvents(self, throughDate):
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT DISTINCT event_ticker FROM KalshiMarkets WHERE result IS NULL AND game_date <= ?",
+                (throughDate,),
+            ).fetchall()
+        return [r[0] for r in rows]
 
     def upsertResults(self, data):
         sql = """
@@ -360,6 +536,7 @@ class DBManager:
             conn.cursor().executemany(sql, data)
 
         print(f"Upserted {len(data)} result records")
+
 
     def upsertOddsArchive(self, data):
         sql = """
@@ -375,6 +552,7 @@ class DBManager:
             conn.cursor().executemany(sql, data)
 
         print(f"Upserted {len(data)} odds archive records")
+
 
     def upsertTeamGameRatings(self, data):
         sql = """

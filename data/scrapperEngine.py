@@ -17,6 +17,7 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from nbainjuries import injury, injury_asy
 from data.dbManager import DBManager
+from config import CURRENT_SEASON
 
 # NBA injury uses very slightly seperate full names than ESPN this table is used to convert to abbrs
 # FIXME: Look into removing this and changing helper function slightly to adjust to injury package
@@ -351,7 +352,7 @@ class ScrapeEngine:
 
     # SCRAPPERS
 
-    def scrapeGames(self, season=2026):
+    def scrapeGames(self, season=CURRENT_SEASON):
         """
         Overveiw:
             Scrapes basketball reference for all games in specifed season.
@@ -455,7 +456,7 @@ class ScrapeEngine:
             return []
 
     
-    def scrapeResults(self, season=2026):
+    def scrapeResults(self, season=CURRENT_SEASON):
         """
         Overveiw:
             Scrapes basketball reference for the final scores of every completed game in
@@ -1001,7 +1002,7 @@ class ScrapeEngine:
                             "name": name,
                             "team_id": int(teamID),
                             "position": position,
-                            "is_active": season == 2026, # Only active players are playing this season but as this is hardcoded need to remember to change in future
+                            "is_active": season == CURRENT_SEASON,
                         })
                         seenSlugs.add(slug)
                         print(f"[{playerID}] {name} -- team:{abbr} pos:{position}")
@@ -1024,7 +1025,7 @@ class ScrapeEngine:
             A list containing teams with there offensive and defensive stats
         """
 
-        url = "https://www.basketball-reference.com/leagues/NBA_2026.html"
+        url = f"{BREF_BASE}/leagues/NBA_{CURRENT_SEASON}.html"
         teamsOut = []
         today = date.today().isoformat()
         seen = set()
@@ -1404,4 +1405,4 @@ class ScrapeEngine:
         if res[0]:
             return res[0]
         else:
-            return "2025-10-01" 
+            return f"{CURRENT_SEASON - 1}-10-01"

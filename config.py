@@ -1,3 +1,4 @@
+from datetime import date
 from pathlib import Path
 
 # Paths
@@ -21,7 +22,8 @@ RESULTS_META_PATH = MODELS_DIR / "nba_results_model_meta.joblib"
 BREF_BASE        = "https://www.basketball-reference.com"
 ODDS_BASE_URL    = "https://api.the-odds-api.com/v4"
 BREF_SLEEP_SECS = 4
-CURRENT_SEASON = 2026
+# Season is named by the year it ends (2026-27 -> 2027); schedules come out in August
+CURRENT_SEASON = date.today().year + (1 if date.today().month >= 8 else 0)
 
 TEAM_MAP = {
     "DEN": 1,  "OKC": 2,  "HOU": 3,  "NYK": 4,  "MIA": 5,

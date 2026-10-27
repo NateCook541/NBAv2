@@ -1,15 +1,9 @@
 """
-Single day live scorer + CLV computation
+Single day live scorer 
 
 scoreLiveDay: for a given date, score todays OPEN prop snapshot with the same
 math the backtest uses, sourcing opp/home/rest PREGAME from the
-Games schedule (never from played logs). Records bettable candidates to CLVLedger
-with the open line/odds
-
-computeCLV: after a CLOSE snapshot is captured, fills close line/odds and CLV
-metrics (clv_prob primary, clv_points, beat_close) per candidate
-
-settleCLV (deferred): after games finish, fills actual_points/won
+Games schedule (never from played logs)
 """
 
 import sqlite3
@@ -22,7 +16,7 @@ from features.cache import preloadCaches
 from models.points import PointsBundle
 from models.minutes import MinutesBundle
 from betting.calibrator import Calibrator
-from betting.under_calibrator import UnderCalibrator
+from betting.underCalibrator import UnderCalibrator
 from betting.filters import FilterSet, UnderFilterSet
 from betting.backtest import (
     scoreOnce, _loadPlayerMap, _loadScheduleMap, _normalize,
@@ -130,6 +124,10 @@ def scoreLiveDay(dbPath="NBA.db", date=None, overThresh=DEFAULT_EDGE_THRESH,
             "opp_team_id": sched["opp_team_id"],
             "is_home": sched["is_home"],
             "rest_days": rest if rest is not None else 2,  # neutral default
+            # identity passthrough for the hub emitter
+            "game_id": sched["game_id"],
+            "team_abbr": sched.get("team_abbr"),
+            "opp_abbr": sched.get("opp_abbr"),
         }
 
         over = scoreOnce(prop, ctx, caches, points, minutes, overCal,

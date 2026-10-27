@@ -352,6 +352,92 @@ class Pipeline:
         return combined
 
 
+    def backtestKalshi(self, startDate=None, endDate=None, evThresh=0.03, minPrice=0.20,
+                       maxPrice=0.80, decisionLeadHours=2, retrainEveryMonths=1,
+                       shrink=True, maxSpread=None, reuseRungs=False):
+        """
+        Walk-forward backtest against archived Kalshi points ladders.
+        Retrains the points model + calibrator before each period (cached features,
+        saved minutes model) so every period is scored by a model that never saw it.
+        With shrink, each period's model probabilities are pulled toward the market mid by a
+        weight fit only on earlier periods. Periods with too little history to fit place no bets.
+        reuseRungs skips retraining and re-picks bets from the saved backtest_kalshi_rungs.csv.
+        """
+        import pandas as pd
+        from betting.backtest import KalshiBacktestEngine, applyMarketShrink, fitMarketShrink
+
+        if reuseRungs:
+            saved = pd.read_csv("backtest_kalshi_rungs.csv")
+            periodRungs = [g.drop(columns="p_bet", errors="ignore")
+                           for _, g in saved.groupby("model_train_end", sort=True)]
+            print(f"[KalshiBacktest] reusing {len(saved)} saved rungs in {len(periodRungs)} periods")
+        else:
+            periodRungs = self._scoreKalshiPeriods(startDate, endDate, decisionLeadHours, retrainEveryMonths)
+
+        allRungs, allBets = [], []
+        for idx, rungs in enumerate(periodRungs):
+            weight = None
+            if shrink:
+                weight = fitMarketShrink(pd.concat(periodRungs[:idx])) if idx else None
+                label = "no history, no bets" if weight is None else f"model weight {weight:.2f}"
+                print(f"[KalshiBacktest] period {rungs['model_train_end'].iloc[0]}: {label}")
+            rungs = applyMarketShrink(rungs, weight)
+            if shrink and weight is None:
+                rungs["p_bet"] = float("nan")
+            rungs["shrink_weight"] = weight
+            allRungs.append(rungs)
+            allBets.append(KalshiBacktestEngine.selectBets(
+                rungs, evThresh=evThresh, minPrice=minPrice, maxPrice=maxPrice, maxSpread=maxSpread,
+            ))
+
+        rungs = pd.concat(allRungs, ignore_index=True)
+        bets = pd.concat(allBets, ignore_index=True)
+        rungs.to_csv("backtest_kalshi_rungs.csv", index=False)
+        bets.to_csv("backtest_kalshi_bets.csv", index=False)
+        KalshiBacktestEngine.summarize(rungs, bets)
+        return rungs, bets
+
+    def _scoreKalshiPeriods(self, startDate, endDate, decisionLeadHours, retrainEveryMonths):
+        """Retrains per period and returns each period's scored rungs, oldest first"""
+        import pandas as pd
+        from betting.backtest import KalshiBacktestEngine
+
+        conn = sqlite3.connect(str(self.dbPath))
+        res = conn.execute(
+            "SELECT MIN(game_date), MAX(game_date) FROM KalshiMarkets WHERE series_ticker = 'KXNBAPTS'"
+        ).fetchone()
+        # Kalshi archive runs past our box scores, can only test where we have actuals
+        lastLog = conn.execute(
+            "SELECT MAX(g.game_date) FROM Player_game_logs l JOIN Games g ON l.game_id = g.game_id"
+        ).fetchone()[0]
+        conn.close()
+
+        startDate = startDate or res[0]
+        endDate = min(endDate or res[1], lastLog)
+
+        # Month periods between start and end
+        months = pd.period_range(startDate[:7], endDate[:7], freq="M")
+        periods = []
+        for i in range(0, len(months), retrainEveryMonths):
+            chunk = months[i:i + retrainEveryMonths]
+            periodStart = max(startDate, chunk[0].start_time.strftime("%Y-%m-%d"))
+            periodEnd = min(endDate, chunk[-1].end_time.strftime("%Y-%m-%d"))
+            periods.append((periodStart, periodEnd))
+
+        print(f"[KalshiBacktest] {len(periods)} periods, retrain every {retrainEveryMonths} month(s)")
+        periodRungs = []
+        for idx, (periodStart, periodEnd) in enumerate(periods, start=1):
+            print(f"\n{'=' * 60}\nKALSHI PERIOD {idx}/{len(periods)}: {periodStart} -> {periodEnd}\n{'=' * 60}")
+            points, minutes, calibrator = self.train(
+                endDate=periodStart, save=False, useCachedFeatures=True,
+            )
+            engine = KalshiBacktestEngine(points, minutes, calibrator, dbPath=self.dbPath)
+            rungs = engine.run(startDate=periodStart, endDate=periodEnd, decisionLeadHours=decisionLeadHours)
+            rungs["model_train_end"] = periodStart
+            periodRungs.append(rungs)
+        return periodRungs
+
+
     # Under backtest
 
 

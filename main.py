@@ -1,4 +1,5 @@
 import argparse
+from config import CURRENT_SEASON
 from pipeline.orchestrator import Pipeline
 
 def main():
@@ -65,10 +66,46 @@ def main():
     parser.add_argument("--compute-clv", nargs="?", const="__today__", metavar="DATE")
     parser.add_argument("--clv-report", nargs="*", metavar=("START", "END"))
 
+    # Kalshi prop collection (public market data, no key needed)
+    parser.add_argument("--kalshi-snapshot", choices=["open", "pregame", "close"], default=None)
+    parser.add_argument("--kalshi-window", type=int, default=None, metavar="MIN",
+                        help="Only snapshot markets whose game tips within the next MIN minutes (close cron)")
+    parser.add_argument("--kalshi-settle", nargs="?", const="__auto__", metavar="DATE",
+                        help="Fill results for tracked markets through DATE (default yesterday ET)")
+    parser.add_argument("--kalshi-backfill", nargs="*", metavar=("START", "END"),
+                        help="Pull settled markets + hourly candles from Kalshi's archive (optional game date range)")
+    parser.add_argument("--kalshi-series", nargs="+", default=["KXNBAPTS"],
+                        help="Series to backfill (default points only)")
+    parser.add_argument("--kalshi-dry-run", action="store_true")
+
+    # Kalshi paper trading (points ladders)
+    parser.add_argument("--kalshi-paper-decide", action="store_true",
+                        help="Score open points ladders and record taker + maker paper bets")
+    parser.add_argument("--kalshi-paper-lead", type=float, nargs=2, default=[1.0, 24.0], metavar=("MIN", "MAX"),
+                        help="Only decide on games tipping between MIN and MAX hours from now")
+    parser.add_argument("--kalshi-paper-settle", action="store_true",
+                        help="Settle results, check maker fills and closing quotes for tipped games")
+    parser.add_argument("--kalshi-paper-report", nargs="*", metavar=("START", "END"))
+    parser.add_argument("--kalshi-fit-shrink", nargs="?", const="__paper__", metavar="RUNGS_CSV",
+                        help="Fit the model-vs-market weight (default: settled paper rungs)")
+    parser.add_argument("--kalshi-shrink-since", default=None, metavar="DATE")
+
     # Backtest args
     parser.add_argument("--backtest", action="store_true")
     parser.add_argument("--backtest-unders", action="store_true")
     parser.add_argument("--backtest-combined", action="store_true")
+    parser.add_argument("--backtest-kalshi", action="store_true",
+                        help="Walk-forward backtest vs archived Kalshi points ladders (uses --start-date/--end-date)")
+    parser.add_argument("--kalshi-ev-thresh", type=float, default=0.03)
+    parser.add_argument("--kalshi-price-band", type=float, nargs=2, default=[0.20, 0.80], metavar=("MIN", "MAX"))
+    parser.add_argument("--kalshi-lead-hours", type=float, default=2,
+                        help="Hours before tip the bet decision is made")
+    parser.add_argument("--kalshi-no-shrink", action="store_true",
+                        help="Bet on raw model probabilities instead of shrinking toward the market mid")
+    parser.add_argument("--kalshi-max-spread", type=float, default=None,
+                        help="Only bet rungs whose decision-time spread is at most this (e.g. 0.01)")
+    parser.add_argument("--kalshi-reuse-rungs", action="store_true",
+                        help="Skip retraining, re-pick bets from saved backtest_kalshi_rungs.csv")
     parser.add_argument("--over-edge-thresh", type=float, default=0.10)
     parser.add_argument("--under-edge-thresh", type=float, default=0.05)
     parser.add_argument("--edge-thresh", type=float, default=0.03)
@@ -159,6 +196,17 @@ def main():
             kwargs["singleTrainEndDate"] = args.holdout_train_end
         pipeline.backtestCombined(**kwargs)
 
+    if args.backtest_kalshi:
+        pipeline.backtestKalshi(
+            startDate=args.start_date, endDate=args.end_date,
+            evThresh=args.kalshi_ev_thresh,
+            minPrice=args.kalshi_price_band[0], maxPrice=args.kalshi_price_band[1],
+            decisionLeadHours=args.kalshi_lead_hours,
+            retrainEveryMonths=args.retrain_every_months or 1,
+            shrink=not args.kalshi_no_shrink, maxSpread=args.kalshi_max_spread,
+            reuseRungs=args.kalshi_reuse_rungs,
+        )
+
     if args.backtest_fold_test:
         pipeline.walkForwardOverThresholds(
                  startDate = args.start_date,
@@ -217,6 +265,50 @@ def main():
         end = args.clv_report[1] if len(args.clv_report) >= 2 else None
         clvReport(dbPath=args.db, startDate=start, endDate=end)
 
+
+    if (args.kalshi_snapshot or args.kalshi_settle or args.kalshi_backfill is not None
+            or args.kalshi_paper_decide or args.kalshi_paper_settle):
+        from data.dbManager import DBManager
+        DBManager(args.db).initSchema()
+
+    if args.kalshi_snapshot:
+        from betting.kalshiCollector import snapshotKalshiProps
+        snapshotKalshiProps(dbPath=args.db, snapshotType=args.kalshi_snapshot,
+                            windowMin=args.kalshi_window, dryRun=args.kalshi_dry_run)
+
+    if args.kalshi_settle:
+        from betting.kalshiCollector import settleKalshiProps
+        throughDate = None if args.kalshi_settle == "__auto__" else args.kalshi_settle
+        settleKalshiProps(dbPath=args.db, throughDate=throughDate, dryRun=args.kalshi_dry_run)
+
+    if args.kalshi_fit_shrink:
+        from betting.kalshiPaper import fitShrinkWeight
+        csvPath = None if args.kalshi_fit_shrink == "__paper__" else args.kalshi_fit_shrink
+        fitShrinkWeight(dbPath=args.db, csvPath=csvPath, sinceDate=args.kalshi_shrink_since)
+
+    if args.kalshi_paper_settle:
+        from betting.kalshiPaper import settlePaperBets
+        settlePaperBets(dbPath=args.db, dryRun=args.kalshi_dry_run)
+
+    if args.kalshi_paper_decide:
+        from betting.kalshiPaper import decidePaperBets
+        decidePaperBets(dbPath=args.db, minLeadHours=args.kalshi_paper_lead[0],
+                        maxLeadHours=args.kalshi_paper_lead[1], evThresh=args.kalshi_ev_thresh,
+                        minPrice=args.kalshi_price_band[0], maxPrice=args.kalshi_price_band[1],
+                        dryRun=args.kalshi_dry_run)
+
+    if args.kalshi_paper_report is not None:
+        from betting.kalshiPaper import paperReport
+        start = args.kalshi_paper_report[0] if len(args.kalshi_paper_report) >= 1 else None
+        end = args.kalshi_paper_report[1] if len(args.kalshi_paper_report) >= 2 else None
+        paperReport(dbPath=args.db, startDate=start, endDate=end)
+
+    if args.kalshi_backfill is not None:
+        from betting.kalshiCollector import backfillKalshiArchive
+        start = args.kalshi_backfill[0] if len(args.kalshi_backfill) >= 1 else None
+        end = args.kalshi_backfill[1] if len(args.kalshi_backfill) >= 2 else None
+        backfillKalshiArchive(dbPath=args.db, series=args.kalshi_series, startDate=start, endDate=end,
+                              dryRun=args.kalshi_dry_run)
 
     if args.cache_data:
         pipeline.cacheFeatures()
@@ -289,7 +381,7 @@ def _runScrape(engine, db, args):
         print("\n--------Scraping--------")
         teams = engine.scrapeTeams()
 
-        players = engine.scrapePlayersHistorical(seasons=[2026])
+        players = engine.scrapePlayersHistorical(seasons=[CURRENT_SEASON])
         with open(f"{outputDir}/players.json", "w") as f:
             json.dump(players, f, indent=2)
         
