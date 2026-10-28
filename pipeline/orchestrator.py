@@ -402,7 +402,8 @@ class Pipeline:
         import pandas as pd
         from betting.backtest import KalshiBacktestEngine
 
-        conn = sqlite3.connect(str(self.dbPath))
+        from data.dbManager import connect
+        conn = connect(self.dbPath)
         res = conn.execute(
             "SELECT MIN(game_date), MAX(game_date) FROM KalshiMarkets WHERE series_ticker = 'KXNBAPTS'"
         ).fetchone()

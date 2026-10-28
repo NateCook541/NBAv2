@@ -12,7 +12,6 @@ fitShrinkWeight: fit the model-vs-market weight on backtest rungs (CSV) or settl
 """
 
 import json
-import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -28,7 +27,7 @@ from betting.calibrator import Calibrator
 from betting.kalshiCollector import (
     _fmtUtc, _getCandles, _parseUtc, _toFloat, settleKalshiProps, snapshotKalshiProps,
 )
-from data.dbManager import DBManager
+from data.dbManager import DBManager, connect
 from features.builder import buildFeatures
 from features.cache import preloadCaches
 from models.minutes import MinutesBundle
@@ -109,7 +108,16 @@ def decidePaperBets(dbPath="NBA.db", minLeadHours=1.0, maxLeadHours=24.0, evThre
     shrink = _loadShrink()
     trainEnd = points.meta.get("calibration_end_date") or points.meta.get("train_last_date")
 
-    conn = sqlite3.connect(str(dbPath))
+    conn = connect(dbPath)
+    # Box scores come from the laptop scrape, so they can lag. Say so instead of quietly using stale features
+    lastLog = conn.execute(
+        "SELECT MAX(g.game_date) FROM Player_game_logs l JOIN Games g ON l.game_id = g.game_id"
+    ).fetchone()[0]
+    lagDays = (now.date() - datetime.strptime(lastLog, "%Y-%m-%d").date()).days if lastLog else None
+    if lagDays is None or lagDays > 2:
+        print(f"[paper] WARNING: box scores end {lastLog} ({lagDays} days old), features are stale")
+    else:
+        print(f"[paper] box scores through {lastLog}")
     caches = preloadCaches(conn)
     playerMap = _loadPlayerMap(conn)
     for kalshiName, dbName in KALSHI_NAME_ALIASES.items():
@@ -276,7 +284,7 @@ def settlePaperBets(dbPath="NBA.db", dryRun=False):
     # Results first so bets on yesterday's games can be graded in the same run
     settleKalshiProps(dbPath, dryRun=dryRun)
 
-    conn = sqlite3.connect(str(dbPath))
+    conn = connect(dbPath)
     bets = pd.read_sql_query(
         """
         SELECT b.*, m.result AS mkt_result, m.settlement_value
@@ -330,7 +338,7 @@ def settlePaperBets(dbPath="NBA.db", dryRun=False):
 
 
 def paperReport(dbPath="NBA.db", startDate=None, endDate=None):
-    conn = sqlite3.connect(str(dbPath))
+    conn = connect(dbPath)
     bets = pd.read_sql_query("SELECT * FROM KalshiPaperBets", conn)
     rungs = pd.read_sql_query(
         """
@@ -414,7 +422,7 @@ def fitShrinkWeight(dbPath="NBA.db", csvPath=None, sinceDate=None, savePath=SHRI
         rungs = pd.read_csv(csvPath, low_memory=False)
         source = str(csvPath)
     else:
-        conn = sqlite3.connect(str(dbPath))
+        conn = connect(dbPath)
         rungs = pd.read_sql_query(
             """
             SELECT r.game_date AS date, r.p_model AS p_yes, r.yes_bid, r.yes_ask, m.result

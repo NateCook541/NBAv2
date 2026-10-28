@@ -20,6 +20,7 @@ from config import (
     MIN_AVGPTS_CAL,
     MIN_AVGMIN_CAL
 )
+from data.dbManager import connect
 from features.builder import buildFeatures
 from features.cache import preloadCaches
 from metrics.reporter import Reporter
@@ -816,7 +817,7 @@ class KalshiBacktestEngine:
 
     def run(self, startDate=None, endDate=None, decisionLeadHours=2):
         """Scores every rung of every ladder. Bets are picked separately by selectBets"""
-        conn = sqlite3.connect(str(self.dbPath))
+        conn = connect(self.dbPath)
         quotes = _loadKalshiQuotes(conn, startDate, endDate, decisionLeadHours)
         if quotes.empty:
             raise ValueError("No Kalshi quotes found for the requested timeframe")

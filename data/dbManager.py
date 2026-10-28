@@ -231,8 +231,51 @@ extraIndexes = [
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_prop_unique ON Props (game_date, player_name, line, bookmaker)",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_player_name ON Players (name)",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_snapshot_unique ON PropSnapshots (game_date, player_name, line, bookmaker, snapshot_type)",
-    "CREATE INDEX IF NOT EXISTS idx_kalshi_game_date ON KalshiMarkets (game_date)",
+    "CREATE INDEX IF NOT EXISTS kalshi.idx_kalshi_game_date ON KalshiMarkets (game_date)",
 ]
+
+# Kalshi tables live in their own file next to the NBA db (kalshi.db), attached as schema "kalshi".
+# The laptop owns NBA.db (scraping needs a home IP) and pushes it to the VPS, the VPS owns kalshi.db,
+# so neither machine ever overwrites the other's data. SQLite resolves unqualified table names
+# across attached files, so queries don't need to know where a table lives
+KALSHI_TABLES = ("KalshiMarkets", "KalshiSnapshots", "KalshiCandles", "KalshiPaperRungs", "KalshiPaperBets")
+
+
+def kalshiDbPath(dbPath):
+    return Path(dbPath).with_name("kalshi.db")
+
+
+def connect(dbPath):
+    """sqlite3 connection to the NBA db with kalshi.db attached"""
+    conn = sqlite3.connect(str(dbPath))
+    conn.execute("ATTACH DATABASE ? AS kalshi", (str(kalshiDbPath(dbPath)),))
+    return conn
+
+
+def splitKalshiDb(dbPath):
+    """
+    One-time move of the Kalshi tables out of the NBA db into kalshi.db. Safe to rerun:
+    tables already moved are skipped, a table in both files is merged (INSERT OR IGNORE) first
+    """
+    conn = connect(dbPath)
+    DBManager(dbPath).initSchema()
+    moved = []
+    for table in KALSHI_TABLES:
+        inMain = conn.execute("SELECT 1 FROM main.sqlite_master WHERE type = 'table' AND name = ?", (table,)).fetchone()
+        if not inMain:
+            continue
+        n = conn.execute(f"SELECT COUNT(*) FROM main.{table}").fetchone()[0]
+        conn.execute(f"INSERT OR IGNORE INTO kalshi.{table} SELECT * FROM main.{table}")
+        conn.execute(f"DROP TABLE main.{table}")
+        conn.commit()
+        moved.append(f"{table} ({n} rows)")
+    conn.close()
+    if moved:
+        # Reclaim the space so the NBA db is small enough to push daily
+        conn = sqlite3.connect(str(dbPath))
+        conn.execute("VACUUM")
+        conn.close()
+    print(f"Moved to {kalshiDbPath(dbPath)}: {', '.join(moved) if moved else 'nothing, already split'}")
 
 # A small SQLite wrapper for the scrapped NBA data
 class DBManager:
@@ -243,7 +286,7 @@ class DBManager:
     # Uses a decorator to write a connect with a with block
     @contextmanager
     def _connect(self):
-        conn = sqlite3.connect(self.dbPath)
+        conn = connect(self.dbPath)
         # Makes the rows returned appear as actual rows not like tuples that are hard to read
         conn.row_factory = sqlite3.Row
         try:
@@ -264,7 +307,9 @@ class DBManager:
     def initSchema(self):
         with self._connect() as conn:
             cur = conn.cursor()
-            for ddl in dbSchema.values():
+            for name, ddl in dbSchema.items():
+                if name in KALSHI_TABLES:
+                    ddl = ddl.replace("IF NOT EXISTS ", "IF NOT EXISTS kalshi.", 1)
                 cur.execute(ddl)
             for inx in extraIndexes:
                 cur.execute(inx)

@@ -89,6 +89,8 @@ def main():
     parser.add_argument("--kalshi-fit-shrink", nargs="?", const="__paper__", metavar="RUNGS_CSV",
                         help="Fit the model-vs-market weight (default: settled paper rungs)")
     parser.add_argument("--kalshi-shrink-since", default=None, metavar="DATE")
+    parser.add_argument("--split-kalshi-db", action="store_true",
+                        help="One-time: move Kalshi tables out of the NBA db into kalshi.db next to it")
 
     # Backtest args
     parser.add_argument("--backtest", action="store_true")
@@ -280,6 +282,10 @@ def main():
         from betting.kalshiCollector import settleKalshiProps
         throughDate = None if args.kalshi_settle == "__auto__" else args.kalshi_settle
         settleKalshiProps(dbPath=args.db, throughDate=throughDate, dryRun=args.kalshi_dry_run)
+
+    if args.split_kalshi_db:
+        from data.dbManager import splitKalshiDb
+        splitKalshiDb(args.db)
 
     if args.kalshi_fit_shrink:
         from betting.kalshiPaper import fitShrinkWeight
