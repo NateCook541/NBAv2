@@ -225,6 +225,13 @@ dbSchema = {
         )
     """,
 }
+# Shadow bets for the lead-time test: what every decide run would have bet on every player-game, so the
+# same player-games can be compared across leads. Same columns, one row per run instead of the first only
+dbSchema["KalshiShadowBets"] = (
+    dbSchema["KalshiPaperBets"]
+    .replace("KalshiPaperBets", "KalshiShadowBets")
+    .replace("UNIQUE (game_date, player_id, order_type)", "UNIQUE (game_date, player_id, order_type, decision_ts)")
+)
 
 extraIndexes = [
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_player_game ON Player_game_logs (player_id, game_id)",
@@ -238,7 +245,8 @@ extraIndexes = [
 # The laptop owns NBA.db (scraping needs a home IP) and pushes it to the VPS, the VPS owns kalshi.db,
 # so neither machine ever overwrites the other's data. SQLite resolves unqualified table names
 # across attached files, so queries don't need to know where a table lives
-KALSHI_TABLES = ("KalshiMarkets", "KalshiSnapshots", "KalshiCandles", "KalshiPaperRungs", "KalshiPaperBets")
+KALSHI_TABLES = ("KalshiMarkets", "KalshiSnapshots", "KalshiCandles", "KalshiPaperRungs", "KalshiPaperBets",
+                 "KalshiShadowBets")
 
 
 def kalshiDbPath(dbPath):
@@ -523,9 +531,9 @@ class DBManager:
         print(f"Inserted {len(data)} kalshi paper rungs")
 
     # Ignore on conflict: the first decision for a player-game stands, reruns can't overwrite it
-    def insertKalshiPaperBets(self, data):
-        sql = """
-            INSERT OR IGNORE INTO KalshiPaperBets
+    def insertKalshiPaperBets(self, data, table="KalshiPaperBets"):
+        sql = f"""
+            INSERT OR IGNORE INTO {table}
                 (game_date, player_id, player_name, market_ticker, strike, order_type, side, price, fee,
                  p_bet, ev, stake, contracts, yes_bid, yes_ask, decision_ts, est_tip_utc, lead_hours, fill_status)
             VALUES
@@ -537,20 +545,20 @@ class DBManager:
         with self._connect() as conn:
             conn.cursor().executemany(sql, data)
 
-        print(f"Inserted {len(data)} kalshi paper bets")
+        print(f"Inserted {len(data)} rows into {table}")
 
-    def updateKalshiPaperBets(self, data):
+    def updateKalshiPaperBets(self, data, table="KalshiPaperBets"):
         """data: dicts with bet_id plus any of the fill / close / settlement columns"""
         cols = ["fill_status", "fill_ts", "close_bid", "close_ask", "clv", "result", "payout", "pnl"]
         with self._connect() as conn:
             for row in data:
                 sets = [c for c in cols if c in row]
                 conn.execute(
-                    f"UPDATE KalshiPaperBets SET {', '.join(f'{c} = :{c}' for c in sets)} WHERE bet_id = :bet_id",
+                    f"UPDATE {table} SET {', '.join(f'{c} = :{c}' for c in sets)} WHERE bet_id = :bet_id",
                     row,
                 )
 
-        print(f"Updated {len(data)} kalshi paper bets")
+        print(f"Updated {len(data)} rows in {table}")
 
     # (game_date, player_id) pairs the paper trader already decided on
     def getKalshiPaperDecided(self, gameDates):

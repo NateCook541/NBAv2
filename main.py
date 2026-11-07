@@ -269,7 +269,7 @@ def main():
 
 
     if (args.kalshi_snapshot or args.kalshi_settle or args.kalshi_backfill is not None
-            or args.kalshi_paper_decide or args.kalshi_paper_settle):
+            or args.kalshi_paper_decide or args.kalshi_paper_settle or args.kalshi_paper_report is not None):
         from data.dbManager import DBManager
         DBManager(args.db).initSchema()
 

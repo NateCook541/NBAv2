@@ -35,6 +35,7 @@ from models.points import PointsBundle
 
 SHRINK_PATH = Path("models/kalshi_shrink.json")
 SERIES = "KXNBAPTS"
+LEAD_BUCKETS = [0, 3, 6, 9, 12, 24]
 
 # Training logs store team rest as days since the team's previous game that season, 20 for an opener
 OPENER_REST_DAYS = 20
@@ -135,9 +136,9 @@ def decidePaperBets(dbPath="NBA.db", minLeadHours=1.0, maxLeadHours=24.0, evThre
             misses["noPlayer"] += 1
             missNames.add(name)
             continue
-        if (date, playerID) in decided:
-            misses["decided"] += 1
-            continue
+        # Already decided player-games are still scored for the shadow lead test, just never bet for real
+        isNew = (date, playerID) not in decided
+        misses["decided"] += not isNew
         teamID = playerTeams.get(playerID)
         if teamID is None:
             misses["noTeam"] += 1
@@ -177,7 +178,7 @@ def decidePaperBets(dbPath="NBA.db", minLeadHours=1.0, maxLeadHours=24.0, evThre
                 "predicted": round(predicted, 2), "p_yes": calibrator.probOver(predicted, q.strike),
                 "yes_bid": q.yes_bid, "yes_ask": q.yes_ask,
                 "mid": (q.yes_bid + q.yes_ask) / 2 if twoSided else None,
-                "est_tip_utc": q.est_tip_utc, "lead_hours": q.lead_hours,
+                "est_tip_utc": q.est_tip_utc, "lead_hours": q.lead_hours, "is_new": isNew,
             })
     conn.close()
 
@@ -192,7 +193,8 @@ def decidePaperBets(dbPath="NBA.db", minLeadHours=1.0, maxLeadHours=24.0, evThre
     rungs["shrink_weight"] = shrink["weight"]
     rungs["model_train_end"] = trainEnd
 
-    picks = []
+    # Shadow picks: what this run would bet on every player-game. Real picks: only the new ones
+    shadow = []
     for orderType, maxSpread in (("taker", None), ("maker", makerMaxSpread)):
         bets = KalshiBacktestEngine.selectBets(
             rungs, evThresh=evThresh, minPrice=minPrice, maxPrice=maxPrice, maxSpread=maxSpread,
@@ -203,15 +205,17 @@ def decidePaperBets(dbPath="NBA.db", minLeadHours=1.0, maxLeadHours=24.0, evThre
         bets["order_type"] = orderType
         # Taker fills now at the quote, maker waits for settlePaperBets to check the candles
         bets["fill_status"] = "filled" if orderType == "taker" else "pending"
-        picks.append(bets)
-    picks = pd.concat(picks, ignore_index=True) if picks else pd.DataFrame()
+        shadow.append(bets)
+    shadow = pd.concat(shadow, ignore_index=True) if shadow else pd.DataFrame()
+    picks = shadow[shadow["is_new"]].reset_index(drop=True) if not shadow.empty else shadow
 
     if not picks.empty:
         show = picks.sort_values(["order_type", "ev"], ascending=[False, False])
         print(show[["order_type", "game_date", "player", "strike", "side", "yes_bid", "yes_ask", "price",
                     "p_bet", "ev", "lead_hours"]].round(3).to_string(index=False))
     print(f"[paper] {len(picks)} paper bets "
-          f"({(picks['order_type'] == 'taker').sum() if len(picks) else 0} taker), shrink weight {shrink['weight']:.2f}")
+          f"({(picks['order_type'] == 'taker').sum() if len(picks) else 0} taker), {len(shadow)} shadow bets, "
+          f"shrink weight {shrink['weight']:.2f}")
 
     if dryRun:
         print("[dry run] nothing written")
@@ -220,12 +224,13 @@ def decidePaperBets(dbPath="NBA.db", minLeadHours=1.0, maxLeadHours=24.0, evThre
     rungCols = ["market_ticker", "decision_ts", "game_date", "player_id", "player_name", "strike", "predicted",
                 "p_model", "shrink_weight", "p_bet", "yes_bid", "yes_ask", "model_train_end"]
     db.insertKalshiPaperRungs(rungs[rungCols].replace({np.nan: None}).to_dict("records"))
-    if not picks.empty:
-        betCols = ["game_date", "player_id", "player_name", "market_ticker", "strike", "order_type", "side",
-                   "price", "fee", "p_bet", "ev", "stake", "contracts", "yes_bid", "yes_ask", "decision_ts",
-                   "est_tip_utc", "lead_hours", "fill_status"]
-        picks = picks.rename(columns={"staked": "stake"})
-        db.insertKalshiPaperBets(picks[betCols].replace({np.nan: None}).to_dict("records"))
+    betCols = ["game_date", "player_id", "player_name", "market_ticker", "strike", "order_type", "side",
+               "price", "fee", "p_bet", "ev", "stake", "contracts", "yes_bid", "yes_ask", "decision_ts",
+               "est_tip_utc", "lead_hours", "fill_status"]
+    for table, rows in (("KalshiPaperBets", picks), ("KalshiShadowBets", shadow)):
+        if not rows.empty:
+            rows = rows.rename(columns={"staked": "stake"})
+            db.insertKalshiPaperBets(rows[betCols].replace({np.nan: None}).to_dict("records"), table=table)
     return picks
 
 
@@ -283,12 +288,31 @@ def _evaluateWindow(bet, candles):
 def settlePaperBets(dbPath="NBA.db", dryRun=False):
     # Results first so bets on yesterday's games can be graded in the same run
     settleKalshiProps(dbPath, dryRun=dryRun)
+    # Taker, maker, real and shadow bets from the same run share a candle window, fetch it once
+    candleCache = {}
+    return [u for table in ("KalshiPaperBets", "KalshiShadowBets")
+            for u in _settleTable(dbPath, table, candleCache, dryRun)]
 
+
+def _windowCandles(bet, cache):
+    key = (bet.market_ticker, bet.decision_ts)
+    if key not in cache:
+        startTs = int(_parseUtc(bet.decision_ts.replace(" ", "T") + "Z").timestamp())
+        endTs = int(_parseUtc(bet.est_tip_utc.replace(" ", "T") + "Z").timestamp())
+        try:
+            cache[key] = _getCandles(SERIES, bet.market_ticker, startTs, endTs, isHistorical=False, periodMin=1)
+        except requests.HTTPError:
+            # Settled markets move to the archive after a while, which only has hourly candles
+            cache[key] = _getCandles(SERIES, bet.market_ticker, startTs, endTs, isHistorical=True)
+    return cache[key]
+
+
+def _settleTable(dbPath, table, candleCache, dryRun):
     conn = connect(dbPath)
     bets = pd.read_sql_query(
-        """
+        f"""
         SELECT b.*, m.result AS mkt_result, m.settlement_value
-        FROM KalshiPaperBets b JOIN KalshiMarkets m ON m.market_ticker = b.market_ticker
+        FROM {table} b JOIN KalshiMarkets m ON m.market_ticker = b.market_ticker
         WHERE b.pnl IS NULL
         """,
         conn,
@@ -297,21 +321,14 @@ def settlePaperBets(dbPath="NBA.db", dryRun=False):
     now = datetime.now(timezone.utc)
     bets = bets[pd.to_datetime(bets["est_tip_utc"]).dt.tz_localize("UTC") <= now]
     if bets.empty:
-        print("[paper] nothing to settle")
+        print(f"[paper] {table}: nothing to settle")
         return []
 
     updates = []
     for bet in bets.itertuples(index=False):
         row = {"bet_id": bet.bet_id}
         if bet.clv is None or pd.isna(bet.clv) or bet.fill_status == "pending":
-            startTs = int(_parseUtc(bet.decision_ts.replace(" ", "T") + "Z").timestamp())
-            endTs = int(_parseUtc(bet.est_tip_utc.replace(" ", "T") + "Z").timestamp())
-            try:
-                candles = _getCandles(SERIES, bet.market_ticker, startTs, endTs, isHistorical=False, periodMin=1)
-            except requests.HTTPError:
-                # Settled markets move to the archive after a while, which only has hourly candles
-                candles = _getCandles(SERIES, bet.market_ticker, startTs, endTs, isHistorical=True)
-            row.update(_evaluateWindow(bet, candles))
+            row.update(_evaluateWindow(bet, _windowCandles(bet, candleCache)))
 
         fillStatus = row.get("fill_status", bet.fill_status)
         if bet.mkt_result in ("yes", "no", "scalar"):
@@ -325,12 +342,12 @@ def settlePaperBets(dbPath="NBA.db", dryRun=False):
         updates.append(row)
 
     graded = sum("pnl" in u for u in updates)
-    print(f"[paper] {len(updates)} bets checked, {graded} graded")
+    print(f"[paper] {table}: {len(updates)} bets checked, {graded} graded")
     if dryRun:
         for u in updates[:10]:
             print("  ", u)
         return updates
-    DBManager(dbPath).updateKalshiPaperBets(updates)
+    DBManager(dbPath).updateKalshiPaperBets(updates, table=table)
     return updates
 
 
@@ -346,11 +363,15 @@ def paperReport(dbPath="NBA.db", startDate=None, endDate=None):
         """,
         conn,
     )
+    shadow = pd.read_sql_query("SELECT * FROM KalshiShadowBets", conn)
+    tips = pd.read_sql_query("SELECT market_ticker, est_tip_utc FROM KalshiMarkets WHERE est_tip_utc IS NOT NULL", conn)
     conn.close()
     if startDate:
         bets, rungs = bets[bets["game_date"] >= startDate], rungs[rungs["game_date"] >= startDate]
+        shadow = shadow[shadow["game_date"] >= startDate]
     if endDate:
         bets, rungs = bets[bets["game_date"] <= endDate], rungs[rungs["game_date"] <= endDate]
+        shadow = shadow[shadow["game_date"] <= endDate]
 
     print(f"\n{'=' * 60}\nKALSHI PAPER TRADING {bets['game_date'].min()} -> {bets['game_date'].max()}\n{'=' * 60}")
     if bets.empty:
@@ -367,7 +388,9 @@ def paperReport(dbPath="NBA.db", startDate=None, endDate=None):
         won = graded[graded["result"] != "scalar"].eval("payout > price")
         clv = graded["clv"].dropna()
         clvText = f" | CLV {clv.mean() * 100:+.2f}c ({(clv > 0).mean():.0%} beat)" if len(clv) else ""
-        print(f"  {label:<26} {len(graded):>4} graded | win {won.mean():.1%} (pred {graded['p_bet'].mean():.1%})"
+        # p_bet is P(yes), the bet's own win probability flips on NO bets
+        pred = np.where(graded["side"] == "yes", graded["p_bet"], 1 - graded["p_bet"]).mean()
+        print(f"  {label:<26} {len(graded):>4} graded | win {won.mean():.1%} (pred {pred:.1%})"
               f" | ROI {ret.mean():+.2%} ±{1.96 * se:.2%} | PnL ${graded['pnl'].sum():+.2f}{clvText}")
 
     taker = bets[bets["order_type"] == "taker"]
@@ -386,15 +409,36 @@ def paperReport(dbPath="NBA.db", startDate=None, endDate=None):
     # Adverse selection check: if unfilled orders would have won more, fills are the bad ones
     _line("unfilled (would-have)", maker[maker["fill_status"] == "unfilled"])
 
-    print(f"\nBy lead hours (taker)")
+    # Where filled maker P&L comes from. Same bet as the taker isolates the spread saved vs adverse
+    # selection; maker-only bets exist because the cheaper limit price clears the EV bar
+    pair = maker.merge(taker[["game_date", "player_id", "market_ticker", "side", "pnl"]],
+                       on=["game_date", "player_id"], how="left", suffixes=("", "_taker"))
+    pair["group"] = np.select(
+        [pair["market_ticker_taker"].isna(),
+         (pair["market_ticker"] == pair["market_ticker_taker"]) & (pair["side"] == pair["side_taker"])],
+        ["maker-only", "same bet as taker"], "other rung/side")
+    print("\nFilled maker orders by source")
+    filled = pair[(pair["fill_status"] == "filled") & pair["pnl"].notna()]
+    for group in ("same bet as taker", "maker-only", "other rung/side"):
+        _line(group, filled[filled["group"] == group])
+    same = filled[(filled["group"] == "same bet as taker") & filled["pnl_taker"].notna()]
+    if not same.empty:
+        print(f"  {'(taker on those same bets)':<26} {len(same):>4} graded | "
+              f"ROI {(same['pnl_taker'] / same['stake']).mean():+.2%} vs maker {(same['pnl'] / same['stake']).mean():+.2%}")
+
+    print(f"\nBy lead hours, real bets (confounded: later runs only bet player-games earlier runs skipped)")
     if not taker.empty:
         t = taker[taker["pnl"].notna()].copy()
         if not t.empty:
-            t["lead"] = pd.cut(t["lead_hours"], [0, 3, 6, 9, 12, 24])
+            t["lead"] = pd.cut(t["lead_hours"], LEAD_BUCKETS)
             g = t.groupby("lead", observed=True)
             print(pd.DataFrame({"bets": g.size(), "roi%": g["pnl"].sum() / g["stake"].sum() * 100,
                                 "clv_c": g["clv"].mean() * 100}).round(2).to_string())
 
+    _shadowLeadReport(shadow, rungs, tips)
+
+    # One scoring per market (the first) so markets re-scored by later runs aren't counted twice
+    rungs = rungs.sort_values("decision_ts").drop_duplicates("market_ticker")
     graded = rungs[rungs["result"].isin(["yes", "no"]) & rungs["yes_bid"].notna() & rungs["yes_ask"].notna()]
     graded = graded[(graded["yes_bid"] > 0) & (graded["yes_ask"] < 1)]
     if not graded.empty:
@@ -407,7 +451,59 @@ def paperReport(dbPath="NBA.db", startDate=None, endDate=None):
 
         print(f"\nLog loss on {len(graded)} settled two-sided rungs: model {_ll(graded['p_model']):.4f} | "
               f"market mid {_ll(mid):.4f} | shrunk {_ll(graded['p_bet']):.4f}")
-    print(f"\nProgress: {taker['pnl'].notna().sum()} graded taker bets (target ~200)")
+    print(f"\nProgress: {taker['pnl'].notna().sum()} graded taker bets")
+
+
+def _logLoss(p, y):
+    p = np.clip(np.asarray(p, dtype=float), 1e-4, 1 - 1e-4)
+    return float(-np.mean(y * np.log(p) + (1 - y) * np.log(1 - p)))
+
+
+def _shadowLeadReport(shadow, rungs, tips):
+    """
+    Lead-time test on the same player-games: every decide run re-scores every player-game, so each one
+    is seen at several leads. Only player-games scored by 2+ runs count, so every bucket holds the same mix
+    """
+    print("\nLead test, shadow bets (same player-games re-scored at each run)")
+    shadow = shadow[shadow["pnl"].notna()].copy()
+    if shadow.empty:
+        print("  no settled shadow bets yet")
+        return
+    runs = shadow.groupby(["game_date", "player_id"])["decision_ts"].transform("nunique")
+    shadow = shadow[runs >= 2]
+    if shadow.empty:
+        print("  no player-games scored by 2+ runs yet")
+        return
+    shadow["lead"] = pd.cut(shadow["lead_hours"], LEAD_BUCKETS)
+    shadow["ret"] = shadow["pnl"] / shadow["stake"]
+    rows = {}
+    for lead, g in shadow.groupby("lead", observed=True):
+        t = g[g["order_type"] == "taker"]
+        m = g[g["order_type"] == "maker"]
+        f = m[m["fill_status"] == "filled"]
+        rows[lead] = {
+            "taker_n": len(t), "taker_roi%": t["ret"].mean() * 100, "taker_clv_c": t["clv"].mean() * 100,
+            "maker_n": len(m), "fill%": len(f) / len(m) * 100 if len(m) else np.nan,
+            "filled_roi%": f["ret"].mean() * 100, "filled_clv_c": f["clv"].mean() * 100,
+        }
+    print(f"  {shadow.groupby(['game_date', 'player_id']).ngroups} player-games")
+    print(pd.DataFrame(rows).T.round(2).to_string())
+
+    # How far ahead of the market the model is at each lead, on every scored rung (no bet selection)
+    r = rungs.merge(tips, on="market_ticker")
+    r = r[r["result"].isin(["yes", "no"]) & (r["yes_bid"] > 0) & (r["yes_ask"] < 1)].copy()
+    if r.empty:
+        return
+    tip = pd.to_datetime(r["est_tip_utc"])
+    r["lead"] = pd.cut((tip - pd.to_datetime(r["decision_ts"])).dt.total_seconds() / 3600, LEAD_BUCKETS)
+    print("  log loss by lead, all scored rungs (shrunk minus mid < 0 means we beat the market)")
+    out = {}
+    for lead, g in r.groupby("lead", observed=True):
+        y = (g["result"] == "yes").astype(float).values
+        mid = _logLoss((g["yes_bid"] + g["yes_ask"]) / 2, y)
+        out[lead] = {"rungs": len(g), "mid": mid, "shrunk": _logLoss(g["p_bet"], y),
+                     "shrunk_minus_mid": _logLoss(g["p_bet"], y) - mid}
+    print(pd.DataFrame(out).T.round(4).to_string())
 
 
 # SHRINK FIT

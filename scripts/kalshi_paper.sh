@@ -7,6 +7,7 @@ set -uo pipefail
 export PATH="/snap/bin:/usr/local/bin:/usr/bin:/bin"
 cd "$(dirname "$0")/.." || exit 1
 source env/bin/activate
+mkdir -p logs
 log="logs/kalshi_paper_$(date +%F).log"
 echo "===== $(date '+%F %T') $1 =====" >> "$log"
 case "$1" in

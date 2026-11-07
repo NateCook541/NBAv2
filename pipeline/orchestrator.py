@@ -411,13 +411,17 @@ class Pipeline:
         lastLog = conn.execute(
             "SELECT MAX(g.game_date) FROM Player_game_logs l JOIN Games g ON l.game_id = g.game_id"
         ).fetchone()[0]
+        # Offseason months have no ladders, skip them instead of retraining for nothing
+        marketMonths = {row[0] for row in conn.execute(
+            "SELECT DISTINCT substr(game_date, 1, 7) FROM KalshiMarkets WHERE series_ticker = 'KXNBAPTS'"
+        )}
         conn.close()
 
         startDate = startDate or res[0]
         endDate = min(endDate or res[1], lastLog)
 
         # Month periods between start and end
-        months = pd.period_range(startDate[:7], endDate[:7], freq="M")
+        months = [m for m in pd.period_range(startDate[:7], endDate[:7], freq="M") if str(m) in marketMonths]
         periods = []
         for i in range(0, len(months), retrainEveryMonths):
             chunk = months[i:i + retrainEveryMonths]
@@ -434,6 +438,9 @@ class Pipeline:
             )
             engine = KalshiBacktestEngine(points, minutes, calibrator, dbPath=self.dbPath)
             rungs = engine.run(startDate=periodStart, endDate=periodEnd, decisionLeadHours=decisionLeadHours)
+            if rungs.empty:
+                print(f"[KalshiBacktest] period {periodStart}: no scorable rungs, skipped")
+                continue
             rungs["model_train_end"] = periodStart
             periodRungs.append(rungs)
         return periodRungs
