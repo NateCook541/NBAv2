@@ -181,3 +181,15 @@ MIN_LINE = 10
 MAX_LINE_DIFF = 15
 
 OVER_MIN_DISAGREEMENT  = 2.0
+
+# Live injury news (official 15-minute NBA reports, see data/injuryReports.py)
+# Decide swaps the model's day-before injury statuses for the newest report before scoring
+LIVE_INJURY_STATUS = True
+# A "key" player for the protection rule and the news trader: last-10 points per game at least this
+KEY_PLAYER_PPG = 12.0
+# Protection rule: no NO bets on teammates of a key player listed with one of these statuses
+PROTECT_STATUSES = ("Questionable", "Doubtful")
+# News trader: buy teammates' YES while a key player is Questionable/Doubtful within this many hours of tip
+NEWS_Q_WINDOW_HOURS = 3.0
+# News trader: act on an "Out" change only if its report is at most this old when we see it
+NEWS_MAX_AGE_MIN = 45

@@ -89,6 +89,13 @@ def main():
     parser.add_argument("--kalshi-fit-shrink", nargs="?", const="__paper__", metavar="RUNGS_CSV",
                         help="Fit the model-vs-market weight (default: settled paper rungs)")
     parser.add_argument("--kalshi-shrink-since", default=None, metavar="DATE")
+    # Official NBA injury reports (15-minute PDFs) and the news trader shadow
+    parser.add_argument("--injury-poll", action="store_true",
+                        help="Fetch official injury reports newer than the last stored one")
+    parser.add_argument("--injury-backfill", nargs="+", metavar=("START", "END"),
+                        help="Fetch every report slot for a game date range (8am-midnight ET)")
+    parser.add_argument("--kalshi-news", action="store_true",
+                        help="News trader: poll reports, record teammates' YES shadow bets on key-player news")
     parser.add_argument("--split-kalshi-db", action="store_true",
                         help="One-time: move Kalshi tables out of the NBA db into kalshi.db next to it")
 
@@ -269,7 +276,8 @@ def main():
 
 
     if (args.kalshi_snapshot or args.kalshi_settle or args.kalshi_backfill is not None
-            or args.kalshi_paper_decide or args.kalshi_paper_settle or args.kalshi_paper_report is not None):
+            or args.kalshi_paper_decide or args.kalshi_paper_settle or args.kalshi_paper_report is not None
+            or args.injury_poll or args.injury_backfill or args.kalshi_news):
         from data.dbManager import DBManager
         DBManager(args.db).initSchema()
 
@@ -291,6 +299,20 @@ def main():
         from betting.kalshiPaper import fitShrinkWeight
         csvPath = None if args.kalshi_fit_shrink == "__paper__" else args.kalshi_fit_shrink
         fitShrinkWeight(dbPath=args.db, csvPath=csvPath, sinceDate=args.kalshi_shrink_since)
+
+    if args.injury_poll:
+        from data.injuryReports import pollInjuryReports
+        pollInjuryReports(dbPath=args.db, dryRun=args.kalshi_dry_run)
+
+    if args.injury_backfill:
+        from data.injuryReports import backfillInjuryReports
+        backfillInjuryReports(args.db, args.injury_backfill[0],
+                              args.injury_backfill[1] if len(args.injury_backfill) > 1 else None,
+                              dryRun=args.kalshi_dry_run)
+
+    if args.kalshi_news:
+        from betting.newsTrader import runNewsTrader
+        runNewsTrader(dbPath=args.db, dryRun=args.kalshi_dry_run)
 
     if args.kalshi_paper_settle:
         from betting.kalshiPaper import settlePaperBets

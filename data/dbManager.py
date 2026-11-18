@@ -187,6 +187,8 @@ dbSchema = {
             yes_bid         REAL,
             yes_ask         REAL,
             model_train_end TEXT,
+            predicted_stale REAL,
+            injury_report_et TEXT,
             PRIMARY KEY (market_ticker, decision_ts)
         )
     """,
@@ -233,6 +235,67 @@ dbSchema["KalshiShadowBets"] = (
     .replace("UNIQUE (game_date, player_id, order_type)", "UNIQUE (game_date, player_id, order_type, decision_ts)")
 )
 
+# Official NBA injury reports, one row per player per 15-minute report (report_et is the PDF's ET stamp)
+dbSchema["InjuryReports"] = """
+    CREATE TABLE IF NOT EXISTS InjuryReports (
+        report_et     TEXT    NOT NULL,
+        report_utc    TEXT    NOT NULL,
+        fetched_utc   TEXT,
+        game_date     TEXT    NOT NULL,
+        team_id       INTEGER,
+        team_abbr     TEXT,
+        player_name   TEXT    NOT NULL,
+        player_id     INTEGER,
+        status        TEXT,
+        reason        TEXT,
+        PRIMARY KEY (report_et, game_date, player_name)
+    )
+"""
+# News trader shadow bets: when a key player's report status changes (or he sits Questionable close to tip),
+# buy his teammates' YES at the ask. One row per news event and teammate rung
+dbSchema["KalshiNewsBets"] = """
+    CREATE TABLE IF NOT EXISTS KalshiNewsBets (
+        bet_id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        strategy        TEXT    NOT NULL,
+        event_key       TEXT    NOT NULL,
+        game_date       TEXT    NOT NULL,
+        team_abbr       TEXT,
+        news_player     TEXT,
+        news_player_id  INTEGER,
+        news_ppg        REAL,
+        prev_status     TEXT,
+        new_status      TEXT,
+        report_et       TEXT,
+        detected_ts     TEXT    NOT NULL,
+        lag_min         REAL,
+        market_ticker   TEXT    NOT NULL,
+        player_name     TEXT,
+        strike          REAL,
+        side            TEXT    NOT NULL,
+        price           REAL    NOT NULL,
+        fee             REAL,
+        stake           REAL,
+        contracts       REAL,
+        yes_bid         REAL,
+        yes_ask         REAL,
+        est_tip_utc     TEXT,
+        mid_15          REAL,
+        mid_60          REAL,
+        close_bid       REAL,
+        close_ask       REAL,
+        clv             REAL,
+        result          TEXT,
+        payout          REAL,
+        pnl             REAL,
+        UNIQUE (event_key, market_ticker)
+    )
+"""
+
+# Columns added to existing tables after they were first created (initSchema adds any that are missing)
+addedColumns = {
+    "KalshiPaperRungs": {"predicted_stale": "REAL", "injury_report_et": "TEXT"},
+}
+
 extraIndexes = [
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_player_game ON Player_game_logs (player_id, game_id)",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_prop_unique ON Props (game_date, player_name, line, bookmaker)",
@@ -246,7 +309,7 @@ extraIndexes = [
 # so neither machine ever overwrites the other's data. SQLite resolves unqualified table names
 # across attached files, so queries don't need to know where a table lives
 KALSHI_TABLES = ("KalshiMarkets", "KalshiSnapshots", "KalshiCandles", "KalshiPaperRungs", "KalshiPaperBets",
-                 "KalshiShadowBets")
+                 "KalshiShadowBets", "InjuryReports", "KalshiNewsBets")
 
 
 def kalshiDbPath(dbPath):
@@ -321,6 +384,12 @@ class DBManager:
                 cur.execute(ddl)
             for inx in extraIndexes:
                 cur.execute(inx)
+            for table, cols in addedColumns.items():
+                schema = "kalshi." if table in KALSHI_TABLES else ""
+                have = {r[1] for r in cur.execute(f"PRAGMA {schema}table_info({table})")}
+                for col, colType in cols.items():
+                    if col not in have:
+                        cur.execute(f"ALTER TABLE {schema}{table} ADD COLUMN {col} {colType}")
         print(f"DB Schema created in {self.dbPath}")
 
     # Bulk runs all the upsert methods
@@ -519,11 +588,13 @@ class DBManager:
         sql = """
             INSERT OR IGNORE INTO KalshiPaperRungs
                 (market_ticker, decision_ts, game_date, player_id, player_name, strike, predicted,
-                 p_model, shrink_weight, p_bet, yes_bid, yes_ask, model_train_end)
+                 p_model, shrink_weight, p_bet, yes_bid, yes_ask, model_train_end, predicted_stale, injury_report_et)
             VALUES
                 (:market_ticker, :decision_ts, :game_date, :player_id, :player_name, :strike, :predicted,
-                 :p_model, :shrink_weight, :p_bet, :yes_bid, :yes_ask, :model_train_end)
+                 :p_model, :shrink_weight, :p_bet, :yes_bid, :yes_ask, :model_train_end, :predicted_stale,
+                 :injury_report_et)
         """
+        data = [{"predicted_stale": None, "injury_report_et": None, **row} for row in data]
 
         with self._connect() as conn:
             conn.cursor().executemany(sql, data)
@@ -549,7 +620,7 @@ class DBManager:
 
     def updateKalshiPaperBets(self, data, table="KalshiPaperBets"):
         """data: dicts with bet_id plus any of the fill / close / settlement columns"""
-        cols = ["fill_status", "fill_ts", "close_bid", "close_ask", "clv", "result", "payout", "pnl"]
+        cols = ["fill_status", "fill_ts", "close_bid", "close_ask", "clv", "result", "payout", "pnl", "mid_15", "mid_60"]
         with self._connect() as conn:
             for row in data:
                 sets = [c for c in cols if c in row]
@@ -559,6 +630,29 @@ class DBManager:
                 )
 
         print(f"Updated {len(data)} rows in {table}")
+
+    def insertInjuryReports(self, data):
+        sql = """
+            INSERT OR IGNORE INTO InjuryReports
+                (report_et, report_utc, fetched_utc, game_date, team_id, team_abbr, player_name, player_id, status, reason)
+            VALUES
+                (:report_et, :report_utc, :fetched_utc, :game_date, :team_id, :team_abbr, :player_name, :player_id,
+                 :status, :reason)
+        """
+        with self._connect() as conn:
+            conn.cursor().executemany(sql, data)
+
+    def insertKalshiNewsBets(self, data):
+        cols = ["strategy", "event_key", "game_date", "team_abbr", "news_player", "news_player_id", "news_ppg",
+                "prev_status", "new_status", "report_et", "detected_ts", "lag_min", "market_ticker", "player_name",
+                "strike", "side", "price", "fee", "stake", "contracts", "yes_bid", "yes_ask", "est_tip_utc"]
+        sql = f"INSERT OR IGNORE INTO KalshiNewsBets ({', '.join(cols)}) VALUES ({', '.join(':' + c for c in cols)})"
+        with self._connect() as conn:
+            cur = conn.cursor()
+            cur.executemany(sql, data)
+            n = conn.total_changes
+        print(f"Inserted {len(data)} rows into KalshiNewsBets")
+        return n
 
     # (game_date, player_id) pairs the paper trader already decided on
     def getKalshiPaperDecided(self, gameDates):

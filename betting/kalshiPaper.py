@@ -27,8 +27,10 @@ from betting.calibrator import Calibrator
 from betting.kalshiCollector import (
     _fmtUtc, _getCandles, _parseUtc, _toFloat, settleKalshiProps, snapshotKalshiProps,
 )
+from config import KEY_PLAYER_PPG, LIVE_INJURY_STATUS, PROTECT_STATUSES
 from data.dbManager import DBManager, connect
-from features.builder import buildFeatures
+from data.injuryReports import latestStatus, pollInjuryReports
+from features.builder import _playerAverageToDate, buildFeatures
 from features.cache import preloadCaches
 from models.minutes import MinutesBundle
 from models.points import PointsBundle
@@ -70,6 +72,36 @@ def _teamRestDays(conn, teamID, date):
     return (datetime.strptime(date, "%Y-%m-%d") - datetime.strptime(row[0], "%Y-%m-%d")).days
 
 
+def _overlayLiveStatus(statusDF, live):
+    """
+    The model reads injury status from the report scraped the day before the game (Status.scrape_date = D-1).
+    Swap that slot for the newest official report so same-day news (Questionable -> Out, late scratches)
+    reaches the features. Only teams the live report lists for the game are replaced
+    """
+    live = live[live["player_id"].notna() & live["team_id"].notna()].copy()
+    if live.empty:
+        return statusDF
+    live["scrape_date"] = (pd.to_datetime(live["game_date"]) - timedelta(days=1)).dt.strftime("%Y-%m-%d")
+    swap = set(zip(live["scrape_date"], live["team_id"].astype(int)))
+    keep = [(d, t) not in swap for d, t in zip(statusDF["scrape_date"], statusDF["team_id"])]
+    add = pd.DataFrame({
+        "player_id": live["player_id"].astype(int), "team_id": live["team_id"].astype(int), "game_id": None,
+        "scrape_date": live["scrape_date"], "report_time": live["report_et"].str[11:], "status": live["status"],
+        "reason": live["reason"], "comment": live["reason"],
+    })
+    return pd.concat([statusDF[keep], add], ignore_index=True)
+
+
+def _keyQuestionable(live, playerLogCache):
+    """(game_date, team_id) -> key players (12+ ppg) listed Questionable/Doubtful in the newest report"""
+    out = {}
+    q = live[live["status"].isin(PROTECT_STATUSES) & live["player_id"].notna() & live["team_id"].notna()]
+    for r in q.itertuples(index=False):
+        if _playerAverageToDate(int(r.player_id), r.game_date, playerLogCache, window=10) >= KEY_PLAYER_PPG:
+            out.setdefault((r.game_date, int(r.team_id)), set()).add(int(r.player_id))
+    return out
+
+
 def _candleQuote(block, key):
     if not block:
         return None
@@ -80,7 +112,7 @@ def _candleQuote(block, key):
 
 
 def decidePaperBets(dbPath="NBA.db", minLeadHours=1.0, maxLeadHours=24.0, evThresh=0.03, minPrice=0.20,
-                    maxPrice=0.80, makerMaxSpread=0.10, stake=10.0, dryRun=False):
+                    maxPrice=0.80, makerMaxSpread=0.10, stake=10.0, liveInjuries=LIVE_INJURY_STATUS, dryRun=False):
     now = datetime.now(timezone.utc)
     decisionTs = _fmtUtc(now)
 
@@ -109,6 +141,13 @@ def decidePaperBets(dbPath="NBA.db", minLeadHours=1.0, maxLeadHours=24.0, evThre
     shrink = _loadShrink()
     trainEnd = points.meta.get("calibration_end_date") or points.meta.get("train_last_date")
 
+    if liveInjuries:
+        try:
+            pollInjuryReports(dbPath, dryRun=dryRun)
+        except Exception as e:
+            # A missing report never blocks betting, decide just falls back to the newest stored one
+            print(f"[paper] injury report poll failed: {type(e).__name__}: {e}")
+
     conn = connect(dbPath)
     # Box scores come from the laptop scrape, so they can lag. Say so instead of quietly using stale features
     lastLog = conn.execute(
@@ -120,6 +159,25 @@ def decidePaperBets(dbPath="NBA.db", minLeadHours=1.0, maxLeadHours=24.0, evThre
     else:
         print(f"[paper] box scores through {lastLog}")
     caches = preloadCaches(conn)
+    staleStatus = caches.statusDF
+    live, keyQ, liveTeams = pd.DataFrame(), {}, set()
+    if liveInjuries:
+        live = latestStatus(conn, quotes["game_date"].unique(), asOfUtc=now)
+        if live.empty:
+            print("[paper] WARNING: no official injury report stored for these games, using day-before statuses")
+        else:
+            caches.statusDF = _overlayLiveStatus(staleStatus, live)
+            liveTeams = {(d, int(t)) for d, t in zip(live["game_date"], live["team_id"]) if pd.notna(t)}
+            keyQ = _keyQuestionable(live, caches.playerLogCache)
+            print(f"[paper] live injury report {live['report_et'].max()} ET: {len(live)} listed, "
+                  f"{(live['status'] == 'Out').sum()} out, {len(keyQ)} teams with a key player questionable/doubtful")
+    liveOut, reportOf = set(), {}
+    if not live.empty:
+        liveOut = {(d, int(p)) for d, p, st in zip(live["game_date"], live["player_id"], live["status"])
+                   if st == "Out" and pd.notna(p)}
+        for d, t, r in zip(live["game_date"], live["team_id"], live["report_et"]):
+            if pd.notna(t):
+                reportOf[(d, int(t))] = max(r, reportOf.get((d, int(t)), r))
     playerMap = _loadPlayerMap(conn)
     for kalshiName, dbName in KALSHI_NAME_ALIASES.items():
         if _normalize(dbName) in playerMap:
@@ -128,7 +186,7 @@ def decidePaperBets(dbPath="NBA.db", minLeadHours=1.0, maxLeadHours=24.0, evThre
     scheduleMap = _loadScheduleMap(conn)
 
     rungRows = []
-    misses = {"decided": 0, "noPlayer": 0, "noTeam": 0, "noGame": 0, "noFeatures": 0}
+    misses = {"decided": 0, "noPlayer": 0, "noTeam": 0, "noGame": 0, "noFeatures": 0, "ruledOut": 0}
     missNames = set()
     for (date, name), ladder in quotes.groupby(["game_date", "player_name"], sort=True):
         playerID = playerMap.get(_normalize(name))
@@ -149,26 +207,40 @@ def decidePaperBets(dbPath="NBA.db", minLeadHours=1.0, maxLeadHours=24.0, evThre
             misses["noGame"] += 1
             missNames.add(f"{name} (no game for team {teamID})")
             continue
+        # Ruled out on the newest report: he won't play and Kalshi settles a DNP ladder at a set price
+        if (date, playerID) in liveOut:
+            misses["ruledOut"] += 1
+            continue
 
-        features = buildFeatures(
-            playerID=playerID,
-            date=date,
-            teamID=sched["team_id"],
-            oppTeamID=sched["opp_team_id"],
-            cache=caches.playerLogCache,
-            posCache=caches.posCache,
-            teamCache=caches.teamCache,
-            statusDF=caches.statusDF,
-            oppPosCache=caches.oppPosCache,
-            teamGameTotals=caches.teamGameTotals,
-            minutesModel=minutes,
-            currentIsHome=sched["is_home"],
-            currentRestDays=_teamRestDays(conn, int(teamID), date),
-        )
-        if features is None:
+        restDays = _teamRestDays(conn, int(teamID), date)
+
+        def _predict(statusDF):
+            f = buildFeatures(
+                playerID=playerID,
+                date=date,
+                teamID=sched["team_id"],
+                oppTeamID=sched["opp_team_id"],
+                cache=caches.playerLogCache,
+                posCache=caches.posCache,
+                teamCache=caches.teamCache,
+                statusDF=statusDF,
+                oppPosCache=caches.oppPosCache,
+                teamGameTotals=caches.teamGameTotals,
+                minutesModel=minutes,
+                currentIsHome=sched["is_home"],
+                currentRestDays=restDays,
+            )
+            return None if f is None else points.predict(f)
+
+        predicted = _predict(caches.statusDF)
+        if predicted is None:
             misses["noFeatures"] += 1
             continue
-        predicted = points.predict(features)
+        # Same player-game on the day-before statuses, kept so live vs stale injury info can be compared later
+        teamKey = (date, int(sched["team_id"]))
+        predictedStale = _predict(staleStatus) if teamKey in liveTeams else predicted
+        # Protection rule: a key teammate is questionable, news later tends to push this ladder up
+        blockNo = bool(keyQ.get(teamKey, set()) - {playerID})
 
         for q in ladder.itertuples(index=False):
             twoSided = pd.notna(q.yes_bid) and pd.notna(q.yes_ask) and 0 < q.yes_bid and q.yes_ask < 1
@@ -179,6 +251,9 @@ def decidePaperBets(dbPath="NBA.db", minLeadHours=1.0, maxLeadHours=24.0, evThre
                 "yes_bid": q.yes_bid, "yes_ask": q.yes_ask,
                 "mid": (q.yes_bid + q.yes_ask) / 2 if twoSided else None,
                 "est_tip_utc": q.est_tip_utc, "lead_hours": q.lead_hours, "is_new": isNew,
+                "block_no": blockNo,
+                "predicted_stale": None if predictedStale is None else round(predictedStale, 2),
+                "injury_report_et": reportOf.get(teamKey),
             })
     conn.close()
 
@@ -193,21 +268,32 @@ def decidePaperBets(dbPath="NBA.db", minLeadHours=1.0, maxLeadHours=24.0, evThre
     rungs["shrink_weight"] = shrink["weight"]
     rungs["model_train_end"] = trainEnd
 
-    # Shadow picks: what this run would bet on every player-game. Real picks: only the new ones
-    shadow = []
-    for orderType, maxSpread in (("taker", None), ("maker", makerMaxSpread)):
-        bets = KalshiBacktestEngine.selectBets(
-            rungs, evThresh=evThresh, minPrice=minPrice, maxPrice=maxPrice, maxSpread=maxSpread,
-            stake=stake, orderType=orderType,
-        )
-        if bets.empty:
-            continue
-        bets["order_type"] = orderType
-        # Taker fills now at the quote, maker waits for settlePaperBets to check the candles
-        bets["fill_status"] = "filled" if orderType == "taker" else "pending"
-        shadow.append(bets)
-    shadow = pd.concat(shadow, ignore_index=True) if shadow else pd.DataFrame()
-    picks = shadow[shadow["is_new"]].reset_index(drop=True) if not shadow.empty else shadow
+    def _select(rs):
+        out = []
+        for orderType, maxSpread in (("taker", None), ("maker", makerMaxSpread)):
+            bets = KalshiBacktestEngine.selectBets(
+                rs, evThresh=evThresh, minPrice=minPrice, maxPrice=maxPrice, maxSpread=maxSpread,
+                stake=stake, orderType=orderType,
+            )
+            if bets.empty:
+                continue
+            bets["order_type"] = orderType
+            # Taker fills now at the quote, maker waits for settlePaperBets to check the candles
+            bets["fill_status"] = "filled" if orderType == "taker" else "pending"
+            out.append(bets)
+        return pd.concat(out, ignore_index=True) if out else pd.DataFrame()
+
+    # Shadow picks: what this run would bet on every player-game, without the protection rule, so the rule
+    # can be judged against them. Real picks: only new player-games, NO bets blocked next to a questionable star
+    shadow = _select(rungs.drop(columns="block_no"))
+    picks = _select(rungs[rungs["is_new"]]) if rungs["is_new"].any() else pd.DataFrame()
+    if not shadow.empty and not picks.empty:
+        wouldBe = shadow[shadow["is_new"]]
+        blocked = wouldBe[(wouldBe["side"] == "no") & wouldBe.set_index(["date", "player"]).index.isin(
+            rungs[rungs["block_no"]].set_index(["date", "player"]).index)]
+        if not blocked.empty:
+            print(f"[paper] protection rule: {len(blocked)} NO bets blocked "
+                  f"({', '.join(sorted(set(blocked['player'])))[:200]})")
 
     if not picks.empty:
         show = picks.sort_values(["order_type", "ev"], ascending=[False, False])
@@ -222,7 +308,8 @@ def decidePaperBets(dbPath="NBA.db", minLeadHours=1.0, maxLeadHours=24.0, evThre
         return picks
 
     rungCols = ["market_ticker", "decision_ts", "game_date", "player_id", "player_name", "strike", "predicted",
-                "p_model", "shrink_weight", "p_bet", "yes_bid", "yes_ask", "model_train_end"]
+                "p_model", "shrink_weight", "p_bet", "yes_bid", "yes_ask", "model_train_end", "predicted_stale",
+                "injury_report_et"]
     db.insertKalshiPaperRungs(rungs[rungCols].replace({np.nan: None}).to_dict("records"))
     betCols = ["game_date", "player_id", "player_name", "market_ticker", "strike", "order_type", "side",
                "price", "fee", "p_bet", "ev", "stake", "contracts", "yes_bid", "yes_ask", "decision_ts",
@@ -290,8 +377,11 @@ def settlePaperBets(dbPath="NBA.db", dryRun=False):
     settleKalshiProps(dbPath, dryRun=dryRun)
     # Taker, maker, real and shadow bets from the same run share a candle window, fetch it once
     candleCache = {}
-    return [u for table in ("KalshiPaperBets", "KalshiShadowBets")
-            for u in _settleTable(dbPath, table, candleCache, dryRun)]
+    updates = [u for table in ("KalshiPaperBets", "KalshiShadowBets")
+               for u in _settleTable(dbPath, table, candleCache, dryRun)]
+    from betting.newsTrader import settleNewsBets
+    settleNewsBets(dbPath, dryRun=dryRun)
+    return updates
 
 
 def _windowCandles(bet, cache):
@@ -451,7 +541,29 @@ def paperReport(dbPath="NBA.db", startDate=None, endDate=None):
 
         print(f"\nLog loss on {len(graded)} settled two-sided rungs: model {_ll(graded['p_model']):.4f} | "
               f"market mid {_ll(mid):.4f} | shrunk {_ll(graded['p_bet']):.4f}")
+        _liveInjuryReport(graded)
+    from betting.newsTrader import newsReport
+    newsReport(dbPath, startDate=startDate, endDate=endDate)
     print(f"\nProgress: {taker['pnl'].notna().sum()} graded taker bets")
+
+
+def _liveInjuryReport(graded):
+    """Same rungs scored with the newest official report vs the day-before statuses the model was trained on"""
+    if "predicted_stale" not in graded.columns:
+        return
+    g = graded[graded["predicted_stale"].notna() & graded["injury_report_et"].notna()]
+    changed = g[(g["predicted"] - g["predicted_stale"]).abs() > 0.05]
+    print(f"Live injury statuses: {len(g)} rungs scored with them, {len(changed)} where the prediction moved")
+    if changed.empty:
+        return
+    calibrator = Calibrator.loadIfExists()
+    y = (changed["result"] == "yes").astype(float).values
+    stale = np.array([calibrator.probOver(p, s) for p, s in zip(changed["predicted_stale"], changed["strike"])])
+    staleShrunk = applyMarketShrink(changed.assign(p_yes=stale, mid=(changed["yes_bid"] + changed["yes_ask"]) / 2),
+                                    changed["shrink_weight"].iloc[0])["p_bet"]
+    print(f"  on those: model live {_logLoss(changed['p_model'], y):.4f} vs day-before {_logLoss(stale, y):.4f} | "
+          f"shrunk live {_logLoss(changed['p_bet'], y):.4f} vs day-before {_logLoss(staleShrunk, y):.4f} "
+          f"| mean |change| {(changed['predicted'] - changed['predicted_stale']).abs().mean():.2f} pts")
 
 
 def _logLoss(p, y):

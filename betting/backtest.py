@@ -916,6 +916,9 @@ class KalshiBacktestEngine:
             o["side"] = side
             opts.append(o)
         opts = pd.concat(opts, ignore_index=True)
+        # Paper trader protection rule: rungs flagged block_no can only be bet on the YES side
+        if "block_no" in opts.columns:
+            opts = opts[~(opts["side"].eq("no") & opts["block_no"].fillna(False).astype(bool))]
         opts["price"] = opts["price"].round(2)
         opts["spread"] = opts["yes_ask"] - opts["yes_bid"]
         opts["fee"] = _kalshiFee(opts["price"], orderType)
