@@ -84,7 +84,11 @@ def _floorSlot(dtEt):
 
 def fetchReport(slotEt):
     """Parsed report for a naive ET slot, or None if the NBA didn't post one (403/404) or it failed to parse"""
+    import jpype.config
     from nbainjuries import injury
+    # jpype tears the JVM down at interpreter exit, which deadlocks with Java 25 + jpype 1.7 (VPS) and leaves
+    # the process hanging forever after its work is done. Skip the teardown, the OS reclaims the JVM on exit
+    jpype.config.destroy_jvm = False
     try:
         df = injury.get_reportdata(slotEt, return_df=True)
     except Exception as e:
