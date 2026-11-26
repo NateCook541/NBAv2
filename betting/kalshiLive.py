@@ -71,9 +71,14 @@ class KalshiAuth:
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.asymmetric import padding
         ts = str(int(time.time() * 1000))
+        from cryptography.hazmat.primitives.asymmetric import rsa
         msg = f"{ts}{method.upper()}{API_PREFIX}{path.split('?')[0]}".encode()
-        sig = self.key.sign(msg, padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
-                                             salt_length=padding.PSS.DIGEST_LENGTH), hashes.SHA256())
+        if isinstance(self.key, rsa.RSAPrivateKey):
+            sig = self.key.sign(msg, padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
+                                                 salt_length=padding.PSS.DIGEST_LENGTH), hashes.SHA256())
+        else:
+            # Ed25519 keys sign the message directly (no padding / hash choice)
+            sig = self.key.sign(msg)
         return {"KALSHI-ACCESS-KEY": self.keyID, "KALSHI-ACCESS-TIMESTAMP": ts,
                 "KALSHI-ACCESS-SIGNATURE": base64.b64encode(sig).decode(), "Content-Type": "application/json"}
 
