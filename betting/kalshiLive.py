@@ -193,6 +193,19 @@ def placeLiveOrders(dbPath="NBA.db", dryRun=False):
         print(f"{tag} kill switch {LIVE_KILL_FILE} present, nothing sent")
         return []
 
+    # First, so every run (dry ones too) proves the key works before anything else can stop it
+    balance = None
+    if auth.ready:
+        try:
+            balance = getBalance(auth)
+            print(f"{tag} account balance ${balance:.2f}")
+        except (requests.RequestException, ValueError) as e:
+            print(f"{tag} balance check failed: {e}")
+            if mode == "live":
+                return []
+    else:
+        print(f"{tag} no API key configured, dry run without auth checks")
+
     conn = connect(dbPath)
     _reconcilePending(conn, auth, db, mode, tag)
 
@@ -221,19 +234,6 @@ def placeLiveOrders(dbPath="NBA.db", dryRun=False):
         print(f"{tag} no new eligible picks (taker, sides {LIVE_SIDES})")
         conn.close()
         return []
-
-    balance = None
-    if auth.ready:
-        try:
-            balance = getBalance(auth)
-            print(f"{tag} account balance ${balance:.2f}")
-        except requests.HTTPError as e:
-            print(f"{tag} balance check failed: {e}")
-            if mode == "live":
-                conn.close()
-                return []
-    else:
-        print(f"{tag} no API key configured, dry run without auth checks")
 
     rows = []
     for b in picks.itertuples(index=False):
