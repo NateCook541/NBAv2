@@ -381,6 +381,8 @@ def settlePaperBets(dbPath="NBA.db", dryRun=False):
                for u in _settleTable(dbPath, table, candleCache, dryRun)]
     from betting.newsTrader import settleNewsBets
     settleNewsBets(dbPath, dryRun=dryRun)
+    from betting.kalshiLive import settleLiveOrders
+    settleLiveOrders(dbPath, dryRun=dryRun)
     return updates
 
 
@@ -544,6 +546,8 @@ def paperReport(dbPath="NBA.db", startDate=None, endDate=None):
         _liveInjuryReport(graded)
     from betting.newsTrader import newsReport
     newsReport(dbPath, startDate=startDate, endDate=endDate)
+    from betting.kalshiLive import liveReport
+    liveReport(dbPath, startDate=startDate, endDate=endDate)
     print(f"\nProgress: {taker['pnl'].notna().sum()} graded taker bets")
 
 

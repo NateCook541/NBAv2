@@ -193,3 +193,18 @@ PROTECT_STATUSES = ("Questionable", "Doubtful")
 NEWS_Q_WINDOW_HOURS = 3.0
 # News trader: act on an "Out" change only if its report is at most this old when we see it
 NEWS_MAX_AGE_MIN = 45
+
+# Live Kalshi orders (betting/kalshiLive.py). Master switch: while False every run is a dry run
+# (orders are built, signed and logged as mode "dry", nothing is sent)
+LIVE_TRADING = False
+LIVE_ORDER_TYPES = ("taker",)
+# NO only for now: YES taker bets have had negative CLV after fees since the retrain (still recorded on paper)
+LIVE_SIDES = ("no",)
+LIVE_STAKE = 2.0                 # dollars per bet, whole contracts (floor(stake / price))
+LIVE_MAX_NIGHT_RISK = 60.0       # cap on cost + fees per game date
+LIVE_MIN_EV = 0.03               # edge after re-quoting, same bar as the paper picks
+LIVE_MAX_SLIPPAGE = 0.02         # skip if the price is this much worse than the paper price
+LIVE_PRICE_BAND = (0.20, 0.80)
+LIVE_MAX_BET_AGE_MIN = 20        # only this decide run's paper picks
+LIVE_MIN_TIP_MIN = 15            # never trade inside this many minutes of the estimated tip
+LIVE_KILL_FILE = "LIVE_KILL"     # touch this file in the repo root to stop all live orders

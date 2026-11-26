@@ -43,7 +43,11 @@ push() {
     if [ "${1:-}" = "push" ]; then
         push
     else
-        if [ ! -e "$scraped" ]; then
+        # basketball-reference posts last night's box scores in the early morning (at midnight they 404),
+        # so don't take the day's one scrape before 4am, it would leave the VPS a night behind all day
+        if [ "$(date +%-H)" -lt 4 ]; then
+            echo "before 4am, last night's box scores aren't posted yet, scraping later"
+        elif [ ! -e "$scraped" ]; then
             if python main.py --scrape; then touch "$scraped"; else echo "scrape failed, will retry next hour"; fi
         fi
         # Push retries every hour until it lands (VPS down, no wifi, ...)

@@ -291,6 +291,48 @@ dbSchema["KalshiNewsBets"] = """
     )
 """
 
+# Real Kalshi orders (betting/kalshiLive.py), each the twin of a paper bet. mode "live" = sent, "dry" = signed only.
+# Skipped picks are kept too (why they weren't sent), so every eligible paper bet has exactly one row per mode
+dbSchema["KalshiLiveOrders"] = """
+    CREATE TABLE IF NOT EXISTS KalshiLiveOrders (
+        live_id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        bet_id          INTEGER NOT NULL,
+        mode            TEXT    NOT NULL,
+        client_order_id TEXT,
+        order_id        TEXT,
+        game_date       TEXT    NOT NULL,
+        player_name     TEXT,
+        market_ticker   TEXT    NOT NULL,
+        strike          REAL,
+        side            TEXT    NOT NULL,
+        est_tip_utc     TEXT,
+        paper_price     REAL,
+        paper_ev        REAL,
+        quote_ts        TEXT,
+        quote_yes_bid   REAL,
+        quote_yes_ask   REAL,
+        limit_price     REAL,
+        live_ev         REAL,
+        count           INTEGER,
+        status          TEXT    NOT NULL,
+        skip_reason     TEXT,
+        submitted_ts    TEXT,
+        filled_count    REAL,
+        avg_price       REAL,
+        cost            REAL,
+        fees            REAL,
+        fee_source      TEXT,
+        request_json    TEXT,
+        response_json   TEXT,
+        error           TEXT,
+        clv             REAL,
+        result          TEXT,
+        payout          REAL,
+        pnl             REAL,
+        UNIQUE (bet_id, mode)
+    )
+"""
+
 # Columns added to existing tables after they were first created (initSchema adds any that are missing)
 addedColumns = {
     "KalshiPaperRungs": {"predicted_stale": "REAL", "injury_report_et": "TEXT"},
@@ -309,7 +351,7 @@ extraIndexes = [
 # so neither machine ever overwrites the other's data. SQLite resolves unqualified table names
 # across attached files, so queries don't need to know where a table lives
 KALSHI_TABLES = ("KalshiMarkets", "KalshiSnapshots", "KalshiCandles", "KalshiPaperRungs", "KalshiPaperBets",
-                 "KalshiShadowBets", "InjuryReports", "KalshiNewsBets")
+                 "KalshiShadowBets", "InjuryReports", "KalshiNewsBets", "KalshiLiveOrders")
 
 
 def kalshiDbPath(dbPath):
@@ -641,6 +683,23 @@ class DBManager:
         """
         with self._connect() as conn:
             conn.cursor().executemany(sql, data)
+
+    def insertKalshiLiveOrder(self, row):
+        cols = ["bet_id", "mode", "client_order_id", "order_id", "game_date", "player_name", "market_ticker", "strike",
+                "side", "est_tip_utc", "paper_price", "paper_ev", "quote_ts", "quote_yes_bid", "quote_yes_ask",
+                "limit_price", "live_ev", "count", "status", "skip_reason", "submitted_ts", "request_json"]
+        sql = f"INSERT OR IGNORE INTO KalshiLiveOrders ({', '.join(cols)}) VALUES ({', '.join(':' + c for c in cols)})"
+        with self._connect() as conn:
+            conn.execute(sql, {c: row.get(c) for c in cols})
+
+    def updateKalshiLiveOrder(self, row):
+        """row: bet_id + mode plus any columns to set"""
+        sets = {k: v for k, v in row.items() if k not in ("bet_id", "mode")}
+        if not sets:
+            return
+        sql = f"UPDATE KalshiLiveOrders SET {', '.join(f'{k} = :{k}' for k in sets)} WHERE bet_id = :bet_id AND mode = :mode"
+        with self._connect() as conn:
+            conn.execute(sql, row)
 
     def insertKalshiNewsBets(self, data):
         cols = ["strategy", "event_key", "game_date", "team_abbr", "news_player", "news_player_id", "news_ppg",

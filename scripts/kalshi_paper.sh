@@ -31,6 +31,8 @@ case "$1" in
         ;;
     decide)
         python main.py --kalshi-paper-decide >> "$log" 2>&1
+        # Real orders on this run's picks (dry unless config.LIVE_TRADING is on)
+        python main.py --kalshi-live >> "$log" 2>&1
         ;;
     news)
         # Own log, it runs every few minutes

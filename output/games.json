@@ -1456,17 +1456,17 @@
     "season": 2027
   },
   {
-    "game_id": "202611170LAL",
-    "game_date": "2026-11-17",
-    "home_team_id": 9,
-    "away_team_id": 18,
-    "season": 2027
-  },
-  {
     "game_id": "202611170LAC",
     "game_date": "2026-11-17",
     "home_team_id": 28,
     "away_team_id": 7,
+    "season": 2027
+  },
+  {
+    "game_id": "202611170LAL",
+    "game_date": "2026-11-17",
+    "home_team_id": 9,
+    "away_team_id": 18,
     "season": 2027
   },
   {
@@ -1512,6 +1512,13 @@
     "season": 2027
   },
   {
+    "game_id": "202611180DAL",
+    "game_date": "2026-11-18",
+    "home_team_id": 25,
+    "away_team_id": 23,
+    "season": 2027
+  },
+  {
     "game_id": "202611180NOP",
     "game_date": "2026-11-18",
     "home_team_id": 20,
@@ -1530,13 +1537,6 @@
     "game_date": "2026-11-18",
     "home_team_id": 1,
     "away_team_id": 17,
-    "season": 2027
-  },
-  {
-    "game_id": "202611180DAL",
-    "game_date": "2026-11-18",
-    "home_team_id": 25,
-    "away_team_id": 23,
     "season": 2027
   },
   {
@@ -2002,6 +2002,13 @@
     "season": 2027
   },
   {
+    "game_id": "202611290CLE",
+    "game_date": "2026-11-29",
+    "home_team_id": 12,
+    "away_team_id": 5,
+    "season": 2027
+  },
+  {
     "game_id": "202611290MEM",
     "game_date": "2026-11-29",
     "home_team_id": 21,
@@ -2020,13 +2027,6 @@
     "game_date": "2026-11-29",
     "home_team_id": 7,
     "away_team_id": 22,
-    "season": 2027
-  },
-  {
-    "game_id": "202611290CLE",
-    "game_date": "2026-11-29",
-    "home_team_id": 12,
-    "away_team_id": 5,
     "season": 2027
   },
   {
@@ -2163,17 +2163,17 @@
     "season": 2027
   },
   {
-    "game_id": "202612010POR",
-    "game_date": "2026-12-01",
-    "home_team_id": 11,
-    "away_team_id": 8,
-    "season": 2027
-  },
-  {
     "game_id": "202612010GSW",
     "game_date": "2026-12-01",
     "home_team_id": 23,
     "away_team_id": 7,
+    "season": 2027
+  },
+  {
+    "game_id": "202612010POR",
+    "game_date": "2026-12-01",
+    "home_team_id": 11,
+    "away_team_id": 8,
     "season": 2027
   },
   {
@@ -3878,6 +3878,13 @@
     "season": 2027
   },
   {
+    "game_id": "202701110NYK",
+    "game_date": "2027-01-11",
+    "home_team_id": 4,
+    "away_team_id": 1,
+    "season": 2027
+  },
+  {
     "game_id": "202701110WAS",
     "game_date": "2027-01-11",
     "home_team_id": 26,
@@ -3889,13 +3896,6 @@
     "game_date": "2027-01-11",
     "home_team_id": 17,
     "away_team_id": 3,
-    "season": 2027
-  },
-  {
-    "game_id": "202701110NYK",
-    "game_date": "2027-01-11",
-    "home_team_id": 4,
-    "away_team_id": 1,
     "season": 2027
   },
   {

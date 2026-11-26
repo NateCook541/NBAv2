@@ -96,6 +96,9 @@ def main():
                         help="Fetch every report slot for a game date range (8am-midnight ET)")
     parser.add_argument("--kalshi-news", action="store_true",
                         help="News trader: poll reports, record teammates' YES shadow bets on key-player news")
+    parser.add_argument("--kalshi-live", action="store_true",
+                        help="Send this decide run's NO taker paper picks to Kalshi as real orders "
+                             "(dry run unless config.LIVE_TRADING; --kalshi-dry-run forces dry)")
     parser.add_argument("--split-kalshi-db", action="store_true",
                         help="One-time: move Kalshi tables out of the NBA db into kalshi.db next to it")
 
@@ -277,7 +280,7 @@ def main():
 
     if (args.kalshi_snapshot or args.kalshi_settle or args.kalshi_backfill is not None
             or args.kalshi_paper_decide or args.kalshi_paper_settle or args.kalshi_paper_report is not None
-            or args.injury_poll or args.injury_backfill or args.kalshi_news):
+            or args.injury_poll or args.injury_backfill or args.kalshi_news or args.kalshi_live):
         from data.dbManager import DBManager
         DBManager(args.db).initSchema()
 
@@ -324,6 +327,10 @@ def main():
                         maxLeadHours=args.kalshi_paper_lead[1], evThresh=args.kalshi_ev_thresh,
                         minPrice=args.kalshi_price_band[0], maxPrice=args.kalshi_price_band[1],
                         dryRun=args.kalshi_dry_run)
+
+    if args.kalshi_live:
+        from betting.kalshiLive import placeLiveOrders
+        placeLiveOrders(dbPath=args.db, dryRun=args.kalshi_dry_run)
 
     if args.kalshi_paper_report is not None:
         from betting.kalshiPaper import paperReport
